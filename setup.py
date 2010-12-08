@@ -15,7 +15,7 @@ major_version, minor_version, _ = trytond_module_info.get(
 major_version = int(major_version)
 minor_version = int(minor_version)
 
-requires = []
+requires = ['flask']
 for dep in trytond_module_info.get('depends', []):
     if not re.match(r'(ir|res|workflow|webdav)(\W|$)', dep):
         requires.append('trytond_%s >= %s.%s, < %s.%s' %

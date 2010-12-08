@@ -128,14 +128,14 @@ class WebSite(ModelSQL, ModelView):
              'Another site with the same name already exists!')
         ]
 
-    def get_urls(self, base_url):
+    def get_urls(self, name):
         """
         Return complete list of URLs
         """
         urlmap_obj = self.pool.get('nereid.urlmap')
-        website_id = self.search([('base_url', '=', base_url)])
+        website_id = self.search([('name', '=', name)])
         if not website_id:
-            raise RuntimeError("Website with Base URL %s not found" % base_url)
+            raise RuntimeError("Website with Name %s not found" % name)
 
         website = self.browse(website_id[0])
         return urlmap_obj.get_rules_arguments(website.url_map.id)
