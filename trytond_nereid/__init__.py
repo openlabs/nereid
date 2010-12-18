@@ -12,5 +12,5 @@ Tryton module to support Nereid
 from .routing import *
 #from auth import User, Address
 from .template import Template
-#from static_bank import NereidStaticFolder, NereidStaticFile
+from .static_file import NereidStaticFolder, NereidStaticFile
 from .party import Address

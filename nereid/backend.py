@@ -7,15 +7,12 @@
     :copyright: (c) 2010 by Sharoon Thomas.
     :license: BSD, see LICENSE for more details
 '''
+from math import ceil
+
+from werkzeug import abort
 from trytond.config import CONFIG
-from trytond.modules import register_classes
-from trytond.pool import Pool
-from trytond.backend import Database
-from trytond.transaction import Transaction
 
 from .config import ConfigAttribute
-
-register_classes()
 
 
 class TransactionManager(object):
@@ -26,10 +23,12 @@ class TransactionManager(object):
         self.context = context
 
     def __enter__(self):
+        from trytond.transaction import Transaction
         Transaction().start(self.database_name, self.user, self.context)
+        return Transaction()
 
     def __exit__(self, type, value, traceback):
-        # TODO: Handle the case where exception is thrown
+        from trytond.transaction import Transaction
         Transaction().stop()
 
 
@@ -43,7 +42,6 @@ class BackendMixin(object):
     #: Configuration file for Tryton
     tryton_configfile = ConfigAttribute('TRYTON_CONFIG')
     database_name = ConfigAttribute('DATABASE_NAME')
-    tryton_config = CONFIG
 
     def __init__(self, *args, **kwargs):
         CONFIG.configfile = self.tryton_configfile
@@ -51,6 +49,11 @@ class BackendMixin(object):
 
     def load_connection(self):
         "Actual loading of connection takes place here"
+        from trytond.backend import Database
+        from trytond.modules import register_classes
+        register_classes()
+        from trytond.pool import Pool
+
         self._database = Database(self.database_name).connect()
         self._pool = Pool(self.database_name)
         self._pool.init()
@@ -100,3 +103,121 @@ class BackendMixin(object):
         method = model_method_split[-1]
 
         return getattr(self.pool.get(model), method)
+
+
+class Pagination(object):
+    """
+    General purpose paginator for doing pagination
+    """
+
+    def __init__(self, obj, domain, page, per_page, order=None):
+        """
+        :param klass: The object itself. pass self within tryton object
+        :param domain: Domain for search in tryton
+        :param per_page: Items per page
+        :param page: The page to be displayed
+        """
+        self.obj = obj
+        self.domain = domain
+        self.per_page = per_page
+        self.page = page
+        self.order = order
+
+    @property
+    def count(self):
+        """
+        Returns the count of entries
+        """
+        return self.obj.search(domain=self.domain, count=True)
+
+    def all_items(self):
+        """Returns complete set of items"""
+        ids = self.obj.search(self.domain)
+        return self.obj.browse(ids)
+
+    def items(self):
+        """Returns the list of browse records of items in the page
+        """
+        ids = self.obj.search(self.domain, offset=self.offset,
+            limit=self.per_page, order=self.order)
+        return self.obj.browse(ids)
+
+    def iter_pages(self, left_edge=2, left_current=2,
+                   right_current=5, right_edge=2):
+        """Iterates over the page numbers in the pagination.  The four
+        parameters control the thresholds how many numbers should be produced
+        from the sides.  Skipped page numbers are represented as `None`.
+        This is how you could render such a pagination in the templates:
+
+        .. sourcecode:: html+jinja
+
+            {% macro render_pagination(pagination, endpoint) %}
+              <div class=pagination>
+              {%- for page in pagination.iter_pages() %}
+                {% if page %}
+                  {% if page != pagination.page %}
+                    <a href="{{ url_for(endpoint, page=page) }}">{{ page }}</a>
+                  {% else %}
+                    <strong>{{ page }}</strong>
+                  {% endif %}
+                {% else %}
+                  <span class=ellipsis>…</span>
+                {% endif %}
+              {%- endfor %}
+              </div>
+            {% endmacro %}
+        """
+        last = 0
+        for num in xrange(1, self.pages + 1):
+            if num <= left_edge or \
+               (num > self.page - left_current - 1 and \
+                num < self.page + right_current) or \
+               num > self.pages - right_edge:
+                if last + 1 != num:
+                    yield None
+                yield num
+                last = num
+
+    offset = property(lambda self: (self.page - 1) * self.per_page)
+
+    @property
+    def prev(self, error_out=False):
+        """Returns a :class:`Pagination` object for the previous page."""
+        return self.obj.paginate(self.page - 1, self.per_page, error_out)
+
+    prev_num = property(lambda self: self.page - 1)
+    has_prev = property(lambda self: self.page > 1)
+
+    def next(self, error_out=False):
+        """Returns a :class:`Pagination` object for the next page."""
+        return self.obj.paginate(self.page + 1, self.per_page, error_out)
+
+    next_num = property(lambda self: self.page + 1)
+    has_next = property(lambda self: self.page < self.pages)
+
+
+    @property
+    def pages(self):
+        """The total number of pages"""
+        return int(ceil(self.count / float(self.per_page)))
+
+
+class ModelPagination(object):
+    """A mixin ancestor that models in tryton could inherit 
+    if they will need to do pagination"""
+
+    def paginate(self, domain, page, per_page=20, error_out=True):
+        """Returns `per_page` items from page `page`.  By default it will
+        abort with 404 if no items were found and the page was less than
+        1.  This behavior can be disabled by setting `error_out` to `False`.
+
+        Returns an :class:`Pagination` object.
+        """
+        if error_out and page < 1:
+            abort(404)
+
+        pagination = Pagination(self, domain, page, per_page)
+        if not pagination.pages and error_out:
+            abort(404)
+
+        return pagination

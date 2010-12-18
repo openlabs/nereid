@@ -9,10 +9,15 @@
     :license: GPLv3, see LICENSE for more details
 """
 from ast import literal_eval
-from nereid import request
+
+from werkzeug import abort, redirect
+from nereid import jsonify, flash, render_template
+from nereid.globals import session, request
 from trytond.model import ModelView, ModelSQL, fields
+from wtforms import Form, TextField, PasswordField, validators
 
 
+# pylint: disable-msg=E1101
 class URLMap(ModelSQL, ModelView):
     """
     URL Map
@@ -81,6 +86,12 @@ class URLMap(ModelSQL, ModelView):
 URLMap()
 
 
+class LoginForm(Form):
+    "Default Login Form"
+    email = TextField('e-mail', [validators.Required(), validators.Email()])
+    password = PasswordField('Password', [validators.Required()])
+
+
 class WebSite(ModelSQL, ModelView):
     """
     Web Site
@@ -116,7 +127,13 @@ class WebSite(ModelSQL, ModelView):
     #: records like sale order which require a company to be present
     company = fields.Many2One('company.company', 'Company', required=True)
 
-    active= fields.Boolean('Active')
+    active = fields.Boolean('Active')
+
+    #: The list of countries this website operates in. Used for generating
+    #: Countries list in the registration form etc.
+    countries = fields.Many2Many(
+        'nereid.website-country.country', 'website', 'country',
+        'Countries Available')
 
     def default_active(self):
         return True
@@ -127,6 +144,30 @@ class WebSite(ModelSQL, ModelView):
             ('name_uniq', 'UNIQUE(name)',
              'Another site with the same name already exists!')
         ]
+
+    def country_list(self):
+        """
+        Return the list of countries in JSON
+        """
+        return jsonify([
+            {'key': c.id, 'value': c.name} \
+                for c in request.nereid_website.countries
+            ])
+
+    def subdivision_list(self):
+        """
+        Return the list of states for given country
+        """
+        country = int(request.args.get('country', 0))
+        if country not in [c.id for c in request.nereid_website.countries]:
+            abort(404)
+
+        subdivision_obj = self.pool.get('country.subdivision')
+        ids = subdivision_obj.search([('country', '=', country)])
+        subdivisions = subdivision_obj.browse(ids)
+        return jsonify(
+            result = [{'key': s.id, 'value': s.name} for s in subdivisions]
+            )
 
     def get_urls(self, name):
         """
@@ -146,6 +187,155 @@ class WebSite(ModelSQL, ModelView):
         """
         return u'Request: %s\nArguments: %s\nEnviron: %s\n' \
             % (request, arguments, request.environ)
+
+    def home(self):
+        """
+        A sample home method
+        """
+        return u'''Welcome to Nereid
+This is the default home page and needs replacing. To build
+your own home method, inherit the model nereid.website and implement
+the `home` method to replace this function.
+        '''
+
+    def login(self):
+        """
+        Simple login based on the email and password
+
+        Required post data see :class:LoginForm
+        """
+        login_form = LoginForm(request.form)
+
+        if request.method == 'POST' and login_form.validate():
+            address_obj = self.pool.get('party.address')
+            result = address_obj.authenticate(
+                login_form.email.data, login_form.password.data)
+            if result is None:
+                flash("Invalid login credentials")
+            else:
+                flash("You are now logged in. Welcome %s" % result.name)
+                session['user'] = result.id
+                return redirect(request.args.get('next', '/'))
+        return render_template('login.jinja', login_form=login_form)
+
+    def logout(self):
+        "Log the user out"
+        session.pop('user', None)
+        flash('You have been logged out successfully. Thanks for visiting us')
+        return redirect(request.args.get('next', '/'))
+
+    def registration(self):
+        register_form = RegistrationForm(request.form)
+        register_form.country.choices = [
+            (c.id, c.name) for c in request.nereid_website.countries
+            ]
+        if request.method == 'POST' and register_form.validate():
+            address_obj = self.pool.get('party.address')
+            contact_mech_obj = self.pool.get('party.contact_mechanism')
+            party_obj = self.pool.get('party.party')
+            opportunity_obj = self.pool.get('sale.opportunity')
+
+            registration_data = register_form.data
+
+            # First search if an address with the email already exists
+            existing = contact_mech_obj.search([
+                ('value', '=', registration_data['email']),
+                ('type', '=', 'email')])
+            if existing:
+                flash('A registration already exists with this email. '
+                    'Please contact customer care')
+            else:
+                # Create Party
+                party_id = party_obj.create({
+                    'name': registration_data['company'],
+                    'addresses': [
+                        ('create', {
+                            'name': registration_data['name'],
+                            'street': registration_data['street'],
+                            'streetbis': registration_data['streetbis'],
+                            'zip': registration_data['zip'],
+                            'city': registration_data['city'],
+                            'country': registration_data['country'],
+                            'subdivision': registration_data['subdivision'],
+                            })],
+                    })
+                party = party_obj.browse(party_id)
+
+                # Create email as contact mech and assign as email
+                contact_mech_id = contact_mech_obj.create({
+                        'type': 'email',
+                        'party': party.id,
+                        'email': registration_data['email'],
+                    })
+                address_obj.write(party.addresses[0].id, 
+                    {'email': contact_mech_id})
+
+                # Finally create opportunity
+                opportunity = opportunity_obj.create({
+                    'party': party.id,
+                    'address': party.addresses[0].id,
+                    'company': request.nereid_website.company.id,
+                    'description': 'New Registration',
+                    'comment': registration_data['comments'],
+                    'employee': request.nereid_website.default_employee.id
+                    })
+
+                flash('''Your registration has been completed successfully
+                Our customer care will soon be in touch with you.
+                Your registration number is: %s''' % opportunity)
+                return redirect(request.args.get('next', '/'))
+        return render_template('registration.jinja', form=register_form)    
+        
+    def registration(self):
+        register_form = RegistrationForm(request.form)
+        register_form.country.choices = [
+            (c.id, c.name) for c in request.nereid_website.countries
+            ]
+
+        if request.method == 'POST' and register_form.validate():
+            address_obj = self.pool.get('party.address')
+            contact_mech_obj = self.pool.get('party.contact_mechanism')
+            party_obj = self.pool.get('party.party')
+
+            registration_data = register_form.data
+
+            # First search if an address with the email already exists
+            existing = contact_mech_obj.search([
+                ('value', '=', registration_data['email']),
+                ('type', '=', 'email')])
+            if existing:
+                flash('A registration already exists with this email. '
+                    'Please contact customer care')
+            else:
+                # Create Party
+                party_id = party_obj.create({
+                    'name': registration_data['company'],
+                    'addresses': [
+                        ('create', {
+                            'name': registration_data['name'],
+                            'street': registration_data['street'],
+                            'streetbis': registration_data['streetbis'],
+                            'zip': registration_data['zip'],
+                            'city': registration_data['city'],
+                            'country': registration_data['country'],
+                            'subdivision': registration_data['subdivision'],
+                            })],
+                    })
+                party = party_obj.browse(party_id)
+
+                # Create email as contact mech and assign as email
+                contact_mech_id = contact_mech_obj.create({
+                        'type': 'email',
+                        'party': party.id,
+                        'email': registration_data['email'],
+                    })
+                address_obj.write(party.addresses[0].id, 
+                    {'email': contact_mech_id})
+
+                flash('''Your registration has been completed successfully
+                Our customer care will soon be in touch with you.''')
+                return redirect(request.args.get('next', '/'))
+        return render_template('registration.jinja', form=register_form)
 
 WebSite()
 
@@ -199,7 +389,7 @@ class URLRule(ModelSQL, ModelView):
 
     rule = fields.Char('Rule', required=True, select=True,)
     endpoint = fields.Char('Endpoint', required=True, select=True,)
-    active= fields.Boolean('Active')
+    active = fields.Boolean('Active')
     defaults = fields.One2Many('nereid.url_rule_defaults', 'rule', 'Defaults')
     methods = fields.Selection(
         [
@@ -210,7 +400,7 @@ class URLRule(ModelSQL, ModelView):
         'Methods', required=True)
     only_for_genaration = fields.Boolean('Only for Generation')
     redirect_to = fields.Char('Redirect To')
-    sequence= fields.Integer('Sequence', required=True,)
+    sequence = fields.Integer('Sequence', required=True,)
     url_map = fields.Many2One('nereid.urlmap', 'URL Map')
 
     def __init__(self):
@@ -261,3 +451,14 @@ class URLRuleDefaults(ModelSQL, ModelView):
         select=True)
 
 URLRuleDefaults()
+
+
+class WebsiteCountry(ModelSQL):
+    "Website Country Relations"
+    _name = 'nereid.website-country.country'
+    _description = __doc__
+
+    website = fields.Many2One('nereid.website', 'Website')
+    country = fields.Many2One('country.country', 'Country')
+
+WebsiteCountry()

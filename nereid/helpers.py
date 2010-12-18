@@ -13,44 +13,18 @@ import posixpath
 import mimetypes
 from time import time
 from zlib import adler32
+import re
+import unicodedata
+from functools import wraps
 
-from flask.helpers import _assert_have_json, json
-from werkzeug import Headers, wrap_file
+from flask.helpers import _assert_have_json, json, jsonify
+from werkzeug import Headers, wrap_file, redirect
 from werkzeug.exceptions import NotFound
 
 from .globals import session, _request_ctx_stack, current_app, request
 
-
-def jsonify(*args, **kwargs):
-    """Creates a :class:`~nereid.wrappers.Response` with the JSON 
-    representation of the given arguments with an `application/json` mimetype.
-    The arguments
-    to this function are the same as to the :class:`dict` constructor.
-
-    Example usage::
-
-        @app.route('/_get_current_user')
-        def get_current_user():
-            return jsonify(username=g.user.username,
-                           email=g.user.email,
-                           id=g.user.id)
-
-    This will send a JSON response like this to the browser::
-
-        {
-            "username": "admin",
-            "email": "admin@localhost",
-            "id": 42
-        }
-
-    This requires Python 2.6 or an installed version of simplejson.  For
-    security reasons only objects are supported toplevel.  For more
-    information about this, have a look at :ref:`json-security`.
-    """
-    if __debug__:
-        _assert_have_json()
-    return current_app.response_class(json.dumps(dict(*args, **kwargs),
-        indent=None if request.is_xhr else 2), mimetype='application/json')
+_SLUGIFY_STRIP_RE = re.compile(r'[^\w\s-]')
+_SLUGIFY_HYPHENATE_RE = re.compile(r'[-\s]+')
 
 
 def url_for(endpoint, **values):
@@ -81,6 +55,15 @@ def url_for(endpoint, **values):
     ctx = _request_ctx_stack.top
     external = values.pop('_external', False)
     return ctx.url_adapter.build(endpoint, values, force_external=external)
+
+
+def login_required(function):
+    @wraps(function)
+    def decorated_function(*args, **kwargs):
+        if 'user' not in session:
+            return redirect(url_for('nereid.website.login', next=request.url))
+        return function(*args, **kwargs)
+    return decorated_function
 
 
 def flash(message, category='message'):
@@ -283,3 +266,42 @@ def send_file(filename_or_fp, mimetype=None, as_attachment=False,
             if rv.status_code == 304:
                 rv.headers.pop('x-sendfile', None)
     return rv
+
+
+def slugify(value):
+    """
+    Normalizes string, converts to lowercase, removes non-alpha characters,
+    and converts spaces to hyphens.
+
+    From Django's "django/template/defaultfilters.py".
+
+    Source : http://code.activestate.com/recipes/577257/ (r2)
+
+    """
+    if not isinstance(value, unicode):
+        value = unicode(value)
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
+    value = unicode(_SLUGIFY_STRIP_RE.sub('', value).strip().lower())
+    return _SLUGIFY_HYPHENATE_RE.sub('-', value)
+
+
+def _rst_to_html_filter(value):
+    """
+    Converts RST text to HTML
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
+    This uses docutils, if the library is missing, then the 
+    original text is returned
+
+    Loading to environment::
+             from jinja2 import Environment
+             env = Environment()
+             env.filters['rst'] = rst_to_html
+             template = env.from_string("Welcome {{name|rst}}")
+             template.render(name="**Sharoon**")
+    """
+    try:
+        from docutils import core
+        parts = core.publish_parts(source=value, writer_name='html')
+        return parts['body_pre_docinfo'] + parts['fragment']
+    except Exception, exc:
+        return value

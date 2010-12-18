@@ -7,11 +7,12 @@
     :copyright: (c) 2010 by Sharoon Thomas.
     :license: BSD, see LICENSE for more details
 '''
-import os
 
-from .helpers import send_from_directory
 from werkzeug.exceptions import HTTPException, MethodNotAllowed
 from werkzeug.routing import Rule, Map
+
+from .config import ConfigAttribute
+from .helpers import send_from_directory
 
 from .globals import _request_ctx_stack, request
 
@@ -26,6 +27,17 @@ class RoutingMixin(object):
     #: This is the default used for application and modules unless a
     #: different value is passed to the constructor.
     static_path = '/static'
+
+    #: The location from where static files will be served
+    static_fileroot = ConfigAttribute('STATIC_FILEROOT')
+
+    #: Enable this if you want to use the X-Sendfile feature.  Keep in
+    #: mind that the server has to support this.  This only affects files
+    #: sent with the :func:`send_file` method.
+    #:
+    #: This attribute can also be configured from the config with the
+    #: `USE_X_SENDFILE` configuration key.  Defaults to `False`.
+    use_x_sendfile = ConfigAttribute('USE_X_SENDFILE')
 
     def __init__(self, **config):
         #: A dictionary of all view functions registered.  The keys will
@@ -178,5 +190,19 @@ class RoutingMixin(object):
         """Function used internally to send static files from the static
         folder to the browser.
         """
-        return send_from_directory(
-            os.path.join(self.root_path, 'static'), filename)
+        return send_from_directory(self.static_fileroot, filename)
+
+    def add_urls_from_db(self):
+        """
+        Add the URLs from the backend database
+        """
+        with self.transaction:
+            website_obj = self.pool.get(self.website_model)
+            urls = website_obj.get_urls(self.site)
+
+            for url in urls:
+                view_func = None
+                if not url['build_only']:
+                    view_func = self.get_method(url['endpoint'])
+                self.add_url_rule(view_func=view_func, **url)
+

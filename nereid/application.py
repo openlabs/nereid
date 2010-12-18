@@ -21,13 +21,13 @@ from werkzeug.exceptions import InternalServerError
 from .wrappers import Request, Response
 from .config import ConfigAttribute, Config
 from .ctx import _RequestContext
-from .globals import request, _request_ctx_stack
+from .globals import request, _request_ctx_stack, transaction
 from .signals import request_started, request_finished, got_request_exception
 
 from .backend import BackendMixin
 from .templating import TemplateMixin
 from .routing import RoutingMixin
-from .session import SessionMixin, _NullSession
+from .session import SessionMixin, Session, FilesystemSessionStore, _NullSession
 
 
 # a lock used for logger initialization
@@ -74,7 +74,6 @@ class Nereid(BackendMixin, RoutingMixin, TemplateMixin, SessionMixin):
     testing = ConfigAttribute('TESTING')
     test_client_class = None
 
-
     #: The name of the logger to use.  By default the logger name is the
     #: package name passed to the constructor.
     logger_name = ConfigAttribute('LOGGER_NAME')
@@ -98,10 +97,14 @@ class Nereid(BackendMixin, RoutingMixin, TemplateMixin, SessionMixin):
         'DEBUG':                                False,
         'TESTING':                              False,
         'PROPAGATE_EXCEPTIONS':                 None,
-        'SECRET_KEY':                           None,
+
         'SESSION_COOKIE_NAME':                  'session',
+        'SESSION_STORE_CLASS':                  FilesystemSessionStore,
+        'SESSION_CLASS':                        Session,
         'PERMANENT_SESSION_LIFETIME':           timedelta(days=31),
+
         'USE_X_SENDFILE':                       False,
+        'STATIC_FILEROOT':                      '',
         'LOGGER_NAME':                          None,
         'SERVER_NAME':                          None,
         'MAX_CONTENT_LENGTH':                   None,
@@ -146,6 +149,9 @@ class Nereid(BackendMixin, RoutingMixin, TemplateMixin, SessionMixin):
         RoutingMixin.__init__(self, **config)
         TemplateMixin.__init__(self, **config)
         SessionMixin.__init__(self, **config)
+
+        self.add_ctx_processors_from_db()
+        self.add_urls_from_db()
 
     def run(self, host='127.0.0.1', port=5000, **options):
         """Runs the application on a local development server.  If the
@@ -233,6 +239,7 @@ class Nereid(BackendMixin, RoutingMixin, TemplateMixin, SessionMixin):
 
         """
         got_request_exception.send(self, exception=exception)
+        transaction.cursor.rollback()
         handler = self.error_handlers.get(500)
         if self.propagate_exceptions:
             raise
@@ -337,7 +344,8 @@ class Nereid(BackendMixin, RoutingMixin, TemplateMixin, SessionMixin):
                                exception context to start the response
         """
         with self.request_context(environ):
-            with self.transaction:
+            with self.transaction as transaction:
+                _request_ctx_stack.top.transaction = transaction
                 try:
                     request_started.send(self)
                     result = self.preprocess_request()
@@ -349,6 +357,7 @@ class Nereid(BackendMixin, RoutingMixin, TemplateMixin, SessionMixin):
                         self.handle_exception(exception))
                 try:
                     response = self.process_response(response)
+                    transaction.cursor.commit()
                 except Exception, exception:
                     response = self.make_response(
                         self.handle_exception(exception))
@@ -358,20 +367,6 @@ class Nereid(BackendMixin, RoutingMixin, TemplateMixin, SessionMixin):
     def __call__(self, environ, start_response):
         """Shortcut for :attr:`wsgi_app`."""
         return self.wsgi_app(environ, start_response)
-
-    def add_urls_from_database(self):
-        """
-        Add the URLs from the backend database
-        """
-        with self.transaction:
-            website_obj = self.pool.get(self.website_model)
-            urls = website_obj.get_urls(self.site)
-
-            for url in urls:
-                view_func = None
-                if not url['build_only']:
-                    view_func = self.get_method(url['endpoint'])
-                self.add_url_rule(view_func=view_func, **url)
 
     def test_client(self, use_cookies=True):
         """Creates a test client for this application.  For information

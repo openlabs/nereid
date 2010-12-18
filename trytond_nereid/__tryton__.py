@@ -18,6 +18,7 @@
     'xml': [
        # 'defaults.xml',
        'configuration.xml',
+       'static_file.xml'
     ],
     'translation': [
     ],

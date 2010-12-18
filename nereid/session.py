@@ -7,25 +7,40 @@
     :copyright: (c) 2010 by Sharoon Thomas.
     :license: BSD, see LICENSE for more details
 '''
+from werkzeug.contrib.sessions import Session as SessionBase, \
+    FilesystemSessionStore
+from flask.session import _NullSession
 
-from flask.session import Session, _NullSession
 
 from .config import ConfigAttribute
+
+class Session(SessionBase):
+    """Expands the session with support for switching between permanent
+    and non-permanent sessions.
+    """
+
+    def _get_permanent(self):
+        return self.get('_permanent', False)
+
+    def _set_permanent(self, value):
+        self['_permanent'] = bool(value)
+
+    permanent = property(_get_permanent, _set_permanent)
+    del _get_permanent, _set_permanent
 
 
 class SessionMixin(object):
     """Session Management Class"""
 
-    #: If a secret key is set, cryptographic components can use this to
-    #: sign cookies and other things.  Set this to a complex random value
-    #: when you want to use the secure cookie for instance.
-    #:
-    #: This attribute can also be configured from the config with the
-    #: `SECRET_KEY` configuration key.  Defaults to `None`.
-    secret_key = ConfigAttribute('SECRET_KEY')
+    #: The session class to use.  Defaults to
+    #: :class:`werkzeug.contrib.sessions.Session`.
+    session_class = ConfigAttribute('SESSION_CLASS')
+
+    #: The class to generate the session store
+    #: Defaults to :class:`werkzeug.contrib.sessions.FilesystemSessionStore`
+    session_store_class = ConfigAttribute('SESSION_STORE_CLASS')
 
     #: The secure cookie uses this for the name of the session cookie.
-    #:
     #: This attribute can also be configured from the config with the
     #: `SESSION_COOKIE_NAME` configuration key.  Defaults to ``'session'``
     session_cookie_name = ConfigAttribute('SESSION_COOKIE_NAME')
@@ -39,35 +54,34 @@ class SessionMixin(object):
     #: ``timedelta(days=31)``
     permanent_session_lifetime = ConfigAttribute('PERMANENT_SESSION_LIFETIME')
 
+
     def __init__(self, **config):
-        pass
+        self.session_store = self.session_store_class(
+            session_class=self.session_class)
 
     def open_session(self, request):
-        """Creates or opens a new session.  Default implementation stores all
-        session data in a signed cookie.  This requires that the
-        :attr:`secret_key` is set.
+        """Creates or opens a new session.
 
         :param request: an instance of :attr:`request_class`.
         """
-        key = self.secret_key
-        if key is not None:
-            return Session.load_cookie(
-                request, self.session_cookie_name, secret_key=key)
+        sid = request.cookies.get(self.session_cookie_name, None)
+        if sid is None:
+            return self.session_store.new()
+        else:
+            return self.session_store.get(sid)
 
     def save_session(self, session, response):
         """Saves the session if it needs updates.  For the default
         implementation, check :meth:`open_session`.
 
-        :param session: the session to be saved (a
-                        :class:`~werkzeug.contrib.securecookie.SecureCookie`
-                        object)
+        :param session: the session to be saved
         :param response: an instance of :attr:`response_class`
         """
+        self.session_store.save(session)
         expires = domain = None
         if session.permanent:
             expires = datetime.utcnow() + self.permanent_session_lifetime
         if self.config['SERVER_NAME'] is not None:
             domain = '.' + self.config['SERVER_NAME']
-        session.save_cookie(response, self.session_cookie_name,
-                            expires=expires, httponly=True, domain=domain)
-
+        response.set_cookie(self.session_cookie_name, session.sid, 
+            expires=expires, httponly=True, domain=domain)

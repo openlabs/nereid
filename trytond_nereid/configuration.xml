@@ -31,14 +31,18 @@
                 <data>
                     <xpath expr="/form/field[@name=&quot;subdivision&quot;]" 
                                                         position="after">
+                        <newline/>
                         <label name="email"/>
                         <field name="email"/>
                         <label name="phone"/>
                         <field name="phone"/>
-                        <label name="username"/>
-                        <field name="username"/>
-                        <label name="password"/>
-                        <field name="password"/>
+                        <newline/>
+                        <button string="Create Web Account" 
+                          name="create_web_account" type="object"
+                          confirm="Account has been created" colspan="3"/>
+                        <button string="Reset Account"
+                          name="reset_web_account" type="object"
+                          confirm="Account has been reset" colspan="3"/>
                     </xpath>
                 </data>
                 ]]>
@@ -64,6 +68,11 @@
                     <field name="active" />
                     <label name="company"/>
                     <field name="company"/>
+                    <notebook colspan="4">
+                      <page id="Countries" string="Countries">
+                        <field name="countries"/>
+                      </page>
+                    </notebook>
                 </form>
                 ]]>
             </field>

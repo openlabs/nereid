@@ -16,7 +16,7 @@ from flask.helpers import _tojson_filter
 
 from .globals import _request_ctx_stack
 from .signals import template_rendered
-from .helpers import url_for, get_flashed_messages
+from .helpers import url_for, get_flashed_messages, _rst_to_html_filter
 
 
 def _default_template_ctx_processor():
@@ -72,7 +72,6 @@ class TrytonTemplateLoader(BaseLoader):
 
         return result
 
-
 def _render(template, context, app):
     """Renders the template and fires the signal"""
     ret_val = template.render(context)
@@ -123,8 +122,7 @@ class TemplateMixin(object):
         #: to populate the template context.  The key of the dictionary is the
         #: name of the module this function is active for, `None` for all
         #: requests.  Each returns a dictionary that the template context is
-        #: updated with.  To register a function here, use the
-        #: :meth:`context_processor` decorator.
+        #: updated with.  
         self.template_context_processors = {
             None: [_default_template_ctx_processor]
         }
@@ -154,6 +152,7 @@ class TemplateMixin(object):
             get_flashed_messages=get_flashed_messages
         )
         self.jinja_env.filters['tojson'] = _tojson_filter
+        self.jinja_env.filters['rst'] = _rst_to_html_filter
 
     def select_jinja_autoescape(self, filename):
         """Returns `True` if autoescaping should be active for the given
@@ -162,6 +161,17 @@ class TemplateMixin(object):
         if filename is None:
             return False
         return filename.endswith(('.html', '.htm', '.xml', '.xhtml'))
+
+    def add_ctx_processors_from_db(self):
+        """Adds template context processors registers with the model
+        nereid.template.context_processor"""
+        with self.transaction:
+            ctx_processor_obj = self.pool.get(
+                'nereid.template.context_processor')
+            new_context_proc = ctx_processor_obj.get_processors()
+            new_context_proc.setdefault(None, []).append(
+                _default_template_ctx_processor)
+            self.template_context_processors.update(new_context_proc)
 
     def update_template_context(self, context):
         """Update the template context with some commonly used variables.

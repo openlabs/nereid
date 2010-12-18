@@ -35,6 +35,7 @@ class _RequestContext(object):
             self.session = _NullSession()
         self.g = _RequestGlobals()
         self.flashes = None
+        self.transaction = None
 
         try:
             url_rule, self.request.view_args = \
