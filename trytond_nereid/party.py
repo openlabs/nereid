@@ -102,8 +102,10 @@ class Address(ModelSQL, ModelView):
         "Changes the password"
         form = ChangePasswordForm(request.form)
         if request.method == 'POST' and form.validate():
-            self.write(request.nereid_user.id, {'password': 'password'})
+            self.write(request.nereid_user.id, 
+                {'password': form.password.data})
             flash('Your password has been successfully changed!')
+            return redirect(url_for('nereid.website.login'))
         return render_template('change-password.jinja')
 
     def activate(self, address_id, activation_code):

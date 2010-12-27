@@ -163,11 +163,15 @@ Try resetting the account::
     >>> address.reload()
     >>> address.activation_code != False
     True
+    >>> old_password = address.password
     >>> with app.test_client() as client:
     ...     client.get(
     ...         '/activate-account/%s/%s' % (address.id, 
     ...             address.activation_code))
+    ...     client.post('/change-password', 
+    ...         data={'password': 'new', 'confirm': 'new'})
+    <Response streamed [302 FOUND]>
     <Response streamed [302 FOUND]>
     >>> address.reload()
-    >>> address.activation_code
-
+    >>> old_password != address.password
+    True
