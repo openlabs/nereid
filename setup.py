@@ -49,6 +49,7 @@ setup(
     platforms='any',
     install_requires=[
         'flask',
+        'wtforms',
     ],
     entry_points="""
     [trytond.modules]

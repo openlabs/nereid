@@ -91,7 +91,7 @@ class BackendMixin(object):
             party_ids = Party.search([ ])
             print party_ids
         """
-        return TransactionManager(self.database_name, 0, self.context)
+        return TransactionManager(self.database_name, 1, self.context)
 
     def get_method(self, model_method):
         """Get the object from pool and fetch the method from it

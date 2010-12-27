@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
+this repository contains the full copyright notices and license terms. -->
+<tryton>
+  <data>
+
+    <record id="password_emails" model="electronic_mail.mailbox">
+      <field name="name">Password Mails</field>
+      <field name="user" ref="res.user_admin"/>
+    </record>
+
+    <record id="password_send_email" model="electronic_mail.template">
+      <field name="mailbox" ref="password_emails"/>
+      <field name="from_">Account Services</field>
+      <field name="to">${record.email.value}</field>
+      <field name="subject">Account Activation</field>
+      <field name="model" search="[('model', '=', 'party.address')]"/>
+      <field name="plain">To activate your email account click the link below:
+      ${ url_for('party.address.activate', address_id=record.id, activation_code=record.activation_code) }
+      </field>
+      <field name="html">To activate your email account click the link below:
+      ${ url_for('party.address.activate', address_id=record.id, activation_code=record.activation_code, external=True) }
+      </field>
+    </record>
+
+    <record id="trigger_password_change" model='ir.trigger'>
+      <field name="name">Activation Email</field>
+      <field name="model" search="[('model', '=', 'party.address')]"/>
+      <field name="on_write" eval="True"/>
+      <field name="on_create" eval="True"/>
+      <field name="condition">self.activation_code</field>
+      <field name="action_model" search="[('model', '=', 'electronic_mail.template')]"/>
+      <field name="action_function">mail_from_trigger</field>
+      <field name="email_template" ref="password_send_email"/>
+    </record>
+
+  </data>
+</tryton>

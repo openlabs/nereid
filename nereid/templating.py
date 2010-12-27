@@ -9,6 +9,7 @@
     :license: BSD, see LICENSE for more details
 '''
 from itertools import chain
+from decimal import Decimal
 
 from werkzeug import ImmutableDict
 from jinja2 import Environment, BaseLoader, TemplateNotFound
@@ -28,7 +29,8 @@ def _default_template_ctx_processor():
         config=reqctx.app.config,
         request=reqctx.request,
         session=reqctx.session,
-        g=reqctx.g
+        g=reqctx.g,
+        Decimal=Decimal,
     )
 
 

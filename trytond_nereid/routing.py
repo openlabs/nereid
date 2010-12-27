@@ -13,6 +13,7 @@ from ast import literal_eval
 from werkzeug import abort, redirect
 from nereid import jsonify, flash, render_template
 from nereid.globals import session, request
+from nereid.helpers import login_required
 from trytond.model import ModelView, ModelSQL, fields
 from wtforms import Form, TextField, PasswordField, validators
 
@@ -336,6 +337,21 @@ the `home` method to replace this function.
                 Our customer care will soon be in touch with you.''')
                 return redirect(request.args.get('next', '/'))
         return render_template('registration.jinja', form=register_form)
+
+    def account_context(self):
+        """This fills the account context for the template
+        rendering my account. Additional modules might want to fill extra 
+        data into the context
+        """
+        return dict(
+            user = request.nereid_user,
+            party = request.nereid_user.party,
+            )
+
+    @login_required
+    def account(self):
+        context = self.account_context()
+        return render_template('account.jinja', **context)
 
 WebSite()
 
