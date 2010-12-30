@@ -90,7 +90,6 @@ class Nereid(BackendMixin, RoutingMixin, TemplateMixin, SessionMixin):
 
     root_path = ConfigAttribute('ROOT_PATH')
     site = ConfigAttribute('SITE')
-    website_model = ConfigAttribute('WEBSITE_MODEL')
 
     #: Default configuration parameters.
     default_config = ImmutableDict({

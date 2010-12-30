@@ -41,6 +41,8 @@ class TrytonTemplateLoader(BaseLoader):
 
     :param app: the application instance
     """
+    model = 'nereid.template'
+
     def __init__(self, app):
         self.app = app
 
@@ -58,7 +60,7 @@ class TrytonTemplateLoader(BaseLoader):
         filename - None (as not loaded from filesystem)
         uptodate - A function to check if template has changed
         """
-        template_obj = self.app.pool.get('nereid.template')
+        template_obj = self.app.pool.get(self.model)
         source = template_obj.get_template_source(template)
         if source is None:
             raise TemplateNotFound(template)
@@ -67,12 +69,13 @@ class TrytonTemplateLoader(BaseLoader):
     def list_templates(self):
         result = self.app.jinja_loader.list_templates()
 
-        template_obj = self.app.pool.get('nereid.template')
+        template_obj = self.app.pool.get(self.model)
         template_ids = template_obj.search([])
         for template in template_obj.browse(template_ids):
             result.append(template.name)
 
         return result
+
 
 def _render(template, context, app):
     """Renders the template and fires the signal"""
@@ -118,6 +121,7 @@ class TemplateMixin(object):
     jinja_options = ImmutableDict(
         extensions=['jinja2.ext.autoescape', 'jinja2.ext.with_']
     )
+    template_loader_class = TrytonTemplateLoader
 
     def __init__(self, **config):
         #: A dictionary with list of functions that are called without argument
@@ -134,7 +138,6 @@ class TemplateMixin(object):
         self.jinja_env = self.create_jinja_environment()
         self.init_jinja_globals()
 
-
     def create_jinja_environment(self):
         """Creates the Jinja2 environment based on :attr:`jinja_options`
         and :meth:`select_jinja_autoescape`.
@@ -142,7 +145,7 @@ class TemplateMixin(object):
         options = dict(self.jinja_options)
         if 'autoescape' not in options:
             options['autoescape'] = self.select_jinja_autoescape
-        return Environment(loader=TrytonTemplateLoader(self), **options)
+        return Environment(loader=self.template_loader_class(self), **options)
 
     def init_jinja_globals(self):
         """Called directly after the environment was created to inject

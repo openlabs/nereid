@@ -39,6 +39,10 @@ class RoutingMixin(object):
     #: `USE_X_SENDFILE` configuration key.  Defaults to `False`.
     use_x_sendfile = ConfigAttribute('USE_X_SENDFILE')
 
+    #: The _name of the model in the backend which holds the Site 
+    #: information.
+    website_model = ConfigAttribute('WEBSITE_MODEL')
+
     def __init__(self, **config):
         #: A dictionary of all view functions registered.  The keys will
         #: be model.function names which are also used to generate URLs and
