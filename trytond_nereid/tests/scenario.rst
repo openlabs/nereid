@@ -10,9 +10,11 @@ Imports::
 
     >>> from decimal import Decimal
     >>> import datetime
+    >>> import socket
     >>> from dateutil.relativedelta import relativedelta
     >>> from proteus import config, Model, Wizard
     >>> from nereid import Nereid
+    >>> from trytond.config import CONFIG
 
 Create database::
 
@@ -151,6 +153,12 @@ Create a new address::
     True
     >>> address_2.street == data['street']
     True
+
+Configure Email account::
+
+    >>> CONFIG['smtp_server'] = 'smtp.dummysmtp.com'
+    >>> CONFIG['smtp_user'] = 'openlabs'
+    >>> CONFIG['smtp_password'] = 'ab7e874818504e878f93f9bf838a8ef4'
 
 Try resetting the account::
 
