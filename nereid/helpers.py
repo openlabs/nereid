@@ -277,9 +277,15 @@ def slugify(value):
 
     Source : http://code.activestate.com/recipes/577257/ (r2)
 
+    >>> slugify('Sharoon Thomas')
+    u'sharoon-thomas'
+    >>> slugify('Sharoon Thomås')
+    u'sharoon-thoms'
+    >>> slugify(u'Sharoon Thomås')
+    u'sharoon-thomas'
     """
     if not isinstance(value, unicode):
-        value = unicode(value)
+        value = unicode(value, errors='ignore')
     value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
     value = unicode(_SLUGIFY_STRIP_RE.sub('', value).strip().lower())
     return _SLUGIFY_HYPHENATE_RE.sub('-', value)
