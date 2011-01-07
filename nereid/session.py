@@ -54,10 +54,12 @@ class SessionMixin(object):
     #: ``timedelta(days=31)``
     permanent_session_lifetime = ConfigAttribute('PERMANENT_SESSION_LIFETIME')
 
+    #: Path where the session files can be stored
+    session_store_path = ConfigAttribute('SESSION_STORE_PATH')
 
     def __init__(self, **config):
         self.session_store = self.session_store_class(
-            session_class=self.session_class)
+            self.session_store_path, session_class=self.session_class)
 
     def open_session(self, request):
         """Creates or opens a new session.

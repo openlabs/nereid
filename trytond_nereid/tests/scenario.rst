@@ -85,6 +85,9 @@ Setup URLs::
     >>> url_map.rules.append(URLRule(
     ...     rule='/change-password', 
     ...     endpoint='party.address.change_password', methods='("GET", "POST")'))
+    >>> url_map.rules.append(URLRule(
+    ...     rule='/', endpoint='nereid.website.home', 
+    ...     sequence=10, methods='("GET",)'))
     >>> url_map.save()
 
 Create Templates::

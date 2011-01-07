@@ -11,7 +11,7 @@
 from ast import literal_eval
 
 from werkzeug import abort, redirect
-from nereid import jsonify, flash, render_template
+from nereid import jsonify, flash, render_template, url_for
 from nereid.globals import session, request
 from nereid.helpers import login_required
 from trytond.model import ModelView, ModelSQL, fields
@@ -286,58 +286,8 @@ the `home` method to replace this function.
                 flash('''Your registration has been completed successfully
                 Our customer care will soon be in touch with you.
                 Your registration number is: %s''' % opportunity)
-                return redirect(request.args.get('next', '/'))
-        return render_template('registration.jinja', form=register_form)    
-        
-    def registration(self):
-        register_form = RegistrationForm(request.form)
-        register_form.country.choices = [
-            (c.id, c.name) for c in request.nereid_website.countries
-            ]
-
-        if request.method == 'POST' and register_form.validate():
-            address_obj = self.pool.get('party.address')
-            contact_mech_obj = self.pool.get('party.contact_mechanism')
-            party_obj = self.pool.get('party.party')
-
-            registration_data = register_form.data
-
-            # First search if an address with the email already exists
-            existing = contact_mech_obj.search([
-                ('value', '=', registration_data['email']),
-                ('type', '=', 'email')])
-            if existing:
-                flash('A registration already exists with this email. '
-                    'Please contact customer care')
-            else:
-                # Create Party
-                party_id = party_obj.create({
-                    'name': registration_data['company'],
-                    'addresses': [
-                        ('create', {
-                            'name': registration_data['name'],
-                            'street': registration_data['street'],
-                            'streetbis': registration_data['streetbis'],
-                            'zip': registration_data['zip'],
-                            'city': registration_data['city'],
-                            'country': registration_data['country'],
-                            'subdivision': registration_data['subdivision'],
-                            })],
-                    })
-                party = party_obj.browse(party_id)
-
-                # Create email as contact mech and assign as email
-                contact_mech_id = contact_mech_obj.create({
-                        'type': 'email',
-                        'party': party.id,
-                        'email': registration_data['email'],
-                    })
-                address_obj.write(party.addresses[0].id, 
-                    {'email': contact_mech_id})
-
-                flash('''Your registration has been completed successfully
-                Our customer care will soon be in touch with you.''')
-                return redirect(request.args.get('next', '/'))
+                return redirect(request.args.get('next', 
+                    url_for('nereid.website.home')))
         return render_template('registration.jinja', form=register_form)
 
     def account_context(self):

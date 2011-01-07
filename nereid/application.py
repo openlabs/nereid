@@ -101,6 +101,7 @@ class Nereid(BackendMixin, RoutingMixin, TemplateMixin, SessionMixin):
         'SESSION_STORE_CLASS':                  FilesystemSessionStore,
         'SESSION_CLASS':                        Session,
         'PERMANENT_SESSION_LIFETIME':           timedelta(days=31),
+        'SESSION_STORE_PATH':                   '/tmp',
 
         'USE_X_SENDFILE':                       False,
         'STATIC_FILEROOT':                      '',
