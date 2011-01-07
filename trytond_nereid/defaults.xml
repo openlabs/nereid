@@ -14,6 +14,7 @@ this repository contains the full copyright notices and license terms. -->
       <field name="from_">Account Services</field>
       <field name="to">${record.email.value}</field>
       <field name="subject">Account Activation</field>
+      <field name="engine">genshi</field>
       <field name="model" search="[('model', '=', 'party.address')]"/>
       <field name="plain">To activate your email account click the link below:
       ${ url_for('party.address.activate', address_id=record.id, activation_code=record.activation_code, _external=True) }
