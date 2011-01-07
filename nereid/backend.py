@@ -42,6 +42,8 @@ class BackendMixin(object):
     #: Configuration file for Tryton
     tryton_configfile = ConfigAttribute('TRYTON_CONFIG')
     database_name = ConfigAttribute('DATABASE_NAME')
+    tryton_user = ConfigAttribute('TRYTON_USER')
+    tryton_context = ConfigAttribute('TRYTON_CONTEXT')
 
     def __init__(self, *args, **kwargs):
         CONFIG.configfile = self.tryton_configfile
@@ -54,9 +56,14 @@ class BackendMixin(object):
         register_classes()
         from trytond.pool import Pool
 
+        # Load pool
         self._database = Database(self.database_name).connect()
         self._pool = Pool(self.database_name)
         self._pool.init()
+
+        # Load context
+        user_obj = self._pool.get('res.user')
+        self.tryton_context.update(user_obj.get_preferences())
 
     @property
     def pool(self):
@@ -73,14 +80,6 @@ class BackendMixin(object):
         return self._database
 
     @property
-    def context(self):
-        """Must return the context. This must ideally return
-        the context relevant to the currently logged in user.
-        """
-        # TODO
-        return None
-
-    @property
     def transaction(self):
         """Allows the use of the transaction as a context manager. 
 
@@ -91,7 +90,8 @@ class BackendMixin(object):
             party_ids = Party.search([ ])
             print party_ids
         """
-        return TransactionManager(self.database_name, 1, self.context)
+        return TransactionManager(
+            self.database_name, self.tryton_user, self.tryton_context)
 
     def get_method(self, model_method):
         """Get the object from pool and fetch the method from it

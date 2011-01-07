@@ -42,7 +42,7 @@ class ChangePasswordForm(Form):
         validators.Required(),
         validators.EqualTo('confirm', message='Passwords must match')])
     confirm = PasswordField('Repeat Password')
-    
+
 
 # pylint: disable-msg=E1101
 class Address(ModelSQL, ModelView):
@@ -104,9 +104,12 @@ class Address(ModelSQL, ModelView):
         if request.method == 'POST' and form.validate():
             self.write(request.nereid_user.id, 
                 {'password': form.password.data})
-            flash('Your password has been successfully changed!')
+            flash('Your password has been successfully changed! '
+                'Please login again')
+            session.pop('user')
             return redirect(url_for('nereid.website.login'))
-        return render_template('change-password.jinja')
+        return render_template('change-password.jinja', 
+            change_password_form=form)
 
     def activate(self, address_id, activation_code):
         "A web request handler for activation"
@@ -142,7 +145,7 @@ class Address(ModelSQL, ModelView):
 
     def reset_account(self):
         """Reset the password for the user
-        
+
         This is a public interface
         """
         contact_mech_obj = self.pool.get('party.contact_mechanism')
@@ -258,7 +261,7 @@ class Address(ModelSQL, ModelView):
                     'party': request.nereid_user.party.id,
                     })
             return redirect(url_for('party.address.view_address'))
-        elif address:
+        elif request.method == 'GET' and address:
             # Its an edit of existing address, prefill data
             record = self.browse(address)
             form = AddressForm(
@@ -293,4 +296,3 @@ class EmailTemplate(ModelSQL, ModelView):
         return context
 
 EmailTemplate()
-

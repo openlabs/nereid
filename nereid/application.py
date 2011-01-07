@@ -110,6 +110,8 @@ class Nereid(BackendMixin, RoutingMixin, TemplateMixin, SessionMixin):
         'ROOT_PATH':                            os.path.curdir,
         'SITE':                                 None,
         'WEBSITE_MODEL':                        'nereid.website',
+        'TRYTON_USER':                          1,
+        'TRYTON_CONTEXT':                       {}
     })
 
     def __init__(self, **config):
