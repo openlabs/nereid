@@ -216,14 +216,16 @@ the `home` method to replace this function.
             else:
                 flash("You are now logged in. Welcome %s" % result.name)
                 session['user'] = result.id
-                return redirect(request.args.get('next', '/'))
+                return redirect(request.args.get('next', 
+                    url_for('nereid.website.home')))
         return render_template('login.jinja', login_form=login_form)
 
     def logout(self):
         "Log the user out"
         session.pop('user', None)
         flash('You have been logged out successfully. Thanks for visiting us')
-        return redirect(request.args.get('next', '/'))
+        return redirect(request.args.get('next', 
+            url_for('nereid.website.home')))
 
     def registration(self):
         register_form = RegistrationForm(request.form)
