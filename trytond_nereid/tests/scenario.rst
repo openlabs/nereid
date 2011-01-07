@@ -157,8 +157,8 @@ Create a new address::
 Configure Email account::
 
     >>> CONFIG['smtp_server'] = 'smtp.dummysmtp.com'
-    >>> CONFIG['smtp_user'] = 'openlabs'
-    >>> CONFIG['smtp_password'] = 'ab7e874818504e878f93f9bf838a8ef4'
+    >>> CONFIG['smtp_user'] = 'sharoonthomas'
+    >>> CONFIG['smtp_password'] = '981dcdfb8f794b3fa84bd294b7bfaa08'
 
 Try resetting the account::
 
