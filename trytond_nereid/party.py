@@ -124,7 +124,6 @@ class Address(ModelSQL, ModelView):
 
     def create_act_code(self, address):
         """Create activation code
-        
         :param address: ID of the addresss
         """
         act_code = ''.join(
@@ -134,19 +133,26 @@ class Address(ModelSQL, ModelView):
             return self.create_act_code(address)
         return self.write(address, {'activation_code': act_code})
 
-    def create_web_account(self, ids):
+    def create_web_account(self, ids, return_password=False):
         """Create a new web account for given address
+
+        This is a Tryton only interface
+
+        :return: The set password
         """
-        for address in self.browse(ids):
-            if not address.email:
-                self.raise_user_error('no_email')
-            self.create_act_code(address.id)
-        return True
+        address = self.browse(ids[0])
+        if not address.email:
+            self.raise_user_error('no_email')
+
+        password = ''.join(
+            random.sample(string.letters + string.digits, 16))
+        self.write(address.id, {'password': password})
+        return return_password and password or True
 
     def reset_account(self):
         """Reset the password for the user
 
-        This is a public interface
+        This is a web interface
         """
         contact_mech_obj = self.pool.get('party.contact_mechanism')
 

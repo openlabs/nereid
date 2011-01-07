@@ -37,12 +37,10 @@
                         <label name="phone"/>
                         <field name="phone"/>
                         <newline/>
-                        <button string="Create Web Account" 
+                        <button string="Create/Reset Web Account" 
                           name="create_web_account" type="object"
-                          confirm="Account has been created" colspan="3"/>
-                        <button string="Reset Account"
-                          name="reset_web_account" type="object"
-                          confirm="Account has been reset" colspan="3"/>
+                          confirm="Do you want to create a web login for this contact?\nThis will send an email with password to user." 
+                          colspan="3"/>
                     </xpath>
                 </data>
                 ]]>
