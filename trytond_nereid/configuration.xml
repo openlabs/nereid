@@ -39,7 +39,8 @@
                         <newline/>
                         <button string="Create/Reset Web Account" 
                           name="create_web_account" type="object"
-                          confirm="Do you want to create a web login for this contact?\nThis will send an email with password to user." 
+                          confirm="Do you want to create a web login for this contact?
+This will send an email with password to user." 
                           colspan="3"/>
                     </xpath>
                 </data>
