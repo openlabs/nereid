@@ -10,7 +10,6 @@
 from math import ceil
 
 from werkzeug import abort
-from trytond.config import CONFIG
 
 from .config import ConfigAttribute
 
@@ -46,6 +45,7 @@ class BackendMixin(object):
     tryton_context = ConfigAttribute('TRYTON_CONTEXT')
 
     def __init__(self, *args, **kwargs):
+        from trytond.config import CONFIG
         CONFIG.configfile = self.tryton_configfile
         CONFIG.load()
 
