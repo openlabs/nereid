@@ -25,21 +25,9 @@ class Template(ModelSQL, ModelView):
     _name = "nereid.template"
     _description = "Nereid Template"
     
-    name = fields.Char(
-        'Name',
-        required=True,
-        select=True,
-    )
-    source = fields.Text(
-        'Source',
-        required=True,
-        select=True,
-    )
-    language = fields.Many2One(
-        'ir.lang',
-        'Language',
-        required=True
-    )
+    name = fields.Char('Name', required=True, select=True)
+    source = fields.Text('Source', required=True, select=True)
+    language = fields.Many2One('ir.lang', 'Language', required=True)
 
     def __init__(self):
         super(Template, self).__init__()
@@ -56,11 +44,9 @@ class Template(ModelSQL, ModelView):
         """
         lang_obj = self.pool.get('ir.lang')
         lang_id, = lang_obj.search(
-            [('code', '=', Transaction().context.get('language', 'en_US'))]
-            )
+            [('code', '=', Transaction().context.get('language', 'en_US'))])
         template_ids = self.search(
-            [('name', '=', name), ('language', '=', lang_id)]
-            )
+            [('name', '=', name), ('language', '=', lang_id)])
         if not template_ids:
             return None
         template = self.browse(template_ids[0])
