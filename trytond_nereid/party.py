@@ -53,7 +53,7 @@ class Address(ModelSQL, ModelView):
     _name = 'party.address'
 
     #: The email to which all application related emails like
-    #: registration, password reet etc is managed
+    #: registration, password reset etc is managed
     email = fields.Many2One('party.contact_mechanism', 'E-Mail',
         domain=[('party', '=', Eval('party')), ('type', '=', 'email')], 
         depends=['party'])

@@ -15,7 +15,8 @@ from nereid import jsonify, flash, render_template, url_for
 from nereid.globals import session, request
 from nereid.helpers import login_required
 from trytond.model import ModelView, ModelSQL, fields
-from wtforms import Form, TextField, PasswordField, validators
+from wtforms import Form, TextField, PasswordField, SelectField, \
+    IntegerField, validators
 
 
 # pylint: disable-msg=E1101
@@ -91,6 +92,20 @@ class LoginForm(Form):
     "Default Login Form"
     email = TextField('e-mail', [validators.Required(), validators.Email()])
     password = PasswordField('Password', [validators.Required()])
+
+
+class RegistrationForm(Form):
+    "Simple Registration form"
+
+    name = TextField('Name', [validators.Required(),])
+    company = TextField('Company', [validators.Required(),])
+    street = TextField('Street', [validators.Required(),])
+    streetbis = TextField('Street (Bis)')
+    zip = TextField('Post Code', [validators.Required(),])
+    city = TextField('City', [validators.Required(),])
+    country = SelectField('Country', [validators.Required(),], coerce=int)
+    subdivision = IntegerField('State/Country', [validators.Required()])
+    email = TextField('e-mail', [validators.Required(), validators.Email()])
 
 
 class WebSite(ModelSQL, ModelView):
@@ -236,7 +251,6 @@ the `home` method to replace this function.
             address_obj = self.pool.get('party.address')
             contact_mech_obj = self.pool.get('party.contact_mechanism')
             party_obj = self.pool.get('party.party')
-            opportunity_obj = self.pool.get('sale.opportunity')
 
             registration_data = register_form.data
 
@@ -272,20 +286,9 @@ the `home` method to replace this function.
                     })
                 address_obj.write(party.addresses[0].id, 
                     {'email': contact_mech_id})
+                address_obj.create_act_code(party.addresses[0].id)
 
-                # Finally create opportunity
-                opportunity = opportunity_obj.create({
-                    'party': party.id,
-                    'address': party.addresses[0].id,
-                    'company': request.nereid_website.company.id,
-                    'description': 'New Registration',
-                    'comment': registration_data['comments'],
-                    'employee': request.nereid_website.default_employee.id
-                    })
-
-                flash('''Your registration has been completed successfully
-                Our customer care will soon be in touch with you.
-                Your registration number is: %s''' % opportunity)
+                flash('Your registration has been completed successfully')
                 return redirect(request.args.get('next', 
                     url_for('nereid.website.home')))
         return render_template('registration.jinja', form=register_form)

@@ -81,7 +81,6 @@ class NereidStaticFolder(ModelSQL, ModelView):
             'folder_cannot_change': "Folder name cannot be changed"
         })
 
-
     def get_path(self, ids, name):
         """Return the path of the folder
         """
