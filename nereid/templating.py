@@ -122,6 +122,7 @@ class TemplateMixin(object):
         extensions=['jinja2.ext.autoescape', 'jinja2.ext.with_']
     )
     template_loader_class = TrytonTemplateLoader
+    context_proc_model = 'nereid.template.context_processor'
 
     def __init__(self, **config):
         #: A dictionary with list of functions that are called without argument
@@ -171,8 +172,7 @@ class TemplateMixin(object):
         """Adds template context processors registers with the model
         nereid.template.context_processor"""
         with self.transaction:
-            ctx_processor_obj = self.pool.get(
-                'nereid.template.context_processor')
+            ctx_processor_obj = self.pool.get(self.context_proc_model)
             new_context_proc = ctx_processor_obj.get_processors()
             new_context_proc.setdefault(None, []).append(
                 _default_template_ctx_processor)
