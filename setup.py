@@ -3,7 +3,7 @@
 
     Nereid - Tryton as a web framework
 
-    :copyright: (c) 2010 by Sharoon Thomas.
+    :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
     :license: BSD, see LICENSE for more details
 '''
 from setuptools import Command, setup

@@ -4,7 +4,7 @@
 
     Helper utilities
 
-    :copyright: (c) 2010 by Sharoon Thomas.
+    :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
     :copyright: (c) 2010 by Armin Ronacher.
     :license: BSD, see LICENSE for more details
 '''

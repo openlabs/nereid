@@ -2,13 +2,13 @@
 '''
     nereid
 
-A microframework based on Flask, Werkzeug and powered by the 
-Tryton ERP.
+    A microframework based on Flask, Werkzeug and powered by the 
+    Tryton ERP.
 
-It replicates the Flask API for most of the system
+    It replicates the Flask API for most of the system
 
-:copyright: (c) 2010 by Sharoon Thomas.
-:license: BSD, see LICENSE for more details
+    :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
+    :license: BSD, see LICENSE for more details
 '''
 
 # utilities we import from Werkzeug and Jinja2 that are unused

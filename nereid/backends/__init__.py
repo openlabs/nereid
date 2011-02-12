@@ -4,7 +4,7 @@
 
     Backend collection for nereid
 
-    :copyright: (c) 2010 by Sharoon Thomas.
+    :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
     :license: GPLv3, see LICENSE for more details
 '''
 
