@@ -288,6 +288,26 @@ class Nereid(BackendMixin, RoutingMixin, TemplateMixin, SessionMixin):
         """
         return _RequestContext(self, environ)
 
+    def test_request_context(self, *args, **kwargs):
+        """Creates a WSGI environment from the given values (see
+        :func:`werkzeug.create_environ` for more information, this
+        function accepts the same arguments).
+        """
+        from werkzeug import create_environ
+        environ_overrides = kwargs.setdefault('environ_overrides', {})
+        if self.config.get('SERVER_NAME'):
+            server_name = self.config.get('SERVER_NAME')
+            if ':' not in server_name:
+                http_host, http_port = server_name, '80'
+            else:
+                http_host, http_port = server_name.split(':', 1)
+
+            environ_overrides.setdefault('SERVER_NAME', server_name)
+            environ_overrides.setdefault('HTTP_HOST', server_name)
+            environ_overrides.setdefault('SERVER_PORT', http_port)
+        return self.request_context(create_environ(*args, **kwargs))
+
+
     def preprocess_request(self):
         """Called before the actual request dispatching and will
         call every as :meth:`before_request` decorated function.
