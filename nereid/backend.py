@@ -7,8 +7,7 @@
     :copyright: (c) 2010 by Sharoon Thomas.
     :license: BSD, see LICENSE for more details
 '''
-from math import ceil
-
+from otcltools.general.pagination import Pagination as BasePagination
 from werkzeug import abort
 
 from .config import ConfigAttribute
@@ -105,7 +104,7 @@ class BackendMixin(object):
         return getattr(self.pool.get(model), method)
 
 
-class Pagination(object):
+class Pagination(BasePagination):
     """
     General purpose paginator for doing pagination
     """
@@ -119,9 +118,8 @@ class Pagination(object):
         """
         self.obj = obj
         self.domain = domain
-        self.per_page = per_page
-        self.page = page
         self.order = order
+        super(Pagination, self).__init__(page, per_page)
 
     @property
     def count(self):
@@ -142,64 +140,14 @@ class Pagination(object):
             limit=self.per_page, order=self.order)
         return self.obj.browse(ids)
 
-    def iter_pages(self, left_edge=2, left_current=2,
-                   right_current=5, right_edge=2):
-        """Iterates over the page numbers in the pagination.  The four
-        parameters control the thresholds how many numbers should be produced
-        from the sides.  Skipped page numbers are represented as `None`.
-        This is how you could render such a pagination in the templates:
-
-        .. sourcecode:: html+jinja
-
-            {% macro render_pagination(pagination, endpoint) %}
-              <div class=pagination>
-              {%- for page in pagination.iter_pages() %}
-                {% if page %}
-                  {% if page != pagination.page %}
-                    <a href="{{ url_for(endpoint, page=page) }}">{{ page }}</a>
-                  {% else %}
-                    <strong>{{ page }}</strong>
-                  {% endif %}
-                {% else %}
-                  <span class=ellipsis>…</span>
-                {% endif %}
-              {%- endfor %}
-              </div>
-            {% endmacro %}
-        """
-        last = 0
-        for num in xrange(1, self.pages + 1):
-            if num <= left_edge or \
-               (num > self.page - left_current - 1 and \
-                num < self.page + right_current) or \
-               num > self.pages - right_edge:
-                if last + 1 != num:
-                    yield None
-                yield num
-                last = num
-
-    offset = property(lambda self: (self.page - 1) * self.per_page)
-
     @property
     def prev(self, error_out=False):
         """Returns a :class:`Pagination` object for the previous page."""
         return self.obj.paginate(self.page - 1, self.per_page, error_out)
 
-    prev_num = property(lambda self: self.page - 1)
-    has_prev = property(lambda self: self.page > 1)
-
     def next(self, error_out=False):
         """Returns a :class:`Pagination` object for the next page."""
         return self.obj.paginate(self.page + 1, self.per_page, error_out)
-
-    next_num = property(lambda self: self.page + 1)
-    has_next = property(lambda self: self.page < self.pages)
-
-
-    @property
-    def pages(self):
-        """The total number of pages"""
-        return int(ceil(self.count / float(self.per_page)))
 
 
 class ModelPagination(object):
