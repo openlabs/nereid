@@ -206,7 +206,7 @@ class RoutingMixin(object):
 
             for url in urls:
                 view_func = None
-                if not url['build_only']:
+                if (not url['build_only']) and not(url['redirect_to']):
                     view_func = self.get_method(url['endpoint'])
                 self.add_url_rule(view_func=view_func, **url)
 
