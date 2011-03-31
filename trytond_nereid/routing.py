@@ -43,7 +43,7 @@ class URLMap(ModelSQL, ModelView):
     :param unique_urls: Enable `redirect_defaults` in the URL Map and
                         redirects the defaults to the URL 
     """
-    _name = "nereid.urlmap"
+    _name = "nereid.url_map"
     _description = "Nereid URL Map"
 
     name = fields.Char(
@@ -137,7 +137,7 @@ class WebSite(ModelSQL, ModelView):
     #: The URLMap is made as a different object which functions as a 
     #: collection of Rules. This will allow easy replication of sites
     #: which perform with same URL structures but different templates
-    url_map = fields.Many2One('nereid.urlmap', 'URL Map', required=True)
+    url_map = fields.Many2One('nereid.url_map', 'URL Map', required=True)
 
     #: The company to which the website belongs. Useful when creating
     #: records like sale order which require a company to be present
@@ -189,13 +189,13 @@ class WebSite(ModelSQL, ModelView):
         """
         Return complete list of URLs
         """
-        urlmap_obj = self.pool.get('nereid.urlmap')
+        url_map_obj = self.pool.get('nereid.url_map')
         website_id = self.search([('name', '=', name)])
         if not website_id:
             raise RuntimeError("Website with Name %s not found" % name)
 
         website = self.browse(website_id[0])
-        return urlmap_obj.get_rules_arguments(website.url_map.id)
+        return url_map_obj.get_rules_arguments(website.url_map.id)
 
     def stats(self, **arguments):
         """
@@ -372,7 +372,7 @@ class URLRule(ModelSQL, ModelView):
     only_for_genaration = fields.Boolean('Only for Generation')
     redirect_to = fields.Char('Redirect To')
     sequence = fields.Integer('Sequence', required=True,)
-    url_map = fields.Many2One('nereid.urlmap', 'URL Map')
+    url_map = fields.Many2One('nereid.url_map', 'URL Map')
 
     def __init__(self):
         super(URLRule, self).__init__()

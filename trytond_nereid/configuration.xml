@@ -108,8 +108,8 @@ This will send an email with password to user."
             id="menu_website_form" />
 
         <!--  URL Map  -->
-        <record model="ir.ui.view" id="urlmap_view_form">
-            <field name="model">nereid.urlmap</field>
+        <record model="ir.ui.view" id="url_map_view_form">
+            <field name="model">nereid.url_map</field>
             <field name="type">form</field>
             <field name="arch" type="xml">
                 <![CDATA[
@@ -137,8 +137,8 @@ This will send an email with password to user."
                 ]]>
             </field>
         </record>
-        <record model="ir.ui.view" id="urlmap_view_tree">
-            <field name="model">nereid.urlmap</field>
+        <record model="ir.ui.view" id="url_map_view_tree">
+            <field name="model">nereid.url_map</field>
             <field name="type">tree</field>
             <field name="arch" type="xml">
                 <![CDATA[
@@ -151,23 +151,23 @@ This will send an email with password to user."
                 ]]>
             </field>
         </record>
-        <record model="ir.action.act_window" id="act_urlmap_form">
+        <record model="ir.action.act_window" id="act_url_map_form">
             <field name="name">URL Map</field>
-            <field name="res_model">nereid.urlmap</field>
+            <field name="res_model">nereid.url_map</field>
             <field name="view_type">form</field>
         </record>
-        <record model="ir.action.act_window.view" id="act_urlmap_form_view1">
+        <record model="ir.action.act_window.view" id="act_url_map_form_view1">
             <field name="sequence" eval="10" />
-            <field name="view" ref="urlmap_view_tree" />
-            <field name="act_window" ref="act_urlmap_form" />
+            <field name="view" ref="url_map_view_tree" />
+            <field name="act_window" ref="act_url_map_form" />
         </record>
-        <record model="ir.action.act_window.view" id="act_urlmap_form_view2">
+        <record model="ir.action.act_window.view" id="act_url_map_form_view2">
             <field name="sequence" eval="20" />
-            <field name="view" ref="urlmap_view_form" />
-            <field name="act_window" ref="act_urlmap_form" />
+            <field name="view" ref="url_map_view_form" />
+            <field name="act_window" ref="act_url_map_form" />
         </record>
-        <menuitem parent="menu_nereid_routing" action="act_urlmap_form"
-            id="menu_urlmap_form" />
+        <menuitem parent="menu_nereid_routing" action="act_url_map_form"
+            id="menu_url_map_form" />
 
         <!--  URL Rule  -->
         <record model="ir.ui.view" id="url_rule_view_form">

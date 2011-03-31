@@ -20,7 +20,8 @@
     'xml': [
        'defaults.xml',
        'configuration.xml',
-       'static_file.xml'
+       'static_file.xml',
+       'urls.xml',
     ],
     'translation': [
     ],

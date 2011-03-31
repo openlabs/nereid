@@ -13,7 +13,7 @@ Imports::
     >>> import socket
     >>> from dateutil.relativedelta import relativedelta
     >>> from proteus import config, Model, Wizard
-    >>> from nereid import Nereid
+    >>> from nereid import Nereid, render_template
     >>> from trytond.config import CONFIG
 
 Create database::
@@ -21,7 +21,7 @@ Create database::
     >>> DBNAME = ':memory:'
     >>> config = config.set_trytond(DBNAME, database_type='sqlite')
 
-Install Nereid Cart::
+Install Nereid::
 
     >>> Module = Model.get('ir.module.module')
     >>> modules = Module.find([('name', '=', 'nereid')])
@@ -66,7 +66,7 @@ Create parties::
 Setup URLs::
 
     >>> NereidSite = Model.get('nereid.website')
-    >>> URLMap = Model.get('nereid.urlmap')
+    >>> URLMap = Model.get('nereid.url_map')
     >>> URLRule = Model.get('nereid.url_rule')
     >>> url_map = URLMap(name='Test Map')
     >>> url_map.rules.append(URLRule(rule='/login',
@@ -186,3 +186,36 @@ Try resetting the account::
     >>> address.reload()
     >>> old_password != address.password
     True
+
+Setup a  second website::
+
+    >>> site2 = NereidSite(name='Test Site 2', 
+    ...     url_map=url_map, company=company.id, countries=countries,)
+
+    >>> site2.save()
+    >>> app2 = Nereid(
+    ...     DATABASE_NAME=DBNAME,
+    ...     TRYTON_CONFIG='trytond.conf',
+    ...     SITE=site2.name,)
+    >>> app2.debug=True
+    >>> app2.site
+    u'Test Site 2'
+
+Try with same name template and lang in current website::
+
+    >>> t1 = Template(
+    ...     name='unique.jinja', language=english,
+    ...     website=site.id, source='site1')
+    >>> t1.save()
+    >>> t2 = Template(
+    ...     name='unique.jinja', language=english,
+    ...     website=site2.id, source='site2')
+    >>> t2.save()
+    >>> with app.test_request_context('/'):
+    ...     with app.transaction:
+    ...         render_template('unique.jinja')
+    u'site1'
+    >>> with app2.test_request_context('/'):
+    ...     with app2.transaction:
+    ...         render_template('unique.jinja')
+    u'site2'
