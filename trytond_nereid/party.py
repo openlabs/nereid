@@ -25,6 +25,19 @@ from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval
 
 
+class RegistrationForm(Form):
+    "Simple Registration form"
+    name = TextField('Name', [validators.Required(),])
+    company = TextField('Company', [validators.Required(),])
+    street = TextField('Street', [validators.Required(),])
+    streetbis = TextField('Street (Bis)')
+    zip = TextField('Post Code', [validators.Required(),])
+    city = TextField('City', [validators.Required(),])
+    country = SelectField('Country', [validators.Required(),], coerce=int)
+    subdivision = IntegerField('State/Country', [validators.Required()])
+    email = TextField('e-mail', [validators.Required(), validators.Email()])
+
+
 class AddressForm(Form):
     "A Form resembling the party.address"
     name = TextField('Name', [validators.Required(),])
@@ -51,6 +64,8 @@ class Address(ModelSQL, ModelView):
     password are stored against the party.address object.
     """
     _name = 'party.address'
+
+    registration_form = RegistrationForm
 
     #: The email to which all application related emails like
     #: registration, password reset etc is managed
@@ -148,6 +163,57 @@ class Address(ModelSQL, ModelView):
             random.sample(string.letters + string.digits, 16))
         self.write(address.id, {'password': password})
         return return_password and password or True
+
+    def registration(self):
+        register_form = (request.form)
+        register_form.country.choices = [
+            (c.id, c.name) for c in request.nereid_website.countries
+            ]
+        if request.method == 'POST' and register_form.validate():
+            address_obj = self.pool.get('party.address')
+            contact_mech_obj = self.pool.get('party.contact_mechanism')
+            party_obj = self.pool.get('party.party')
+
+            registration_data = register_form.data
+
+            # First search if an address with the email already exists
+            existing = contact_mech_obj.search([
+                ('value', '=', registration_data['email']),
+                ('type', '=', 'email')])
+            if existing:
+                flash('A registration already exists with this email. '
+                    'Please contact customer care')
+            else:
+                # Create Party
+                party_id = party_obj.create({
+                    'name': registration_data['company'],
+                    'addresses': [
+                        ('create', {
+                            'name': registration_data['name'],
+                            'street': registration_data['street'],
+                            'streetbis': registration_data['streetbis'],
+                            'zip': registration_data['zip'],
+                            'city': registration_data['city'],
+                            'country': registration_data['country'],
+                            'subdivision': registration_data['subdivision'],
+                            })],
+                    })
+                party = party_obj.browse(party_id)
+
+                # Create email as contact mech and assign as email
+                contact_mech_id = contact_mech_obj.create({
+                        'type': 'email',
+                        'party': party.id,
+                        'email': registration_data['email'],
+                    })
+                address_obj.write(party.addresses[0].id, 
+                    {'email': contact_mech_id})
+                address_obj.create_act_code(party.addresses[0].id)
+
+                flash('Your registration has been completed successfully')
+                return redirect(request.args.get('next', 
+                    url_for('nereid.website.home')))
+        return render_template('registration.jinja', form=register_form)
 
     def reset_account(self):
         """Reset the password for the user

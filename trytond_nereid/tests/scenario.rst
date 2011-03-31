@@ -68,27 +68,7 @@ Setup URLs::
     >>> NereidSite = Model.get('nereid.website')
     >>> URLMap = Model.get('nereid.url_map')
     >>> URLRule = Model.get('nereid.url_rule')
-    >>> url_map = URLMap(name='Test Map')
-    >>> url_map.rules.append(URLRule(rule='/login',
-    ...     endpoint='nereid.website.login', methods='("GET", "POST")'))
-    >>> url_map.rules.append(URLRule(rule='/addresses', 
-    ...     endpoint='party.address.view_address', methods='("GET",)'))
-    >>> url_map.rules.append(URLRule(rule='/address/save',
-    ...     endpoint='party.address.edit_address', methods='("GET", "POST")'))
-    >>> url_map.rules.append(URLRule(rule='/address/save/<int:address>',
-    ...     endpoint='party.address.edit_address', methods='("GET", "POST")'))
-    >>> url_map.rules.append(URLRule(rule='/account-reset',
-    ...     endpoint='party.address.reset_account', methods='("GET", "POST")'))
-    >>> url_map.rules.append(URLRule(
-    ...     rule='/activate-account/<int:address_id>/<activation_code>', 
-    ...     endpoint='party.address.activate', methods='("GET",)'))
-    >>> url_map.rules.append(URLRule(
-    ...     rule='/change-password', 
-    ...     endpoint='party.address.change_password', methods='("GET", "POST")'))
-    >>> url_map.rules.append(URLRule(
-    ...     rule='/', endpoint='nereid.website.home', 
-    ...     sequence=10, methods='("GET",)'))
-    >>> url_map.save()
+    >>> url_map, = URLMap.find([])
 
 Create Templates::
 
@@ -128,7 +108,7 @@ Try getting address::
     >>> with app.test_client() as client:
     ...     client.post('/login', 
     ...         data=dict(email='user@example.com', password='password'))
-    ...     client.get('/addresses')
+    ...     client.get('/view-address')
     <Response streamed [302 FOUND]>
     <Response streamed [200 OK]>
     >>> len(customer.addresses)
@@ -145,7 +125,7 @@ Create a new address::
     >>> with app.test_client() as client:
     ...     client.post('/login', 
     ...         data=dict(email='user@example.com', password='password'))
-    ...     client.post('/address/save', data=data)
+    ...     client.post('/save-new-address', data=data)
     <Response streamed [302 FOUND]>
     <Response streamed [302 FOUND]>
     >>> customer.reload()
@@ -168,7 +148,7 @@ Try resetting the account::
     >>> address = customer.addresses[0]
     >>> address.activation_code
     >>> with app.test_client() as client:
-    ...     client.post('/account-reset', 
+    ...     client.post('/reset-account', 
     ...         data=dict(email='user@example.com'))
     <Response streamed [302 FOUND]>
     >>> address.reload()

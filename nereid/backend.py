@@ -101,7 +101,10 @@ class BackendMixin(object):
         model = '.'.join(model_method_split[:-1])
         method = model_method_split[-1]
 
-        return getattr(self.pool.get(model), method)
+        try:
+            return getattr(self.pool.get(model), method)
+        except AttributeError:
+            raise Exception("Method %s not in Model %s" % (method, model))
 
 
 class Pagination(BasePagination):
