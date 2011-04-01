@@ -37,6 +37,7 @@ class _RequestContext(object):
         self.g = _RequestGlobals()
         self.flashes = None
         self.transaction = None
+        self.cache = app.cache
 
         try:
             url_rule, self.request.view_args = \

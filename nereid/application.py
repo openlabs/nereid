@@ -28,13 +28,17 @@ from .backend import BackendMixin
 from .templating import TemplateMixin
 from .routing import RoutingMixin
 from .session import SessionMixin, Session, FilesystemSessionStore, _NullSession
-
+from .cache import Cache, CacheMixin
 
 # a lock used for logger initialization
 _logger_lock = Lock()
 
+# A global Cache
+cache = Cache()
 
-class Nereid(BackendMixin, RoutingMixin, TemplateMixin, SessionMixin):
+
+class Nereid(BackendMixin, RoutingMixin, 
+        TemplateMixin, SessionMixin, CacheMixin):
     """
     ...
 
@@ -93,26 +97,32 @@ class Nereid(BackendMixin, RoutingMixin, TemplateMixin, SessionMixin):
 
     #: Default configuration parameters.
     default_config = ImmutableDict({
-        'DEBUG':                                False,
-        'TESTING':                              False,
-        'PROPAGATE_EXCEPTIONS':                 None,
+        'DEBUG': False,
+        'TESTING': False,
+        'PROPAGATE_EXCEPTIONS': None,
 
-        'SESSION_COOKIE_NAME':                  'session',
-        'SESSION_STORE_CLASS':                  FilesystemSessionStore,
-        'SESSION_CLASS':                        Session,
-        'PERMANENT_SESSION_LIFETIME':           timedelta(days=31),
-        'SESSION_STORE_PATH':                   '/tmp',
+        'SESSION_COOKIE_NAME': 'session',
+        'SESSION_STORE_CLASS': FilesystemSessionStore,
+        'SESSION_CLASS': Session,
+        'PERMANENT_SESSION_LIFETIME': timedelta(days=31),
+        'SESSION_STORE_PATH': '/tmp',
 
-        'USE_X_SENDFILE':                       False,
-        'STATIC_FILEROOT':                      '',
-        'LOGGER_NAME':                          None,
-        'SERVER_NAME':                          None,
-        'MAX_CONTENT_LENGTH':                   None,
-        'ROOT_PATH':                            os.path.curdir,
-        'SITE':                                 None,
-        'WEBSITE_MODEL':                        'nereid.website',
-        'TRYTON_USER':                          1,
-        'TRYTON_CONTEXT':                       {}
+        'USE_X_SENDFILE': False,
+        'STATIC_FILEROOT': '',
+        'LOGGER_NAME': None,
+        'SERVER_NAME': None,
+        'MAX_CONTENT_LENGTH': None,
+        'ROOT_PATH': os.path.curdir,
+        'SITE': None,
+        'WEBSITE_MODEL': 'nereid.website',
+        'TRYTON_USER': 1,
+        'TRYTON_CONTEXT': {},
+
+        # Cache Settings
+        'CACHE_TYPE': 'werkzeug.contrib.cache.NullCache',
+        'CACHE_DEFAULT_TIMEOUT': 300,
+        'CACHE_THRESHOLD': 500,
+        'CACHE_INIT_KWARGS': {},
     })
 
     def __init__(self, **config):
@@ -151,6 +161,7 @@ class Nereid(BackendMixin, RoutingMixin, TemplateMixin, SessionMixin):
         RoutingMixin.__init__(self, **config)
         TemplateMixin.__init__(self, **config)
         SessionMixin.__init__(self, **config)
+        CacheMixin.__init__(self, **config)
 
         self.add_ctx_processors_from_db()
         self.add_urls_from_db()

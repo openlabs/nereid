@@ -274,6 +274,8 @@ This will send an email with password to user."
                         <field name="name"/>
                         <label name="language"/>
                         <field name="language"/>
+                        <label name="website"/>
+                        <field name="website"/>
                         <separator colspan="4" id="source"/>
                         <field name="source" colspan="4"/>
                     </form>
@@ -289,6 +291,7 @@ This will send an email with password to user."
                     <tree string="Templates">
                         <field name="name"/>
                         <field name="language"/>
+                        <field name="site"/>
                     </tree>
                 ]]>
             </field>

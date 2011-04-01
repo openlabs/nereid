@@ -22,6 +22,6 @@ from .templating import render_template, render_template_string
 from .helpers import flash, get_flashed_messages, jsonify, url_for, \
     login_required
 
-from .application import Nereid, Request, Response
+from .application import Nereid, Request, Response, cache
 from .session import Session
 

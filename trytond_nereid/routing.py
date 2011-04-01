@@ -191,14 +191,8 @@ class WebSite(ModelSQL, ModelView):
             % (request, arguments, request.environ)
 
     def home(self):
-        """
-        A sample home method
-        """
-        return u'''Welcome to Nereid
-This is the default home page and needs replacing. To build
-your own home method, inherit the model nereid.website and implement
-the `home` method to replace this function.
-        '''
+        "A sample home method"
+        return render_template('home.jinja')
 
     def login(self):
         """

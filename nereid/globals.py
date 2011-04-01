@@ -24,4 +24,4 @@ def _lookup_object(name):
     return getattr(top, name)
 
 transaction = LocalProxy(partial(_lookup_object, 'transaction'))
-
+cache = LocalProxy(partial(_lookup_object, 'cache'))

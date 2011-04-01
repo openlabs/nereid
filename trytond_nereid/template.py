@@ -8,7 +8,7 @@
     :copyright: (c) 2010 by Openlabs Technologies & Consulting (P) Ltd
     :license: GPLv3, see LICENSE for more details
 """
-from nereid import request
+from nereid import request, cache
 
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
@@ -28,7 +28,7 @@ class Template(ModelSQL, ModelView):
     _description = "Nereid Template"
 
     name = fields.Char('Name', required=True, select=True)
-    source = fields.Text('Source', required=True, select=True)
+    source = fields.Text('Source', required=True)
     language = fields.Many2One('ir.lang', 'Language', required=True)
     website = fields.Many2One('nereid.website', 'Website')
 
@@ -42,23 +42,32 @@ class Template(ModelSQL, ModelView):
 
     def get_template_source(self, name):
         """
+        Wraps _get_template_source for efficient caching
+        """
+        return self._get_template_source(
+            name, request.nereid_website.id, 
+            Transaction().context.get('language', 'en_US'))
+
+    @cache.memoize_method(60 * 60, 'nereid.template._get_template_source')
+    def _get_template_source(self, name, website, lang):
+        """
         Returns the source of the template requested
 
         If not found it returns None
         """
         lang_obj = self.pool.get('ir.lang')
         lang_id, = lang_obj.search(
-            [('code', '=', Transaction().context.get('language', 'en_US'))])
+            [('code', '=', lang)])
+
         template_ids = self.search([
             ('name', '=', name), 
             ('language', '=', lang_id), 
-            ('website', '=', request.nereid_website.id)])
+            ('website', '=', website)])
 
         if not template_ids:
             template_ids = self.search([
                 ('name', '=', name), 
                 ('language', '=', lang_id), ])
-
 
         if not template_ids:
             return None
