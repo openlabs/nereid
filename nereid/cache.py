@@ -147,34 +147,18 @@ class Cache(object):
         "Proxy function for internal cache object."
         return cache.set_many(mapping, timeout)
 
-    def make_key(self, function):
-        """Construct a key
-        """
-        if hasattr(function, 'im_self') and hasattr(function.im_self, '_name'):
-            return '%s.%s' % (function.im_self._name, function.__name__)
-        elif hasattr(function, 'im_self'):
-            return '%s.%s' % (function.im_self.__name__, function.__name__)
-        else:
-            return '%d-%s' % (id(function), function.__name__)
-
-    def cache(self, timeout=None, _key=None, unless=None):
+    def cache(self, key, timeout=None, unless=None):
         """Decorator to use as caching function
 
         :copyright: (c) 2010 by Thadeus Burgess.
 
         :param timeout: Time in seconds to retain cached value
-        :param key_prefix: Key to use for cache. Defaults to 
-            model `_name.method_name`
-            Eg: account.invoice.render
+        :param key_prefix: Key to use for cache. 
         :param unless: Callable for truth testing. If provided, the 
             callable is called with no arguments and if true, caching
             operation will be cancelled
         """
         def decorator(function):
-            if _key is None:
-                key = self.make_key(function)
-            else:
-                key = _key
             @wraps(function)
             def wrapper(*args, **kwargs):
                 if callable(unless) and unless() is True:
@@ -189,25 +173,19 @@ class Cache(object):
             return wrapper
         return decorator
 
-    def memoize(self, timeout=None, _key=None, unless=None):
+    def memoize(self, key, timeout=None, unless=None):
         """Decorator to use as caching function but also evaluates
         the arguments
 
         :copyright: (c) 2010 by Thadeus Burgess.
 
         :param timeout: Time in seconds to retain cached value
-        :param key_prefix: Key to use for cache. Defaults to 
-            model `_name.method_name`
-            Eg: account.invoice.render
+        :param key_prefix: Key to use for cache. 
         :param unless: Callable for truth testing. If provided, the 
             callable is called with no arguments and if true, caching
             operation will be cancelled
         """
         def decorator(function):
-            if _key is None:
-                key = self.make_key(function)
-            else:
-                key = _key
             arg_names = inspect.getargspec(function)[0]
             @wraps(function)
             def wrapper(*args, **kwargs):
@@ -232,25 +210,19 @@ class Cache(object):
             return wrapper
         return decorator
 
-    def memoize_method(self, timeout=None, _key=None, unless=None):
+    def memoize_method(self, key, timeout=None, unless=None):
         """Decorator to use as caching function but also evaluates
         the arguments
 
         :copyright: (c) 2010 by Thadeus Burgess.
 
         :param timeout: Time in seconds to retain cached value
-        :param key_prefix: Key to use for cache. Defaults to 
-            model `_name.method_name`
-            Eg: account.invoice.render
+        :param key_prefix: Key to use for cache.
         :param unless: Callable for truth testing. If provided, the 
             callable is called with no arguments and if true, caching
             operation will be cancelled
         """
         def decorator(function):
-            if _key is None:
-                key = self.make_key(function)
-            else:
-                key = _key
             arg_names = inspect.getargspec(function)[0]
             @wraps(function)
             def wrapper(*args, **kwargs):

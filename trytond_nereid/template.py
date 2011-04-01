@@ -48,7 +48,7 @@ class Template(ModelSQL, ModelView):
             name, request.nereid_website.id, 
             Transaction().context.get('language', 'en_US'))
 
-    @cache.memoize_method(60 * 60, 'nereid.template._get_template_source')
+    @cache.memoize_method('nereid.template', 60 * 60)
     def _get_template_source(self, name, website, lang):
         """
         Returns the source of the template requested
