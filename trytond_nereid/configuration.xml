@@ -291,7 +291,7 @@ This will send an email with password to user."
                     <tree string="Templates">
                         <field name="name"/>
                         <field name="language"/>
-                        <field name="site"/>
+                        <field name="website"/>
                     </tree>
                 ]]>
             </field>
