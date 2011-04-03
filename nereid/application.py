@@ -123,6 +123,7 @@ class Nereid(BackendMixin, RoutingMixin,
         'CACHE_DEFAULT_TIMEOUT': 300,
         'CACHE_THRESHOLD': 500,
         'CACHE_INIT_KWARGS': {},
+        'CACHE_KEY_PREFIX': None
     })
 
     def __init__(self, **config):
