@@ -16,6 +16,7 @@ from zlib import adler32
 import re
 import unicodedata
 from functools import wraps
+from hashlib import md5
 
 from flask.helpers import _assert_have_json, json, jsonify
 from werkzeug import Headers, wrap_file, redirect
@@ -311,3 +312,12 @@ def _rst_to_html_filter(value):
         return parts['body_pre_docinfo'] + parts['fragment']
     except Exception, exc:
         return value
+
+
+def key_from_list(list_of_args):
+    """Builds a key from a list of arguments which could be used for caching
+    The key s constructed as an md5 hash
+    """
+    hash = md5()
+    hash.update(repr(list_of_args))
+    return hash.hexdigest()

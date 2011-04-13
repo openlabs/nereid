@@ -102,7 +102,7 @@ class Nereid(BackendMixin, RoutingMixin,
         'PROPAGATE_EXCEPTIONS': None,
 
         'SESSION_COOKIE_NAME': 'session',
-        'SESSION_STORE_CLASS': FilesystemSessionStore,
+        'SESSION_STORE_CLASS': 'werkzeug.contrib.sessions.FilesystemSessionStore',
         'SESSION_CLASS': Session,
         'PERMANENT_SESSION_LIFETIME': timedelta(days=31),
         'SESSION_STORE_PATH': '/tmp',

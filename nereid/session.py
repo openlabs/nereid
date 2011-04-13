@@ -7,12 +7,19 @@
     :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
     :license: BSD, see LICENSE for more details
 '''
-from werkzeug.contrib.sessions import Session as SessionBase, \
-    FilesystemSessionStore
-from flask.session import _NullSession
+from datetime import datetime
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
+from werkzeug.contrib.sessions import Session as SessionBase, SessionStore
+from werkzeug.contrib.sessions import FilesystemSessionStore
+from werkzeug.utils import import_string
 
 from .config import ConfigAttribute
+from .globals import current_app, cache
+
 
 class Session(SessionBase):
     """Expands the session with support for switching between permanent
@@ -29,6 +36,40 @@ class Session(SessionBase):
     del _get_permanent, _set_permanent
 
 
+class MemcachedSessionStore(SessionStore):
+    """Session store that stores session on memcached
+
+    :param session_class: The session class to use.  Defaults to
+                          :class:`Session`.
+    """
+    def __init__(self, session_class=Session):
+        SessionStore.__init__(self, session_class)
+
+    def save(self, session):
+        session_key = '%s-%s' % (current_app.site, session.sid)
+        success = cache.set(session_key, json.dumps(dict(session)))
+        if not success:
+            current_app.logger.warning("Sessions are not being saved")
+
+    def delete(self, session):
+        session_key = '%s-%s' % (current_app.site, session.sid)
+        cache.delete(session_key)
+
+    def get(self, sid):
+        if not self.is_valid_key(sid):
+            return self.new()
+        session_key = '%s-%s' % (current_app.site, sid)
+        session_data = cache.get(session_key)
+        if session_data is None:
+            session_data = {}
+        return self.session_class(session_data, sid, False)
+
+    def list(self):
+        """Lists all sessions in the store
+        """
+        raise Exception("Not implemented yet")
+
+
 class SessionMixin(object):
     """Session Management Class"""
 
@@ -37,7 +78,7 @@ class SessionMixin(object):
     session_class = ConfigAttribute('SESSION_CLASS')
 
     #: The class to generate the session store
-    #: Defaults to :class:`werkzeug.contrib.sessions.FilesystemSessionStore`
+    #: Defaults to :class:`FilesystemSessionStore`
     session_store_class = ConfigAttribute('SESSION_STORE_CLASS')
 
     #: The secure cookie uses this for the name of the session cookie.
@@ -54,12 +95,19 @@ class SessionMixin(object):
     #: ``timedelta(days=31)``
     permanent_session_lifetime = ConfigAttribute('PERMANENT_SESSION_LIFETIME')
 
-    #: Path where the session files can be stored
+    #: Path where the session files can be stored. This is only for
+    #: Filesystem Cache. The FilesystemCache is a simple implementation
+    #: and does not scale for production use.
     session_store_path = ConfigAttribute('SESSION_STORE_PATH')
 
     def __init__(self, **config):
-        self.session_store = self.session_store_class(
-            self.session_store_path, session_class=self.session_class)
+        session_store_class = import_string(self.session_store_class)
+        if session_store_class == FilesystemSessionStore:
+            self.session_store = FilesystemSessionStore(
+                self.session_store_path, session_class=self.session_class)
+        elif session_store_class == MemcachedSessionStore:
+            self.session_store =   MemcachedSessionStore(
+                session_class=self.session_class)
 
     def open_session(self, request):
         """Creates or opens a new session.

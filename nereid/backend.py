@@ -7,8 +7,11 @@
     :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
     :license: BSD, see LICENSE for more details
 '''
+import json
+
 from otcltools.general.pagination import Pagination as BasePagination
 from werkzeug import abort
+from werkzeug.utils import cached_property
 
 from .config import ConfigAttribute
 
@@ -124,7 +127,7 @@ class Pagination(BasePagination):
         self.order = order
         super(Pagination, self).__init__(page, per_page)
 
-    @property
+    @cached_property
     def count(self):
         """
         Returns the count of entries
@@ -156,6 +159,7 @@ class Pagination(BasePagination):
 class ModelPagination(object):
     """A mixin ancestor that models in tryton could inherit 
     if they will need to do pagination"""
+
 
     def paginate(self, domain, page, per_page=20, error_out=True):
         """Returns `per_page` items from page `page`.  By default it will
