@@ -63,6 +63,8 @@ class MemcachedSessionStore(SessionStore):
         session_data = cache.get(session_key)
         if session_data is None:
             session_data = {}
+        else:
+            session_data = json.loads(session_data)
         return self.session_class(session_data, sid, False)
 
     def list(self):
