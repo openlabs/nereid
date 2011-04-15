@@ -14,7 +14,7 @@ except ImportError:
     import json
 
 from werkzeug.contrib.sessions import Session as SessionBase, SessionStore
-from werkzeug.contrib.sessions import FilesystemSessionStore
+from werkzeug.contrib.sessions import FilesystemSessionStore, _NullSession
 from werkzeug.utils import import_string
 
 from .config import ConfigAttribute
