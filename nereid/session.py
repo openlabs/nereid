@@ -13,13 +13,28 @@ try:
 except ImportError:
     import json
 
-from flask.session import Session, _NullSession
-from werkzeug.contrib.sessions import SessionStore
+from flask.session import _NullSession
+from werkzeug.contrib.sessions import Session as SessionBase, SessionStore
 from werkzeug.contrib.sessions import FilesystemSessionStore
 from werkzeug.utils import import_string
 
 from .config import ConfigAttribute
 from .globals import current_app, cache
+
+
+class Session(SessionBase):
+    """Expands the session with support for switching between permanent
+    and non-permanent sessions.
+    """
+
+    def _get_permanent(self):
+        return self.get('_permanent', False)
+
+    def _set_permanent(self, value):
+        self['_permanent'] = bool(value)
+
+    permanent = property(_get_permanent, _set_permanent)
+    del _get_permanent, _set_permanent
 
 
 class MemcachedSessionStore(SessionStore):
