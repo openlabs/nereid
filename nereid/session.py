@@ -47,20 +47,17 @@ class MemcachedSessionStore(SessionStore):
         SessionStore.__init__(self, session_class)
 
     def save(self, session):
-        session_key = '%s-%s' % (current_app.site, session.sid)
-        success = cache.set(session_key, json.dumps(dict(session)))
+        success = cache.set(session.sid, json.dumps(dict(session)))
         if not success:
             current_app.logger.warning("Sessions are not being saved")
 
     def delete(self, session):
-        session_key = '%s-%s' % (current_app.site, session.sid)
-        cache.delete(session_key)
+        cache.delete(session.sid)
 
     def get(self, sid):
         if not self.is_valid_key(sid):
             return self.new()
-        session_key = '%s-%s' % (current_app.site, sid)
-        session_data = cache.get(session_key)
+        session_data = cache.get(sid)
         if session_data is None:
             session_data = {}
         else:
