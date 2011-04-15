@@ -8,10 +8,6 @@
     :license: BSD, see LICENSE for more details
 '''
 from datetime import datetime
-try:
-    import simplejson as json
-except ImportError:
-    import json
 
 from flask.session import _NullSession
 from werkzeug.contrib.sessions import Session as SessionBase, SessionStore
@@ -47,9 +43,7 @@ class MemcachedSessionStore(SessionStore):
         SessionStore.__init__(self, session_class)
 
     def save(self, session):
-        success = cache.set(session.sid, json.dumps(dict(session)))
-        if not success:
-            current_app.logger.warning("Sessions are not being saved")
+        success = cache.set(session.sid, dict(session))
 
     def delete(self, session):
         cache.delete(session.sid)
@@ -60,8 +54,6 @@ class MemcachedSessionStore(SessionStore):
         session_data = cache.get(sid)
         if session_data is None:
             session_data = {}
-        else:
-            session_data = json.loads(session_data)
         return self.session_class(session_data, sid, False)
 
     def list(self):
