@@ -67,7 +67,9 @@ class Template(ModelSQL, ModelView):
         if not template_ids:
             template_ids = self.search([
                 ('name', '=', name), 
-                ('language', '=', lang_id), ])
+                ('language', '=', lang_id), 
+                ('website', '=', False)
+                ])
 
         if not template_ids:
             return None
