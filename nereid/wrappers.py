@@ -29,11 +29,19 @@ class Request(RequestBase):
         """
         Fetch the browse record of current user or None
         """
-        if 'user' not in session:
-            return None
-
         address_obj = current_app.pool.get('party.address')
+        if 'user' not in session:
+            if current_app.guest_user:
+                return address_obj.browse(current_app.guest_user)
+            return None
         return address_obj.browse(session['user'])
+
+    @property
+    def is_guest_user(self):
+        """Return true if the user is guest"""
+        if current_app.guest_user is None:
+            raise RuntimeError("Guest user is not defined for app")
+        return ('user' not in session)
 
 
 class Response(ResponseBase):

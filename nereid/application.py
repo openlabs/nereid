@@ -92,6 +92,14 @@ class Nereid(BackendMixin, RoutingMixin,
         '-' * 80
     )
 
+
+    #: ID of the party.address to be used as a Guest account
+    #: Defaults to None, Not specifying the GUEST USER will
+    #: limit the application from performing certain tasks 
+    #: whcih depend on request.nereid_user as it will return 
+    #: None when the user is not Logged In
+    guest_user = ConfigAttribute('GUEST_USER')
+
     root_path = ConfigAttribute('ROOT_PATH')
     site = ConfigAttribute('SITE')
 
@@ -117,6 +125,7 @@ class Nereid(BackendMixin, RoutingMixin,
         'WEBSITE_MODEL': 'nereid.website',
         'TRYTON_USER': 1,
         'TRYTON_CONTEXT': {},
+        'GUEST_USER': None,
 
         # Cache Settings
         'CACHE_TYPE': 'werkzeug.contrib.cache.NullCache',
