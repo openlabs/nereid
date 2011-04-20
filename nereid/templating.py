@@ -12,7 +12,8 @@ from itertools import chain
 from decimal import Decimal
 
 from werkzeug import ImmutableDict
-from jinja2 import Environment, BaseLoader, TemplateNotFound
+from jinja2 import Environment, BaseLoader, TemplateNotFound, \
+    MemcachedBytecodeCache
 from flask.helpers import _tojson_filter
 
 from .globals import _request_ctx_stack
@@ -146,6 +147,9 @@ class TemplateMixin(object):
         options = dict(self.jinja_options)
         if 'autoescape' not in options:
             options['autoescape'] = self.select_jinja_autoescape
+        if self.cache and \
+                self.cache_type=='werkzeug.contrib.cache.MemcachedCache':
+            options['bytecode_cache'] = MemcachedBytecodeCache(self.cache)
         return Environment(loader=self.template_loader_class(self), **options)
 
     def init_jinja_globals(self):

@@ -7,7 +7,7 @@
     :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
     :license: BSD, see LICENSE for more details
 '''
-
+from werkzeug.utils import cached_property
 from flask.wrappers import Request as RequestBase, Response as ResponseBase
 from .globals import current_app, session
 
@@ -15,7 +15,7 @@ from .globals import current_app, session
 class Request(RequestBase):
     "Request Object"
 
-    @property
+    @cached_property
     def nereid_website(self):
         """
         Fetch the Browse Record of current website
@@ -24,7 +24,7 @@ class Request(RequestBase):
         website, = website_obj.search([('name', '=', current_app.site)])
         return website_obj.browse(website)
 
-    @property
+    @cached_property
     def nereid_user(self):
         """
         Fetch the browse record of current user or None
@@ -36,7 +36,7 @@ class Request(RequestBase):
             return None
         return address_obj.browse(session['user'])
 
-    @property
+    @cached_property
     def is_guest_user(self):
         """Return true if the user is guest"""
         if current_app.guest_user is None:

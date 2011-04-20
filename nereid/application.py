@@ -169,9 +169,9 @@ class Nereid(BackendMixin, RoutingMixin,
 
         BackendMixin.__init__(self, **config) 
         RoutingMixin.__init__(self, **config)
+        CacheMixin.__init__(self, **config)
         TemplateMixin.__init__(self, **config)
         SessionMixin.__init__(self, **config)
-        CacheMixin.__init__(self, **config)
 
         self.add_ctx_processors_from_db()
         self.add_urls_from_db()
