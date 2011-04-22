@@ -18,6 +18,7 @@ import unicodedata
 from functools import wraps
 from hashlib import md5
 
+import jinja2
 from flask.helpers import _assert_have_json, json, jsonify
 from werkzeug import Headers, wrap_file, redirect
 from werkzeug.exceptions import NotFound
@@ -321,3 +322,27 @@ def key_from_list(list_of_args):
     hash = md5()
     hash.update(repr(list_of_args))
     return hash.hexdigest()
+
+@jinja2.contextfunction
+def make_crumbs(context, browse_record, endpoint, add_home=True, max_size=10):
+    """Makes bread crumbs for a given browse record based on the field
+    parent of the browse record
+    """
+    parent_field = 'parent'
+    uri_field = 'uri'
+    title_field = 'title'
+
+    def recurse(node, level=1):
+        if level > max_size or not node:
+            return []
+        return [
+            (url_for(endpoint, uri=getattr(node, uri_field)), 
+             getattr(node, title_field))
+            ] + recurse(getattr(node, parent_field), level + 1)
+
+    items = recurse(browse_record)
+
+    if add_home:
+        items.append((url_for('nereid.website.home'), 'Home'))
+
+    return items

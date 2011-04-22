@@ -36,7 +36,10 @@ if tryton_installed:
                         minor_version + 1))
     requires.append('trytond >= %s.%s, < %s.%s' %
             (major_version, minor_version, major_version, minor_version + 1))
-    package_dir.update({'trytond.modules.nereid': 'trytond_nereid'})
+    package_dir.update({
+        'trytond.modules.nereid': 'trytond_nereid',
+        'trytond.modules.test_nereid_module': 'tests/test_nereid_module',
+        })
     package_data.update({
         'trytond.modules.nereid': trytond_module_info.get('xml', []) \
                 + trytond_module_info.get('translation', []),
@@ -44,8 +47,12 @@ if tryton_installed:
     entry_points += """
     [trytond.modules]
     nereid = trytond.modules.nereid
+    test_nereid_module = trytond.modules.test_nereid_module
     """
-    packages.append('trytond.modules.nereid')
+    packages.extend([
+        'trytond.modules.nereid', 
+        'trytond.modules.test_nereid_module'
+        ])
 
 
 setup(

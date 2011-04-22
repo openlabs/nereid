@@ -132,18 +132,35 @@ class Pagination(BasePagination):
         """
         Returns the count of entries
         """
+        if self.ids_domain():
+            return len(self.domain[0][2])
         return self.obj.search(domain=self.domain, count=True)
 
     def all_items(self):
         """Returns complete set of items"""
-        ids = self.obj.search(self.domain)
+        if self.ids_domain():
+            ids = self.domain[0][2]
+        else:
+            ids = self.obj.search(self.domain)
         return self.obj.browse(ids)
+
+    def ids_domain(self):
+        """Returns True if the domain has only IDs and can skip SQL fetch
+        to directly browse the records. Else a False is returned
+        """
+        return (len(self.domain) == 1) and \
+            (self.domain[0][0] == 'id') and \
+            (self.domain[0][1] == 'in') and \
+            (self.order is None)
 
     def items(self):
         """Returns the list of browse records of items in the page
         """
-        ids = self.obj.search(self.domain, offset=self.offset,
-            limit=self.per_page, order=self.order)
+        if self.ids_domain():
+            ids = self.domain[0][2][self.offset:self.offset + self.per_page]
+        else:
+            ids = self.obj.search(self.domain, offset=self.offset,
+                limit=self.per_page, order=self.order)
         return self.obj.browse(ids)
 
     @property
