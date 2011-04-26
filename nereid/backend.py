@@ -47,9 +47,10 @@ class BackendMixin(object):
     tryton_context = ConfigAttribute('TRYTON_CONTEXT')
 
     def __init__(self, *args, **kwargs):
-        from trytond.config import CONFIG
-        CONFIG.configfile = self.tryton_configfile
-        CONFIG.load()
+        if self.tryton_configfile is not None:
+            from trytond.config import CONFIG
+            CONFIG.configfile = self.tryton_configfile
+            CONFIG.load()
 
     def load_connection(self):
         "Actual loading of connection takes place here"

@@ -125,6 +125,7 @@ class Nereid(BackendMixin, RoutingMixin,
         'WEBSITE_MODEL': 'nereid.website',
         'TRYTON_USER': 1,
         'TRYTON_CONTEXT': {},
+        'TRYTON_CONFIG': None,
         'GUEST_USER': None,
 
         # Cache Settings
