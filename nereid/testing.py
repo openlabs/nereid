@@ -170,27 +170,29 @@ def create_user_party(obj, name, email, password, **kwargs):
     contact_mechanism_obj = obj.pool.get('party.contact_mechanism')
 
     kwargs['name'] = name
-    kwargs['addresses'] = [('create', {
-        'name': name + 'Address', 
-        'password': password,
-        })]
-    kwargs['contact_mechanisms'] = [('create', {
+    party_id = party_obj.create(kwargs)
+    party = party_obj.browse(party_id)
+
+    email_id = contact_mechanism_obj.create({
         'type': 'email',
         'value': email,
-        })]
-    customer_id = party_obj.create(kwargs)
-    customer = party_obj.browse(customer_id)
-    address_obj.write(customer.addresses[0].id, {
-        'email': customer.contact_mechanisms[0].id
+        'party': party_id,
         })
-    return customer_id
+    address_obj.write(party.addresses[0].id, {
+        'name': name + 'Address',
+        'password': password,
+        'email': email_id,
+        'party': party_id,
+        })
+
+    return party.addresses[0].id
 
 
 @testing_proxy.register()
-def create_guest_user(obj, name='Guest', email='guest@example.com'):
+def create_guest_user(obj, name='Guest', email='guest@example.com', **options):
     """Create guest user
     """
-    return obj.create_user_party(name, email, 'password')
+    return obj.create_user_party(name, email, 'password', **options)
 
 
 @testing_proxy.register()
@@ -210,8 +212,7 @@ def create_template(obj, name, source, site=False, lang_code='en_US'):
 
 @testing_proxy.register()
 def create_site(obj, name, url_map=None, company=None, **options):
-    """Create a site available in the
-    """
+    """Create a site."""
     company_obj = obj.pool.get('company.company')
     site_obj = obj.pool.get('nereid.website')
     url_map_obj = obj.pool.get('nereid.url_map')
@@ -227,3 +228,13 @@ def create_site(obj, name, url_map=None, company=None, **options):
     options['company'] = company
 
     return site_obj.create(options)
+
+
+@testing_proxy.register()
+def set_company_for_user(self, user, company):
+    """Set company for current user"""
+    user_obj = self.pool.get('res.user')
+    return user_obj.write(user, {
+        'main_company': company,
+        'company': company
+        })

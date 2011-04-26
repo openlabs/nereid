@@ -19,7 +19,7 @@ except ImportError:
 from wtforms import Form, TextField, IntegerField, SelectField, validators, \
     PasswordField
 from nereid import request, url_for, render_template, login_required, flash
-from nereid.globals import session
+from nereid.globals import session, current_app
 from werkzeug import redirect
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval
@@ -250,16 +250,22 @@ class Address(ModelSQL, ModelView):
         :return: Browse Record or None
         """
         contact_mech_obj = self.pool.get('party.contact_mechanism')
+
+        guest_user = self.browse(current_app.guest_user)
         contact = contact_mech_obj.search([
-                ('value', '=', email),
-                ('type', '=', 'email')])
+            ('value', '=', email),
+            ('type', '=', 'email'),
+            ('party', '!=', guest_user.party.id)
+            ])
         if not contact:
+            current_app.logger.debug('%s not found' % email)
             return None
 
         ids = self.search([
             ('email', '=', contact[0])
             ])
         if not ids or len(ids) > 1:
+            current_app.logger.debug('%s not attached to addresses' % email)
             return None
 
         address = self.browse(ids[0])
