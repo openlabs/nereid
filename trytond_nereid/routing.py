@@ -151,7 +151,7 @@ class WebSite(ModelSQL, ModelView):
         """
         Return the list of countries in JSON
         """
-        return jsonify([
+        return jsonify(result = [
             {'key': c.id, 'value': c.name} \
                 for c in request.nereid_website.countries
             ])
