@@ -315,6 +315,10 @@ This will send an email with password to user."
         <menuitem parent="menu_nereid_template" action="act_template_form"
             id="menu_template_form" />
 
+        <!-- Context processors -->
+        <record model="nereid.template.context_processor" id="ctx_processor_currency">
+            <field name="method">currency.currency.context_processor</field>
+        </record>
     </data>
 </tryton>
 

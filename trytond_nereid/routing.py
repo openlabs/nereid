@@ -11,12 +11,12 @@
 from ast import literal_eval
 
 from werkzeug import abort, redirect
-from nereid import jsonify, flash, render_template, url_for
+from nereid import jsonify, flash, render_template, url_for, cache
 from nereid.globals import session, request
-from nereid.helpers import login_required
+from nereid.helpers import login_required, key_from_list
 from trytond.model import ModelView, ModelSQL, fields
-from wtforms import Form, TextField, PasswordField, SelectField, \
-    IntegerField, validators
+from trytond.transaction import Transaction
+from wtforms import Form, TextField, PasswordField, validators
 
 
 # pylint: disable-msg=E1101
@@ -136,6 +136,10 @@ class WebSite(ModelSQL, ModelView):
     countries = fields.Many2Many(
         'nereid.website-country.country', 'website', 'country',
         'Countries Available')
+    #: Allowed currencies in the website
+    currencies = fields.Many2Many(
+        'nereid.website-currency.currency',
+        'website', 'currency', 'Currencies Available')
 
     def default_active(self):
         return True
@@ -248,6 +252,51 @@ class WebSite(ModelSQL, ModelView):
     def account(self):
         context = self.account_context()
         return render_template('account.jinja', **context)
+
+    def get_currencies(self):
+        """Returns available currencies for current site
+
+        .. note:: A special method is required so that the fetch
+        can be speeded up, by pushing the categories to the central cache
+        which cannot be done directly on a browse node.
+        """
+        cache_key = key_from_list([
+            Transaction().cursor.dbname,
+            Transaction().user,
+            'nereid.website.get_currencies',
+            ])
+        # The website is automatically appended to the cache prefix
+        rv = cache.get(cache_key)
+        if rv is None:
+            rv = [{
+                'id': c.id,
+                'name': c.name,
+                'symbol': c.symbol,
+                } for c in request.nereid_website.currencies]
+            cache.set(cache_key, rv, 60*60)
+        return rv
+
+    def set_currency(self):
+        """Set the currency for the current session.
+
+        Accepted Methods: GET, POST
+        Accepts XHR: Yes
+        """
+        currency = int(request.values.get('currency', 0))
+        if currency not in [c['id'] for c in self.get_currencies()]:
+            abort(403)  # Forbidden currency
+
+        session['currency'] = currency
+        message = "The currency has been successfully changed"
+
+        if request.is_xhr:
+            return jsonify(result = {'success': True, 'message': message})
+
+        flash(message)
+        # redirect to the next url if given else take to home page
+        return redirect(
+            request.values.get('next', url_for('nereid.website.home'))
+            )
 
 WebSite()
 
@@ -374,3 +423,19 @@ class WebsiteCountry(ModelSQL):
     country = fields.Many2One('country.country', 'Country')
 
 WebsiteCountry()
+
+
+class WebsiteCurrency(ModelSQL):
+    "Currencies to be made available on website"
+    _name = 'nereid.website-currency.currency'
+    _table = 'website_currency_rel'
+    _description = __doc__
+
+    website = fields.Many2One(
+        'nereid.website', 'Website', 
+        ondelete='CASCADE', select=1, required=True)
+    currency = fields.Many2One(
+        'currency.currency', 'Currency', 
+        ondelete='CASCADE', select=1, required=True)
+
+WebsiteCurrency()

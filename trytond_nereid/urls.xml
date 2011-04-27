@@ -124,5 +124,12 @@
           <field name="url_map" ref="default_url_map" />
         </record> 
 
+        <record id="set_currency" model="nereid.url_rule">
+            <field name="rule">/set_currency</field>
+            <field name="endpoint">nereid.website.set_currency</field>
+            <field name="sequence" eval="140" />
+            <field name="methods">("GET", "POST")</field>
+            <field name="url_map" ref="nereid.default_url_map" />
+        </record>
     </data>
 </tryton>

@@ -10,7 +10,7 @@ Tryton module to support Nereid
 '''
 
 from .routing import *
-#from auth import User, Address
 from .template import Template
 from .static_file import NereidStaticFolder, NereidStaticFile
 from .party import Address
+from .currency import Currency
