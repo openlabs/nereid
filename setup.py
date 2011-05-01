@@ -72,6 +72,7 @@ setup(
     install_requires=[
         'flask',
         'wtforms',
+        'wtforms-recaptcha',
     ],
     entry_points=entry_points,
     classifiers=[

@@ -18,11 +18,13 @@ except ImportError:
 
 from wtforms import Form, TextField, IntegerField, SelectField, validators, \
     PasswordField
+from wtfrecaptcha.fields import RecaptchaField
 from nereid import request, url_for, render_template, login_required, flash
 from nereid.globals import session, current_app
 from werkzeug import redirect
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval
+from trytond.config import CONFIG
 
 
 class RegistrationForm(Form):
@@ -36,6 +38,8 @@ class RegistrationForm(Form):
     country = SelectField('Country', [validators.Required(),], coerce=int)
     subdivision = IntegerField('State/Country', [validators.Required()])
     email = TextField('e-mail', [validators.Required(), validators.Email()])
+    captcha = RecaptchaField(public_key=CONFIG.options['re_captcha_public'], 
+        private_key=CONFIG.options['re_captcha_private'], secure=True)
 
 
 class AddressForm(Form):
@@ -165,7 +169,8 @@ class Address(ModelSQL, ModelView):
         return return_password and password or True
 
     def registration(self):
-        register_form = self.registration_form(request.form)
+        register_form = self.registration_form(request.form, 
+            captcha={'ip_address': request.remote_addr})
         register_form.country.choices = [
             (c.id, c.name) for c in request.nereid_website.countries
             ]
