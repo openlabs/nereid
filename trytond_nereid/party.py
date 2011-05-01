@@ -114,6 +114,7 @@ class Address(ModelSQL, ModelView):
         "Activate the address account"
         address = self.browse(address_id)
         assert address.activation_code == activation_code, 'Invalid Act Code'
+        session['user'] = address_id
         return self.write(address.id, {'activation_code': False})
 
     @login_required
