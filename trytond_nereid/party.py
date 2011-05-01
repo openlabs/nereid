@@ -38,8 +38,10 @@ class RegistrationForm(Form):
     country = SelectField('Country', [validators.Required(),], coerce=int)
     subdivision = IntegerField('State/Country', [validators.Required()])
     email = TextField('e-mail', [validators.Required(), validators.Email()])
-    captcha = RecaptchaField(public_key=CONFIG.options['re_captcha_public'], 
-        private_key=CONFIG.options['re_captcha_private'], secure=True)
+    if 're_captcha_public' in CONFIG.options:
+        captcha = RecaptchaField(
+            public_key=CONFIG.options['re_captcha_public'], 
+            private_key=CONFIG.options['re_captcha_private'], secure=True)
 
 
 class AddressForm(Form):
@@ -169,8 +171,12 @@ class Address(ModelSQL, ModelView):
         return return_password and password or True
 
     def registration(self):
-        register_form = self.registration_form(request.form, 
-            captcha={'ip_address': request.remote_addr})
+        if 're_captcha_public' in CONFIG.options:
+            register_form = self.registration_form(request.form, 
+                captcha={'ip_address': request.remote_addr})
+        else:
+            register_form = self.registration_form(request.form)
+
         register_form.country.choices = [
             (c.id, c.name) for c in request.nereid_website.countries
             ]
