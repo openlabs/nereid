@@ -165,7 +165,7 @@ class Address(ModelSQL, ModelView):
         return return_password and password or True
 
     def registration(self):
-        register_form = (request.form)
+        register_form = self.registration_form(request.form)
         register_form.country.choices = [
             (c.id, c.name) for c in request.nereid_website.countries
             ]
