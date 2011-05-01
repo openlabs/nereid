@@ -215,7 +215,7 @@ class WebSite(ModelSQL, ModelView):
             else:
                 flash("You are now logged in. Welcome %s" % result.name)
                 session['user'] = result.id
-                return redirect(request.args.get('next', 
+                return redirect(request.values.get('next', 
                     url_for('nereid.website.home')))
         return render_template('login.jinja', login_form=login_form)
 
