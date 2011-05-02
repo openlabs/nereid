@@ -42,6 +42,10 @@ class RegistrationForm(Form):
         captcha = RecaptchaField(
             public_key=CONFIG.options['re_captcha_public'], 
             private_key=CONFIG.options['re_captcha_private'], secure=True)
+    password = PasswordField('New Password', [
+        validators.Required(),
+        validators.EqualTo('confirm', message='Passwords must match')])
+    confirm = PasswordField('Confirm Password')
 
 
 class AddressForm(Form):
@@ -55,12 +59,17 @@ class AddressForm(Form):
     subdivision = IntegerField('State/Country', [validators.Required()])
 
 
-class ChangePasswordForm(Form):
-    "Form to change the password"
+class NewPasswordForm(Form):
+    "Form to set a new password"
     password = PasswordField('New Password', [
         validators.Required(),
         validators.EqualTo('confirm', message='Passwords must match')])
     confirm = PasswordField('Repeat Password')
+
+
+class ChangePasswordForm(NewPasswordForm):
+    "Form to change the password"
+    old_password = PasswordField('Old Password')
 
 
 # pylint: disable-msg=E1101
@@ -132,13 +141,24 @@ class Address(ModelSQL, ModelView):
         return render_template('change-password.jinja', 
             change_password_form=form)
 
+    @login_required
+    def new_password(self):
+        "Create a new password"
+        form = NewPasswordForm(request.form)
+        if request.method == 'POST' and form.validate():
+            self.write(request.nereid_user.id, 
+                {'password': form.password.data})
+            flash('Your password has been successfully changed! '
+                'Please login again')
+            session.pop('user')
+            return redirect(url_for('nereid.website.login'))
+        return render_template('new-password.jinja', password_form=form)
+
     def activate(self, address_id, activation_code):
         "A web request handler for activation"
         try:
             self._activate(address_id, activation_code)
-            session['user'] = address_id
             flash('Your account has been activated')
-            return redirect(url_for('party.address.change_password'))
         except AssertionError:
             flash('Invalid Activation Code')
         return redirect(url_for('nereid.website.login'))
@@ -207,6 +227,7 @@ class Address(ModelSQL, ModelView):
                             'city': registration_data['city'],
                             'country': registration_data['country'],
                             'subdivision': registration_data['subdivision'],
+                            'password': registration_data['password']
                             })],
                     })
                 party = party_obj.browse(party_id)
@@ -221,7 +242,7 @@ class Address(ModelSQL, ModelView):
                     {'email': contact_mech_id})
                 address_obj.create_act_code(party.addresses[0].id)
 
-                flash('Your registration has been completed successfully')
+                flash('Registration Complete. Check your email for activation')
                 return redirect(request.args.get('next', 
                     url_for('nereid.website.home')))
         return render_template('registration.jinja', form=register_form)
