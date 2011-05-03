@@ -298,6 +298,28 @@ class WebSite(ModelSQL, ModelView):
             request.values.get('next', url_for('nereid.website.home'))
             )
 
+    def set_language(self):
+        """Sets the language in the session of the user
+
+        Accepted Methods: GET, POST
+        Accepts XHR: Yes
+        """
+        lang_obj = self.pool.get('ir.lang')
+
+        language = request.values.get('language')
+        exists = lang_obj.search([('code', '=', language)])
+
+        if exists:
+            session['language'] = language
+            flash('Your language preference have been saved.')
+        else:
+            flash('Sorry! we do not support your language yet.')
+
+        # redirect to the next url if given else take to home page
+        return redirect(
+            request.values.get('next', url_for('nereid.website.home'))
+            )
+
 WebSite()
 
 

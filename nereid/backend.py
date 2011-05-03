@@ -7,13 +7,13 @@
     :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
     :license: BSD, see LICENSE for more details
 '''
-import json
-
 from otcltools.general.pagination import Pagination as BasePagination
 from werkzeug import abort
 from werkzeug.utils import cached_property
 
 from .config import ConfigAttribute
+from .globals import session
+from .ctx import has_request_context
 
 
 class TransactionManager(object):
@@ -21,10 +21,13 @@ class TransactionManager(object):
     def __init__(self, database_name, user, context=None):
         self.database_name = database_name
         self.user = user
-        self.context = context
+        self.context = context if context is not None else {}
 
     def __enter__(self):
         from trytond.transaction import Transaction
+        context = self.context.copy()
+        if has_request_context() and 'language' in session:
+            context['language'] = session['language']
         Transaction().start(self.database_name, self.user, self.context)
         return Transaction()
 
