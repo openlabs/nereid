@@ -298,6 +298,33 @@ class WebSite(ModelSQL, ModelView):
             request.values.get('next', url_for('nereid.website.home'))
             )
 
+    def get_languages(self):
+        """Returns available languages for current site
+
+        .. note:: A special method is required so that the fetch
+        can be speeded up, by pushing the categories to the central cache
+        which cannot be done directly on a browse node.
+        """
+        lang_obj = self.pool.get('ir.lang')
+
+        cache_key = key_from_list([
+            Transaction().cursor.dbname,
+            Transaction().user,
+            'nereid.website.get_languages',
+            ])
+        # The website is automatically appended to the cache prefix
+        rv = cache.get(cache_key)
+        if rv is None:
+            language_ids = lang_obj.search([('translatable', '=', True)])
+            languages = lang_obj.browse(language_ids)
+            rv = [{
+                'id': l.id,
+                'name': l.name,
+                'code': l.code,
+                } for l in languages]
+            cache.set(cache_key, rv, 60*60)
+        return rv
+
     def set_language(self):
         """Sets the language in the session of the user
 
