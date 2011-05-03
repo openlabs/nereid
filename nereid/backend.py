@@ -28,7 +28,7 @@ class TransactionManager(object):
         context = self.context.copy()
         if has_request_context() and 'language' in session:
             context['language'] = session['language']
-        Transaction().start(self.database_name, self.user, self.context)
+        Transaction().start(self.database_name, self.user, context)
         return Transaction()
 
     def __exit__(self, type, value, traceback):

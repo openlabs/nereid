@@ -32,7 +32,9 @@ class TestLanguage(unittest.TestCase):
     def get_app(self):
         return testing_proxy.make_app(
             SITE='testsite.com', 
-            GUEST_USER=self.guest_user)
+            GUEST_USER=self.guest_user,
+            SESSION_STORE_CLASS = 'nereid.session.FilesystemSessionStore',
+            )
 
     def setUp(self):
         self.lang_obj = testing_proxy.pool.get('ir.lang')
@@ -62,6 +64,25 @@ class TestLanguage(unittest.TestCase):
             c.get('/set_language?language=%s&next=/' % self.langs[1]['code'])
             rv = c.get('/')
             self.assertEqual(rv.data, self.langs[1]['code'])
+
+    def test_0030_set_with_lang_template(self):
+        """Test and ensure the language paramenter on template is respected
+        """
+        with Transaction().start(testing_proxy.db_name, 1, None) as txn:
+            testing_proxy.create_template(
+                'home.jinja',
+                "%s:{{session.get('language')}}" % self.langs[1]['code'],
+                self.site, self.langs[1]['code'])
+            txn.cursor.commit()
+
+        app = self.get_app()
+        with app.test_client() as c:
+            c.get('/set_language?language=%s&next=/' % self.langs[1]['code'])
+            rv = c.get('/')
+            self.assertEqual(rv.data, '%s:%s' % (
+                self.langs[1]['code'], self.langs[1]['code']
+                )
+            )
 
 
 def suite():

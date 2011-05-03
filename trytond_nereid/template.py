@@ -56,20 +56,35 @@ class Template(ModelSQL, ModelView):
         If not found it returns None
         """
         lang_obj = self.pool.get('ir.lang')
-        lang_id, = lang_obj.search(
-            [('code', '=', lang)])
+        lang_id, = lang_obj.search([('code', '=', lang)])
 
+        # Search with full spec
         template_ids = self.search([
             ('name', '=', name), 
             ('language', '=', lang_id), 
             ('website', '=', website)])
 
+        # Search with website param relaxed
         if not template_ids:
             template_ids = self.search([
                 ('name', '=', name), 
                 ('language', '=', lang_id), 
                 ('website', '=', False)
                 ])
+
+        # Search with english as language for specific website
+        if not template_ids:
+            template_ids = self.search([
+                ('name', '=', name), 
+                ('language.code', '=', 'en_US'), 
+                ('website', '=', website)])
+
+        # Search with english as language for relaxed website param
+        if not template_ids:
+            template_ids = self.search([
+                ('name', '=', name), 
+                ('language.code', '=', 'en_US'), 
+                ('website', '=', False)])
 
         if not template_ids:
             return None
