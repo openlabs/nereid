@@ -115,13 +115,16 @@ class BackendMixin(object):
 
 
 class Pagination(BasePagination):
-    """
-    General purpose paginator for doing pagination
+    """General purpose paginator for doing pagination which can be used by 
+    passing a search domain .Remember that this means the query will be built
+    and executed and passed on which could be slower than writing native SQL 
+    queries. While this fits into most use cases, if you would like to use
+    a SQL query rather than a domain use :class:QueryPagination instead
     """
 
     def __init__(self, obj, domain, page, per_page, order=None):
         """
-        :param klass: The object itself. pass self within tryton object
+        :param obj: The object itself. pass self within tryton object
         :param domain: Domain for search in tryton
         :param per_page: Items per page
         :param page: The page to be displayed
@@ -175,6 +178,53 @@ class Pagination(BasePagination):
     def next(self, error_out=False):
         """Returns a :class:`Pagination` object for the next page."""
         return self.obj.paginate(self.page + 1, self.per_page, error_out)
+
+
+class QueryPagination(BasePagination):
+    """A fast implementation of pagination which uses a SQL query for 
+    generating the IDS and hence the pagination"""
+
+    def __init__(self, search_query, count_query, page, per_page):
+        """
+        :param search_query: Query to be used for search. It must not include
+            an OFFSET or LIMIT as they would be automatically added to the 
+            query
+        :param count_query: Query to be used to get the count of the pagination
+            use a query like `SELECT 1234 AS id` for a query where you do not
+            want to manipulate the count
+        :param per_page: Items per page
+        :param page: The page to be displayed
+        """
+        self.search_query = search_query
+        self.count_query = count_query
+        super(Pagination, self).__init__(page, per_page)
+
+    @cached_property
+    def count(self):
+        "Return the count of the Items"
+        from trytond.transaction import Transaction
+        with Transaction().new_cursor as transaction:
+            transaction.cursor.execute(self.count_query)
+            return transaction.cursor.fetchone()
+
+    def all_items(self):
+        """Returns complete set of items"""
+        from trytond.transaction import Transaction
+        with Transaction().new_cursor as transaction:
+            transaction.cursor.execute(self.search_query)
+            return transaction.cursor.fetchall()
+
+    def items(self):
+        """Returns the list of browse records of items in the page
+        """
+        from trytond.transaction import Transaction
+        limit_string = ' LIMIT %d' % self.per_page
+        offset_string = ' OFFSET %d' % self.offset
+        with Transaction().new_cursor as transaction:
+            transaction.cursor.execute(''.join([
+                self.search_query, limit_string, offset_string
+                ]))
+            return transaction.cursor.fetchall()
 
 
 class ModelPagination(object):
