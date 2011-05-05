@@ -184,7 +184,7 @@ class QueryPagination(BasePagination):
     """A fast implementation of pagination which uses a SQL query for 
     generating the IDS and hence the pagination"""
 
-    def __init__(self, search_query, count_query, page, per_page):
+    def __init__(self, obj, search_query, count_query, page, per_page):
         """
         :param search_query: Query to be used for search. It must not include
             an OFFSET or LIMIT as they would be automatically added to the 
@@ -195,24 +195,26 @@ class QueryPagination(BasePagination):
         :param per_page: Items per page
         :param page: The page to be displayed
         """
+        self.obj = obj
         self.search_query = search_query
         self.count_query = count_query
-        super(Pagination, self).__init__(page, per_page)
+        super(QueryPagination, self).__init__(page, per_page)
 
     @cached_property
     def count(self):
         "Return the count of the Items"
         from trytond.transaction import Transaction
-        with Transaction().new_cursor as transaction:
+        with Transaction().new_cursor() as transaction:
             transaction.cursor.execute(self.count_query)
-            return transaction.cursor.fetchone()
+            return transaction.cursor.fetchone()[0]
 
     def all_items(self):
         """Returns complete set of items"""
         from trytond.transaction import Transaction
-        with Transaction().new_cursor as transaction:
+        with Transaction().new_cursor() as transaction:
             transaction.cursor.execute(self.search_query)
-            return transaction.cursor.fetchall()
+            rv = [x[0] for x in transaction.cursor.fetchall()]
+        return self.obj.browse(rv)
 
     def items(self):
         """Returns the list of browse records of items in the page
@@ -220,11 +222,12 @@ class QueryPagination(BasePagination):
         from trytond.transaction import Transaction
         limit_string = ' LIMIT %d' % self.per_page
         offset_string = ' OFFSET %d' % self.offset
-        with Transaction().new_cursor as transaction:
+        with Transaction().new_cursor() as transaction:
             transaction.cursor.execute(''.join([
                 self.search_query, limit_string, offset_string
                 ]))
-            return transaction.cursor.fetchall()
+            rv = [x[0] for x in transaction.cursor.fetchall()]
+        return self.obj.browse(rv)
 
 
 class ModelPagination(object):
