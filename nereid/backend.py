@@ -182,7 +182,7 @@ class ModelPagination(object):
     if they will need to do pagination"""
 
 
-    def paginate(self, domain, page, per_page=20, error_out=True):
+    def paginate(self, domain, page, per_page=20, error_out=True, order=None):
         """Returns `per_page` items from page `page`.  By default it will
         abort with 404 if no items were found and the page was less than
         1.  This behavior can be disabled by setting `error_out` to `False`.
@@ -192,7 +192,7 @@ class ModelPagination(object):
         if error_out and page < 1:
             abort(404)
 
-        pagination = Pagination(self, domain, page, per_page)
+        pagination = Pagination(self, domain, page, per_page, order)
         if not pagination.pages and error_out:
             abort(404)
 
