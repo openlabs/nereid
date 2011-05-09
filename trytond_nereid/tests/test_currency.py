@@ -96,7 +96,7 @@ class TestCurrency(unittest.TestCase):
 
 
 def suite():
-    "Catalog test suite"
+    "Currency test suite"
     suite = unittest.TestSuite()
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestCurrency)
