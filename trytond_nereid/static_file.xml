@@ -63,7 +63,6 @@
     <record model="ir.action.act_window" id="action_nereid_static_folder_view">
         <field name="name">Nereid Static Folders</field>
         <field name="res_model">nereid.static.folder</field>
-        <field name="view_type">form</field>
     </record>
     <record model="ir.action.act_window.view" id="act_nereid_static_folder_view1">
         <field name="sequence" eval="10" />
@@ -128,7 +127,6 @@
     <record model="ir.action.act_window" id="action_nereid_static_file_view">
         <field name="name">Nereid Static Files</field>
         <field name="res_model">nereid.static.file</field>
-        <field name="view_type">form</field>
     </record>
     <record model="ir.action.act_window.view" id="act_nereid_static_file_view1">
         <field name="sequence" eval="10" />

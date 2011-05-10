@@ -92,7 +92,6 @@ This will send an email with password to user."
         <record model="ir.action.act_window" id="act_website_form">
             <field name="name">Web Sites</field>
             <field name="res_model">nereid.website</field>
-            <field name="view_type">form</field>
         </record>
         <record model="ir.action.act_window.view" id="act_website_form_view1">
             <field name="sequence" eval="10" />
@@ -154,7 +153,6 @@ This will send an email with password to user."
         <record model="ir.action.act_window" id="act_url_map_form">
             <field name="name">URL Map</field>
             <field name="res_model">nereid.url_map</field>
-            <field name="view_type">form</field>
         </record>
         <record model="ir.action.act_window.view" id="act_url_map_form_view1">
             <field name="sequence" eval="10" />
@@ -220,7 +218,6 @@ This will send an email with password to user."
         <record model="ir.action.act_window" id="act_url_rule_form">
             <field name="name">URL Rules</field>
             <field name="res_model">nereid.url_rule</field>
-            <field name="view_type">form</field>
         </record>
         <record model="ir.action.act_window.view" id="act_url_rule_form_view1">
             <field name="sequence" eval="10" />
@@ -252,7 +249,6 @@ This will send an email with password to user."
         <record model="ir.action.act_window" id="act_url_rule_defaults_tree">
             <field name="name">URL Rule Defaults</field>
             <field name="res_model">nereid.url_rule_defaults</field>
-            <field name="view_type">form</field>
         </record>
         <record model="ir.action.act_window.view" id="act_url_rule_defaults_tree_view2">
             <field name="sequence" eval="20" />
@@ -300,7 +296,6 @@ This will send an email with password to user."
         <record model="ir.action.act_window" id="act_template_form">
             <field name="name">Templates</field>
             <field name="res_model">nereid.template</field>
-            <field name="view_type">form</field>
         </record>
         <record model="ir.action.act_window.view" id="act_template_form_view1">
             <field name="sequence" eval="10" />
