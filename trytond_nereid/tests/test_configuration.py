@@ -12,9 +12,14 @@ from ast import literal_eval
 from decimal import Decimal
 import unittest2 as unittest
 
+from minimock import Mock
+import smtplib
+smtplib.SMTP = Mock('smtplib.SMTP')
+smtplib.SMTP.mock_returns = Mock('smtp_connection')
+
 from trytond.config import CONFIG
 CONFIG.options['db_type'] = 'sqlite'
-CONFIG.options['data_path'] = '/home/shalabh'
+CONFIG.options['data_path'] = '/tmp/temp_tryton_data/'
 CONFIG['smtp_server'] = 'smtp.gmail.com'
 CONFIG['smtp_user'] = 'test@xyz.com'
 CONFIG['smtp_password'] = 'testpassword'

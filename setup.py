@@ -15,7 +15,7 @@ try:
 except ImportError:
     tryton_installed = False
 
-requires = ['flask']
+requires = ['flask', 'unittest2', 'minimock']
 package_dir = {'nereid': 'nereid'}
 package_data = { }
 entry_points = ''
