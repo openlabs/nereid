@@ -12,10 +12,12 @@ from itertools import chain
 from decimal import Decimal
 
 from werkzeug import ImmutableDict
+from werkzeug.utils import import_string
 from jinja2 import Environment, BaseLoader, TemplateNotFound, \
-    MemcachedBytecodeCache
+    MemcachedBytecodeCache, FileSystemLoader as _Jinja2FileSystemLoader
 from flask.helpers import _tojson_filter
 
+from .config import ConfigAttribute
 from .globals import _request_ctx_stack
 from .signals import template_rendered
 from .helpers import url_for, get_flashed_messages, _rst_to_html_filter
@@ -78,6 +80,14 @@ class TrytonTemplateLoader(BaseLoader):
         return result
 
 
+class FileSystemLoader(_Jinja2FileSystemLoader):
+    """Loads templates from the file system."""
+
+    def __init__(self, app):
+        super(FileSystemLoader, self).__init__(
+            app.config['TEMPLATE_SEARCH_PATH'])
+
+
 def _render(template, context, app):
     """Renders the template and fires the signal"""
     ret_val = template.render(context)
@@ -122,7 +132,7 @@ class TemplateMixin(object):
     jinja_options = ImmutableDict(
         extensions=['jinja2.ext.autoescape', 'jinja2.ext.with_']
     )
-    template_loader_class = TrytonTemplateLoader
+    template_loader_class = ConfigAttribute('TEMPLATE_LOADER_CLASS')
     context_proc_model = 'nereid.template.context_processor'
 
     def __init__(self, **config):
@@ -150,7 +160,8 @@ class TemplateMixin(object):
         if self.cache and \
                 self.cache_type=='werkzeug.contrib.cache.MemcachedCache':
             options['bytecode_cache'] = MemcachedBytecodeCache(self.cache)
-        return Environment(loader=self.template_loader_class(self), **options)
+        loader_class = import_string(self.template_loader_class)
+        return Environment(loader=loader_class(self), **options)
 
     def init_jinja_globals(self):
         """Called directly after the environment was created to inject

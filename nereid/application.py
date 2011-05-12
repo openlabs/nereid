@@ -133,7 +133,13 @@ class Nereid(BackendMixin, RoutingMixin,
         'CACHE_DEFAULT_TIMEOUT': 300,
         'CACHE_THRESHOLD': 500,
         'CACHE_INIT_KWARGS': {},
-        'CACHE_KEY_PREFIX': None
+        'CACHE_KEY_PREFIX': None,
+
+        # Template Settings
+        'TEMPLATE_LOADER_CLASS': 'nereid.templating.TrytonTemplateLoader',
+        # Specify this if you are using the nereid.templating.FileSystemLoader
+        # Argument can be '/path/to/template' or ['path1', 'path2']
+        'TEMPLATE_SEARCH_PATH': ''
     })
 
     def __init__(self, **config):
