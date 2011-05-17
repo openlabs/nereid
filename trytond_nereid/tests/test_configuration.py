@@ -122,7 +122,7 @@ class TestNereidConfiguration(unittest.TestCase):
             # should return registration form back.
             registration_data = {
                 'name': 'New Test user',
-                'company': 'Test Company',
+                #'company': 'Test Company',
                 'street': 'New Street',
                 'email': NEW_USER,
                 'password': NEW_PASS,
