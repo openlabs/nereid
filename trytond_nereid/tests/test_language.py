@@ -25,7 +25,7 @@ class TestLanguage(unittest.TestCase):
             cls.site = testing_proxy.create_site('testsite.com')
             testing_proxy.create_template(
                 'home.jinja',
-                "{{session.get('language')}}",
+                "{{request.nereid_language.code}}",
                 cls.site)
             txn.cursor.commit()
 
@@ -49,7 +49,7 @@ class TestLanguage(unittest.TestCase):
         app = self.get_app()
         with app.test_client() as c:
             rv = c.get('/')
-            self.assertEqual(literal_eval(rv.data), None)
+            self.assertEqual(rv.data, 'en_US')
 
         with app.test_client() as c:
             c.get('/set_language?language=%s&next=/' % self.langs[0]['code'])
@@ -71,7 +71,7 @@ class TestLanguage(unittest.TestCase):
         with Transaction().start(testing_proxy.db_name, 1, None) as txn:
             testing_proxy.create_template(
                 'home.jinja',
-                "%s:{{session.get('language')}}" % self.langs[1]['code'],
+                "%s:{{request.nereid_language.code}}" % self.langs[1]['code'],
                 self.site, self.langs[1]['code'])
             txn.cursor.commit()
 
