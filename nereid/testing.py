@@ -216,6 +216,7 @@ def create_site(obj, name, url_map=None, company=None, **options):
     company_obj = obj.pool.get('company.company')
     site_obj = obj.pool.get('nereid.website')
     url_map_obj = obj.pool.get('nereid.url_map')
+    lang_obj = obj.pool.get('ir.lang')
 
     options['name'] = name
 
@@ -226,6 +227,10 @@ def create_site(obj, name, url_map=None, company=None, **options):
     if company is None:
         company, = company_obj.search([], limit=1)
     options['company'] = company
+
+    if 'default_language' not in options:
+        options['default_language'], = lang_obj.search(
+            [('code', '=', 'en_US')])
 
     return site_obj.create(options)
 

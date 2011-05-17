@@ -12,7 +12,7 @@ from werkzeug import abort
 from werkzeug.utils import cached_property
 
 from .config import ConfigAttribute
-from .globals import session
+from .globals import request
 from .ctx import has_request_context
 
 
@@ -26,8 +26,8 @@ class TransactionManager(object):
     def __enter__(self):
         from trytond.transaction import Transaction
         context = self.context.copy()
-        if has_request_context() and 'language' in session:
-            context['language'] = session['language']
+        if has_request_context():
+            context['language'] = request.nereid_language.code
         Transaction().start(self.database_name, self.user, context)
         return Transaction()
 

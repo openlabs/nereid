@@ -41,6 +41,14 @@ class Request(RequestBase):
         return currency_obj.browse(session['currency'])
 
     @cached_property
+    def nereid_language(self):
+        """Return a browse record for the language."""
+        lang_obj = current_app.pool.get('ir.lang')
+        if 'language' not in session:
+            return self.nereid_website.default_language
+        return lang_obj.browse(session['language'])
+
+    @cached_property
     def is_guest_user(self):
         """Return true if the user is guest."""
         if current_app.guest_user is None:

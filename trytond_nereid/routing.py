@@ -136,10 +136,15 @@ class WebSite(ModelSQL, ModelView):
     countries = fields.Many2Many(
         'nereid.website-country.country', 'website', 'country',
         'Countries Available')
+
     #: Allowed currencies in the website
     currencies = fields.Many2Many(
         'nereid.website-currency.currency',
         'website', 'currency', 'Currencies Available')
+
+    #: Default language
+    default_language = fields.Many2One('ir.lang', 'Default Language', 
+        required=True)
 
     def default_active(self):
         return True
@@ -331,14 +336,18 @@ class WebSite(ModelSQL, ModelView):
 
         Accepted Methods: GET, POST
         Accepts XHR: Yes
+
+        The language has to be provided in the GET arguments of POST form. It 
+        is more convenient to pass the language code than the id of the 
+        language because it makes it more readable in URLs
         """
         lang_obj = self.pool.get('ir.lang')
 
         language = request.values.get('language')
-        exists = lang_obj.search([('code', '=', language)])
+        exists = lang_obj.search([('code', '=', language)], limit=1)
 
         if exists:
-            session['language'] = language
+            session['language'] = exists[0]
             flash('Your language preference have been saved.')
             currency_code = ccy.countryccy(language[-2:])
             if currency_code:
