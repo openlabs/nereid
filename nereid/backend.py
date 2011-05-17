@@ -25,10 +25,9 @@ class TransactionManager(object):
 
     def __enter__(self):
         from trytond.transaction import Transaction
-        context = self.context.copy()
+        Transaction().start(self.database_name, self.user, self.context.copy())
         if has_request_context():
-            context['language'] = request.nereid_language.code
-        Transaction().start(self.database_name, self.user, context)
+            Transaction().context['language'] = request.nereid_language.code
         return Transaction()
 
     def __exit__(self, type, value, traceback):
