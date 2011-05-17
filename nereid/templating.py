@@ -14,7 +14,8 @@ from decimal import Decimal
 from werkzeug import ImmutableDict
 from werkzeug.utils import import_string
 from jinja2 import Environment, BaseLoader, TemplateNotFound, \
-    MemcachedBytecodeCache, FileSystemLoader as _Jinja2FileSystemLoader
+    MemcachedBytecodeCache, FileSystemLoader as _Jinja2FileSystemLoader, \
+    nodes, Extension
 from flask.helpers import _tojson_filter
 
 from .config import ConfigAttribute
@@ -88,6 +89,60 @@ class FileSystemLoader(_Jinja2FileSystemLoader):
             app.config['TEMPLATE_SEARCH_PATH'])
 
 
+class FragmentCacheExtension(Extension):
+    # a set of names that trigger the extension.
+    tags = set(['cache'])
+
+    def __init__(self, environment):
+        super(FragmentCacheExtension, self).__init__(environment)
+
+        # add the defaults to the environment
+        environment.extend(
+            fragment_cache_prefix='',
+            fragment_cache=None
+            )
+
+    def parse(self, parser):
+        # the first token is the token that started the tag.  In our case
+        # we only listen to ``'cache'`` so this will be a name token with
+        # `cache` as value.  We get the line number so that we can give
+        # that line number to the nodes we create by hand.
+        lineno = parser.stream.next().lineno
+
+        # now we parse a single expression that is used as cache key.
+        args = [parser.parse_expression()]
+
+        # if there is a comma, the user provided a timeout.  If not use
+        # None as second parameter.
+        if parser.stream.skip_if('comma'):
+            args.append(parser.parse_expression())
+        else:
+            args.append(nodes.Const(None))
+
+        # now we parse the body of the cache block up to `endcache` and
+        # drop the needle (which would always be `endcache` in that case)
+        body = parser.parse_statements(['name:endcache'], drop_needle=True)
+
+        # now return a `CallBlock` node that calls our _cache_support
+        # helper method on this extension.
+        return nodes.CallBlock(self.call_method('_cache_support', args),
+                               [], [], body).set_lineno(lineno)
+
+    def _cache_support(self, name, timeout, caller):
+        """Helper callback."""
+        key = self.environment.fragment_cache_prefix + name
+
+        # try to load the block from the cache
+        # if there is no fragment in the cache, render it and store
+        # it in the cache.
+        rv = self.environment.fragment_cache.get(key)
+        if rv is not None:
+            return rv
+        rv = caller()
+        self.environment.fragment_cache.add(key, rv, timeout)
+        return rv
+
+
 def _render(template, context, app):
     """Renders the template and fires the signal"""
     ret_val = template.render(context)
@@ -130,7 +185,8 @@ class TemplateMixin(object):
 
     #: Options that are passed directly to the Jinja2 environment.
     jinja_options = ImmutableDict(
-        extensions=['jinja2.ext.autoescape', 'jinja2.ext.with_']
+        extensions=['jinja2.ext.autoescape', 'jinja2.ext.with_', 
+            FragmentCacheExtension]
     )
     template_loader_class = ConfigAttribute('TEMPLATE_LOADER_CLASS')
     context_proc_model = 'nereid.template.context_processor'
@@ -148,6 +204,11 @@ class TemplateMixin(object):
         #: The Jinja2 environment.  It is created from the
         #: :attr:`jinja_options`.
         self.jinja_env = self.create_jinja_environment()
+
+        # Setup for fragmented caching
+        self.jinja_env.fragment_cache = self.cache
+        self.jinja_env.fragment_cache_prefix = self.cache_key_prefix + "-frag-"
+
         self.init_jinja_globals()
 
     def create_jinja_environment(self):
@@ -161,7 +222,9 @@ class TemplateMixin(object):
                 self.cache_type=='werkzeug.contrib.cache.MemcachedCache':
             options['bytecode_cache'] = MemcachedBytecodeCache(self.cache)
         loader_class = import_string(self.template_loader_class)
-        return Environment(loader=loader_class(self), **options)
+        return Environment(
+            loader=loader_class(self), 
+            **options)
 
     def init_jinja_globals(self):
         """Called directly after the environment was created to inject
