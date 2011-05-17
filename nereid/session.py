@@ -119,11 +119,12 @@ class SessionMixin(object):
         :param session: the session to be saved
         :param response: an instance of :attr:`response_class`
         """
-        self.session_store.save(session)
-        expires = domain = None
-        if session.permanent:
-            expires = datetime.utcnow() + self.permanent_session_lifetime
-        if self.config['SERVER_NAME'] is not None:
-            domain = '.' + self.config['SERVER_NAME']
-        response.set_cookie(self.session_cookie_name, session.sid, 
-            expires=expires, httponly=True, domain=domain)
+        if session.should_save:
+            self.session_store.save(session)
+            expires = domain = None
+            if session.permanent:
+                expires = datetime.utcnow() + self.permanent_session_lifetime
+            if self.config['SERVER_NAME'] is not None:
+                domain = '.' + self.config['SERVER_NAME']
+            response.set_cookie(self.session_cookie_name, session.sid, 
+                expires=expires, httponly=True, domain=domain)
