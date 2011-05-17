@@ -14,8 +14,8 @@ from decimal import Decimal
 from werkzeug import ImmutableDict
 from werkzeug.utils import import_string
 from jinja2 import Environment, BaseLoader, TemplateNotFound, \
-    MemcachedBytecodeCache, FileSystemLoader as _Jinja2FileSystemLoader, \
-    nodes, Extension
+    MemcachedBytecodeCache, FileSystemLoader as _Jinja2FileSystemLoader, nodes
+from jinja2.ext import Extension
 from flask.helpers import _tojson_filter
 
 from .config import ConfigAttribute
