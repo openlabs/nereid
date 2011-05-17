@@ -17,7 +17,7 @@ from nereid.helpers import login_required, key_from_list
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
 from wtforms import Form, TextField, PasswordField, validators
-
+import ccy
 
 # pylint: disable-msg=E1101
 class URLMap(ModelSQL, ModelView):
@@ -326,7 +326,8 @@ class WebSite(ModelSQL, ModelView):
         return rv
 
     def set_language(self):
-        """Sets the language in the session of the user
+        """Sets the language in the session of the user. Also try to guess the
+        currency of the user, if not use the default currency of the website
 
         Accepted Methods: GET, POST
         Accepts XHR: Yes
@@ -339,8 +340,16 @@ class WebSite(ModelSQL, ModelView):
         if exists:
             session['language'] = language
             flash('Your language preference have been saved.')
+            currency_code = ccy.countryccy(language[-2:])
+            if currency_code:
+                for currency in request.nereid_website.currencies:
+                    if currency.code == currency_code:
+                        session['currency'] = currency.id
+                        break
+                else:
+                    'But we dont support your currency yet!'
         else:
-            flash('Sorry! we do not support your language yet.')
+            flash('Sorry! we do not speak your language yet!')
 
         # redirect to the next url if given else take to home page
         return redirect(
