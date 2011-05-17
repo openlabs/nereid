@@ -30,7 +30,7 @@ from trytond.config import CONFIG
 class RegistrationForm(Form):
     "Simple Registration form"
     name = TextField('Name', [validators.Required(),])
-    company = TextField('Company', [validators.Required(),])
+    company = TextField('Company')
     street = TextField('Street', [validators.Required(),])
     streetbis = TextField('Street (Bis)')
     zip = TextField('Post Code', [validators.Required(),])
@@ -217,7 +217,8 @@ class Address(ModelSQL, ModelView):
             else:
                 # Create Party
                 party_id = party_obj.create({
-                    'name': registration_data['company'],
+                    'name': registration_data['company'] or \
+                        registration_data['name'],
                     'addresses': [
                         ('create', {
                             'name': registration_data['name'],
