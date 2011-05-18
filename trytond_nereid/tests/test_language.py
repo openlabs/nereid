@@ -48,12 +48,12 @@ class TestLanguage(unittest.TestCase):
         """
         app = self.get_app()
         with app.test_client() as c:
-            rv = c.get('/')
+            rv = c.get('/en_US/')
             self.assertEqual(rv.data, 'en_US')
 
         with app.test_client() as c:
-            c.get('/set_language?language=%s&next=/' % self.langs[0]['code'])
-            rv = c.get('/')
+            c.get('/en_US/set_language?language=%s&next=/' % self.langs[0]['code'])
+            rv = c.get('/en_US/')
             self.assertEqual(rv.data, self.langs[0]['code'])
 
     def test_0020_set_another(self):
@@ -61,8 +61,8 @@ class TestLanguage(unittest.TestCase):
         """
         app = self.get_app()
         with app.test_client() as c:
-            c.get('/set_language?language=%s&next=/' % self.langs[1]['code'])
-            rv = c.get('/')
+            c.get('/en_US/set_language?language=%s&next=/' % self.langs[1]['code'])
+            rv = c.get('/en_US/')
             self.assertEqual(rv.data, self.langs[1]['code'])
 
     def test_0030_set_with_lang_template(self):
@@ -77,8 +77,8 @@ class TestLanguage(unittest.TestCase):
 
         app = self.get_app()
         with app.test_client() as c:
-            c.get('/set_language?language=%s&next=/' % self.langs[1]['code'])
-            rv = c.get('/')
+            c.get('/en_US/set_language?language=%s&next=/' % self.langs[1]['code'])
+            rv = c.get('/en_US/')
             self.assertEqual(rv.data, '%s:%s' % (
                 self.langs[1]['code'], self.langs[1]['code']
                 )

@@ -101,7 +101,7 @@ class TestNereidConfiguration(unittest.TestCase):
         "Successful rendering of an empty registration page"
         app = self.get_app()
         with app.test_client() as c:
-            response = c.get('/registration')
+            response = c.get('/en_US/registration')
             self.assertEqual(response.status_code, 200)
 
     def test_0020_registration(self):
@@ -115,7 +115,7 @@ class TestNereidConfiguration(unittest.TestCase):
         app = self.get_app()
         with app.test_client() as c:
             # Rendering of empty registration page
-            response = c.get('/registration')
+            response = c.get('/en_US/registration')
             self.assertEqual(response.status_code, 200)
 
             # Missing some information in filling the form 
@@ -128,7 +128,7 @@ class TestNereidConfiguration(unittest.TestCase):
                 'password': NEW_PASS,
             }
 
-            response = c.post('/registration', data=registration_data)
+            response = c.post('/en_US/registration', data=registration_data)
             self.assertEqual(response.status_code, 200)
 
             # Filling all required values in the registration form 
@@ -142,7 +142,7 @@ class TestNereidConfiguration(unittest.TestCase):
                 'confirm': NEW_PASS,
             })
 
-            response = c.post('/registration', data=registration_data)
+            response = c.post('/en_US/registration', data=registration_data)
             self.assertEqual(response.status_code, 302)
             # Checking whether new has been created.
             # An active user will have activation_code = False
@@ -171,7 +171,7 @@ class TestNereidConfiguration(unittest.TestCase):
             # For account activation a link is send as email which is in 
             # format below, clicking on it will activate the account and 
             # set activation_code=False 
-            response = c.get('/activate-account/%s/%s' % (new_user.id, 
+            response = c.get('/en_US/activate-account/%s/%s' % (new_user.id, 
                 new_user.activation_code))
             self.assertEqual(response.status_code, 302)
             
@@ -180,7 +180,7 @@ class TestNereidConfiguration(unittest.TestCase):
             self.assertFalse(new_user.activation_code)
 
         with app.test_client() as c:
-            response = c.post('/login', 
+            response = c.post('/en_US/login', 
                 data={'email': u'new@example.com', 'password': u'password'})
             self.assertEqual(response.status_code, 302)
 
@@ -188,18 +188,18 @@ class TestNereidConfiguration(unittest.TestCase):
         "Change of password"
         app = self.get_app()
         with app.test_client() as c:
-            c.post('/login', 
+            c.post('/en_US/login', 
                 data={'email': 'new@example.com', 'password': 'password'})
-            response = c.get('/change-password')
+            response = c.get('/en_US/change-password')
             self.assertEqual(response.status_code, 200)
 
-            response = c.post('/change-password', data={
+            response = c.post('/en_US/change-password', data={
                 'password': 'new-password',
                 'confirm': 'password'
             })
             self.assertEqual(response.status_code, 200)
 
-            response = c.post('/change-password', data={
+            response = c.post('/en_US/change-password', data={
                 'password': 'new-password',
                 'confirm': 'new-password'
             })
@@ -211,12 +211,12 @@ class TestNereidConfiguration(unittest.TestCase):
             new_user_id, = self.address_obj.search([('email', '=', NEW_USER)])
         app = self.get_app()
         with app.test_client() as c:
-            c.post('/login', 
+            c.post('/en_US/login', 
                 data={'email': 'new@example.com', 'password': 'new-password'})
-            response = c.get('/reset-account')
+            response = c.get('/en_US/reset-account')
             self.assertEqual(response.status_code, 200)
 
-            response = c.post('/reset-account', data={
+            response = c.post('/en_US/reset-account', data={
                 'email': 'new@example.com',
             })
             self.assertEqual(response.status_code, 302)
@@ -226,9 +226,9 @@ class TestNereidConfiguration(unittest.TestCase):
             self.assertTrue(new_user.activation_code != False)
 
         with app.test_client() as c:
-            c.post('/login', 
+            c.post('/en_US/login', 
                 data={'email': 'new@example.com', 'password': 'new-password'})
-            response = c.post('/change-password', data={
+            response = c.post('/en_US/change-password', data={
                 'password': 'password',
                 'confirm': 'password'
             })
@@ -239,11 +239,11 @@ class TestNereidConfiguration(unittest.TestCase):
             self.assertTrue(new_user.activation_code != False)
 
         with app.test_client() as c:
-            c.get('/logout')
-            response = c.post('/login', 
+            c.get('/en_US/logout')
+            response = c.post('/en_US/login', 
                 data={'email': 'new@example.com', 'password': 'new-password'})
             self.assertEqual(response.status_code, 200)
-            response = c.post('/login', 
+            response = c.post('/en_US/login', 
                 data={'email': 'new@example.com', 'password': 'password'})
             self.assertEqual(response.status_code, 302)
 
@@ -258,11 +258,11 @@ class TestNereidConfiguration(unittest.TestCase):
             new_user = self.address_obj.browse(new_user_id)
         app = self.get_app()
         with app.test_client() as c:
-            c.post('/login', 
+            c.post('/en_US/login', 
                 data={'email': 'new@example.com', 'password': 'password'})
 
             # On submitting an empty form the page should load back
-            response = c.get('/edit-address/%d' % new_user.id)
+            response = c.get('/en_US/edit-address/%d' % new_user.id)
             self.assertEqual(response.status_code, 200)
 
             # On submitting url with id the address must change
@@ -282,9 +282,9 @@ class TestNereidConfiguration(unittest.TestCase):
                 'email': new_user_email,
                 }
         with app.test_client() as c:
-            c.post('/login', 
+            c.post('/en_US/login', 
                 data={'email': 'new@example.com', 'password': 'password'})
-            response = c.post('/edit-address/%d' % new_user.id,
+            response = c.post('/en_US/edit-address/%d' % new_user.id,
                 data=address_data)
             self.assertEqual(response.status_code, 302)
 
@@ -300,7 +300,7 @@ class TestNereidConfiguration(unittest.TestCase):
                 'subdivision': subdivision.id,
                 'email': new_user_email,
                 }
-            response = c.post('/edit-address/%d' % 0, data=address_data)
+            response = c.post('/en_US/edit-address/%d' % 0, data=address_data)
             self.assertEqual(response.status_code, 302)
         with Transaction().start(testing_proxy.db_name, testing_proxy.user, None):
             self.assertEqual(len(new_user.party.addresses), 2)
@@ -308,9 +308,9 @@ class TestNereidConfiguration(unittest.TestCase):
     def test_0070_view_address(self):
         app = self.get_app()
         with app.test_client() as c:
-            c.post('/login', 
+            c.post('/en_US/login', 
                 data={'email': 'new@example.com', 'password': 'password'})
-            response = c.get('/view-address')
+            response = c.get('/en_US/view-address')
             self.assertEqual(response.status_code, 200)
 
     def test_0080_login(self):
@@ -319,12 +319,12 @@ class TestNereidConfiguration(unittest.TestCase):
         with app.test_client() as c:
 
             # Correct entries will redirect to home or some other page
-            response = c.post('/login', 
+            response = c.post('/en_US/login', 
                 data={'email': 'new@example.com', 'password': 'password'})
             self.assertEqual(response.status_code, 302)
 
             # Wrong entries will render the login page again
-            response = c.post('/login', 
+            response = c.post('/en_US/login', 
                 data={
                     'email': 'new@example.com', 
                     'password': 'wrong-password'})
@@ -334,27 +334,27 @@ class TestNereidConfiguration(unittest.TestCase):
         "Check whether a logged in user can logout"
         app = self.get_app()
         with app.test_client() as c:
-            c.post('/login', 
+            c.post('/en_US/login', 
                 data={'email': 'new@example.com', 'password': 'password'})
 
-            response = c.get('/logout')
+            response = c.get('/en_US/logout')
             self.assertEqual(response.status_code, 302)
 
     def test_0100_account(self):
         "Check the display the account details of a user"
         app = self.get_app()
         with app.test_client() as c:
-            c.post('/login', 
+            c.post('/en_US/login', 
                 data={'email': 'new@example.com', 'password': 'password'})
 
-            response = c.get('/account')
+            response = c.get('/en_US/account')
             self.assertEqual(response.status_code, 200)
 
     def test_0110_country_list(self):
         "Check if the website countries are there in country list"
         app = self.get_app()
         with app.test_client() as c:
-            response = c.get('/countries')
+            response = c.get('/en_US/countries')
             self.assertEqual(len(eval(response.data)['result']), 5)
 
     def test_0120_subdivision_list(self):
@@ -366,7 +366,7 @@ class TestNereidConfiguration(unittest.TestCase):
             subdivision = country.subdivisions[2]
         app = self.get_app()
         with app.test_client() as c:
-            response = c.get('/subdivisions?country=%d' % country)
+            response = c.get('/en_US/subdivisions?country=%d' % country)
             self.assertEqual(not(len(eval(response.data)['result'])), 0)
 
 def suite():

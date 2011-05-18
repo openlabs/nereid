@@ -44,7 +44,7 @@ class TestCurrency(unittest.TestCase):
         """
         app = self.get_app()
         with app.test_client() as c:
-            rv = c.get('/')
+            rv = c.get('/en_US/')
             self.assertEqual(literal_eval(rv.data), [])
 
         with Transaction().start(testing_proxy.db_name, 1, None) as txn:
@@ -53,14 +53,14 @@ class TestCurrency(unittest.TestCase):
             txn.cursor.commit()
 
         with app.test_client() as c:
-            rv = c.get('/')
+            rv = c.get('/en_US/')
             self.assertEqual(len(literal_eval(rv.data)), 5)
 
     def test_0020_set_invalid_currency(self):
         """Set invalid currency and assert 403"""
         app = self.get_app()
         with app.test_client() as c:
-            rv = c.get('/')
+            rv = c.get('/en_US/')
             data = literal_eval(rv.data)
             allowed_currencies = [c['id'] for c in data]
 
@@ -69,28 +69,28 @@ class TestCurrency(unittest.TestCase):
                 [('id', 'not in', allowed_currencies)], limit=1)
 
         with app.test_client() as c:
-            rv = c.post('/set_currency', data={'currency': invalid_id})
+            rv = c.post('/en_US/set_currency', data={'currency': invalid_id})
             self.assertEqual(rv.status_code, 403)
 
     def test_0030_set_currency_post(self):
         """Set currency on POST and assert 302"""
         app = self.get_app()
         with app.test_client() as c:
-            rv = c.get('/')
+            rv = c.get('/en_US/')
             data = literal_eval(rv.data)
             allowed_currencies = [each['id'] for each in data]
-            rv = c.post('/set_currency', data={'currency': allowed_currencies[0]})
+            rv = c.post('/en_US/set_currency', data={'currency': allowed_currencies[0]})
             self.assertEqual(rv.status_code, 302)
 
     def test_0040_set_currency_get(self):
         """Set currency on GET and assert 302"""
         app = self.get_app()
         with app.test_client() as c:
-            rv = c.get('/')
+            rv = c.get('/en_US/')
             data = literal_eval(rv.data)
             allowed_currencies = [each['id'] for each in data]
             rv = c.get(
-                '/set_currency?currency=%s&next=/next' % allowed_currencies[0])
+                '/en_US/set_currency?currency=%s&next=/next' % allowed_currencies[0])
             self.assertEqual(rv.status_code, 302)
             self.assertEqual(rv.location, 'http://localhost/next')
 
