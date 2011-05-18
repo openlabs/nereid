@@ -11,6 +11,13 @@
             <field name="name">Default</field>
         </record>
 
+        <record id="home_url_wo_lang" model="nereid.url_rule">
+            <field name="rule">/</field>
+            <field name="endpoint">nereid.website.home</field>
+            <field name="sequence" eval="05" />
+            <field name="url_map" ref="default_url_map" />
+        </record>
+
         <record id="home_url" model="nereid.url_rule">
             <field name="rule">/&lt;language&gt;/</field>
             <field name="endpoint">nereid.website.home</field>
