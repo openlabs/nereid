@@ -10,10 +10,10 @@
 
 from werkzeug.exceptions import HTTPException, MethodNotAllowed
 from werkzeug.routing import Rule, Map
+from trytond.transaction import Transaction
 
 from .config import ConfigAttribute
 from .helpers import send_from_directory
-
 from .globals import _request_ctx_stack, request
 
 
@@ -91,7 +91,10 @@ class RoutingMixin(object):
             if rule.provide_automatic_options and req.method == 'OPTIONS':
                 return self.make_default_options_response()
             # otherwise dispatch to the handler for that endpoint
-            return self.view_functions[rule.endpoint](**req.view_args)
+            language = req.view_args.pop(
+                'language', req.nereid_website.default_language.code)
+            with Transaction().set_context(language=language):
+                return self.view_functions[rule.endpoint](**req.view_args)
 
         except HTTPException, exception:
             return self.handle_http_exception(exception)

@@ -341,26 +341,21 @@ class WebSite(ModelSQL, ModelView):
         is more convenient to pass the language code than the id of the 
         language because it makes it more readable in URLs
         """
+        raise DeprecationWarning("Set language is deprecated")
         lang_obj = self.pool.get('ir.lang')
 
         language = request.values.get('language')
         exists = lang_obj.search([('code', '=', language)], limit=1)
 
         if exists:
-            session['language'] = exists[0]
             flash('Your language preference have been saved.')
-            currency_code = ccy.countryccy(language[-2:])
-            if currency_code:
-                for currency in request.nereid_website.currencies:
-                    if currency.code == currency_code:
-                        session['currency'] = currency.id
-                        break
-                else:
-                    'But we dont support your currency yet!'
         else:
             flash('Sorry! we do not speak your language yet!')
 
         # redirect to the next url if given else take to home page
+        redirect_to = request.values.get('next')
+        if redirect_to:
+            redirect_to.replace(session['language'], language)
         return redirect(
             request.values.get('next', url_for('nereid.website.home'))
             )

@@ -9,6 +9,8 @@
 '''
 from werkzeug.utils import cached_property
 from flask.wrappers import Request as RequestBase, Response as ResponseBase
+from trytond.transaction import Transaction
+import ccy
 from .globals import current_app, session
 
 
@@ -35,18 +37,18 @@ class Request(RequestBase):
     @cached_property
     def nereid_currency(self):
         """Return a browse record for the currency."""
-        currency_obj = current_app.pool.get('currency.currency')
-        if 'currency' not in session:
-            return self.nereid_website.company.currency
-        return currency_obj.browse(session['currency'])
+        currency_code = ccy.countryccy(self.nereid_language.code[-2:])
+        for currency in self.nereid_website.currencies:
+            if currency.code == currency_code:
+                return currency
+        raise RuntimeError("Currency %s is not valid" % currency_code)
 
     @cached_property
     def nereid_language(self):
         """Return a browse record for the language."""
         lang_obj = current_app.pool.get('ir.lang')
-        if 'language' not in session:
-            return self.nereid_website.default_language
-        return lang_obj.browse(session['language'])
+        lang_id, = lang_obj.search([('code', '=', Transaction().language)])
+        return lang_obj.browse(lang_id)
 
     @cached_property
     def is_guest_user(self):

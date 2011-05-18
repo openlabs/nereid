@@ -56,8 +56,8 @@ def url_for(endpoint, **values):
     """
     ctx = _request_ctx_stack.top
     external = values.pop('_external', False)
-    if 'lang' not in values:
-        values['lang'] = ctx.request.nereid_language.code
+    if 'language' not in values:
+        values['language'] = request.nereid_language.code
     return ctx.url_adapter.build(endpoint, values, force_external=external)
 
 
