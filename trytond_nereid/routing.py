@@ -411,7 +411,7 @@ class URLRule(ModelSQL, ModelView):
     _rec_name = 'rule'
 
     rule = fields.Char('Rule', required=True, select=True,)
-    endpoint = fields.Char('Endpoint', required=True, select=True,)
+    endpoint = fields.Char('Endpoint', select=True,)
     active = fields.Boolean('Active')
     defaults = fields.One2Many('nereid.url_rule_defaults', 'rule', 'Defaults')
     methods = fields.Selection(
