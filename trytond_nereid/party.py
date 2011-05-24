@@ -210,7 +210,9 @@ class Address(ModelSQL, ModelView):
             # First search if an address with the email already exists
             existing = contact_mech_obj.search([
                 ('value', '=', registration_data['email']),
-                ('type', '=', 'email')])
+                ('type', '=', 'email'),
+                ('party.company', '=', request.nereid_website.company.id),
+                ])
             if existing:
                 flash('A registration already exists with this email. '
                     'Please contact customer care')
@@ -219,6 +221,7 @@ class Address(ModelSQL, ModelView):
                 party_id = party_obj.create({
                     'name': registration_data['company'] or \
                         registration_data['name'],
+                    'company': request.nereid_website.company.id,
                     'addresses': [
                         ('create', {
                             'name': registration_data['name'],
@@ -257,8 +260,10 @@ class Address(ModelSQL, ModelView):
 
         if request.method == 'POST':
             contact = contact_mech_obj.search([
-                    ('value', '=', request.form['email']),
-                    ('type', '=', 'email')])
+                ('value', '=', request.form['email']),
+                ('type', '=', 'email'),
+                ('party.company', '=', request.nereid_website.company.id),
+                ])
             if not contact:
                 flash('Invalid email address')
                 return render_template('reset-password.jinja')
@@ -288,6 +293,7 @@ class Address(ModelSQL, ModelView):
         contact = contact_mech_obj.search([
             ('value', '=', email),
             ('type', '=', 'email'),
+            ('party.company', '=', request.nereid_website.company.id),
             ('party', '!=', guest_user.party.id)
             ])
         if not contact:
@@ -395,6 +401,19 @@ class Address(ModelSQL, ModelView):
         return render_template('address.jinja')
 
 Address()
+
+
+class Party(ModelSQL, ModelView):
+    """Add company to the user"""
+    _name = "party.party"
+
+    # The company of the website(s) to which the user is affiliated. This 
+    # allows websites of the same company to share authentication/users. It 
+    # does not make business or technical sense to have website of multiple
+    # companies share the authentication.
+    company = fields.Many2One('company.company', 'Company')
+
+Party()
 
 
 class EmailTemplate(ModelSQL, ModelView):
