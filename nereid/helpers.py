@@ -326,21 +326,35 @@ def key_from_list(list_of_args):
     return hash.hexdigest()
 
 
-def make_crumbs(browse_record, endpoint, add_home=True, max_size=10):
+def make_crumbs(browse_record, endpoint, add_home=True, max_depth=10, 
+        field_map_changes=None):
     """Makes bread crumbs for a given browse record based on the field
     parent of the browse record
+
+    :param browse_record: The browse record of the object from which upward 
+        tracing of crumbs need to be done
+    :param endpoint: The endpoint against which the urls have to be generated
+    :param add_home: If provided will add home and home url as the first item
+    :param max_depth: Maximum depth of the crumbs
+    :param field_map_changes: A dictionary/list of key value pair (tuples) to 
+        update the default field_map. Only the changing entries need to be 
+        provided.
     """
-    parent_field = 'parent'
-    uri_field = 'uri'
-    title_field = 'title'
+    field_map = dict(
+        parent_field = 'parent',
+        uri_field = 'uri',
+        title_field = 'title',
+        )
+    if field_map_changes is not None:
+        field_map.update(field_map_changes)
 
     def recurse(node, level=1):
-        if level > max_size or not node:
+        if level > max_depth or not node:
             return []
         return [
-            (url_for(endpoint, uri=getattr(node, uri_field)), 
-             getattr(node, title_field))
-            ] + recurse(getattr(node, parent_field), level + 1)
+            (url_for(endpoint, uri=getattr(node, field_map['uri_field'])), 
+             getattr(node, field_map['title_field']))
+            ] + recurse(getattr(node, field_map['parent_field']), level + 1)
 
     items = recurse(browse_record)
 
