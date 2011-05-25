@@ -361,4 +361,7 @@ def make_crumbs(browse_record, endpoint, add_home=True, max_depth=10,
     if add_home:
         items.append((url_for('nereid.website.home'), 'Home'))
 
+    # The bread crumb is now in reverse order with home at end, reverse it
+    items.reverse()
+
     return items
