@@ -18,7 +18,6 @@ import unicodedata
 from functools import wraps
 from hashlib import md5
 
-import jinja2
 from flask.helpers import _assert_have_json, json, jsonify
 from werkzeug import Headers, wrap_file, redirect
 from werkzeug.exceptions import NotFound
@@ -326,8 +325,8 @@ def key_from_list(list_of_args):
     hash.update(repr(list_of_args))
     return hash.hexdigest()
 
-@jinja2.contextfunction
-def make_crumbs(context, browse_record, endpoint, add_home=True, max_size=10):
+
+def make_crumbs(browse_record, endpoint, add_home=True, max_size=10):
     """Makes bread crumbs for a given browse record based on the field
     parent of the browse record
     """

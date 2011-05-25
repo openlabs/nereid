@@ -22,7 +22,8 @@ from flask.helpers import _tojson_filter
 from .config import ConfigAttribute
 from .globals import _request_ctx_stack
 from .signals import template_rendered
-from .helpers import url_for, get_flashed_messages, _rst_to_html_filter
+from .helpers import url_for, get_flashed_messages, _rst_to_html_filter, \
+    make_crumbs
 
 
 def _default_template_ctx_processor():
@@ -36,6 +37,7 @@ def _default_template_ctx_processor():
         session=reqctx.session,
         g=reqctx.g,
         Decimal=Decimal,
+        make_crumbs=make_crumbs,
     )
 
 
