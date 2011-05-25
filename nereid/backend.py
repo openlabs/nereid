@@ -119,6 +119,14 @@ class Pagination(BasePagination):
     a SQL query rather than a domain use :class:QueryPagination instead
     """
 
+    # The counting of all possible records can be really expensive if you
+    # have too many records and the selectivity of the query is low. For 
+    # example -  a query to display all products in a website would be quick
+    # in displaying the products but slow in building the navigation. So in 
+    # cases where this could be frequent, the value of count may be cached and
+    # assigned to this variable
+    _count = None
+
     def __init__(self, obj, domain, page, per_page, order=None):
         """
         :param obj: The object itself. pass self within tryton object
@@ -138,6 +146,8 @@ class Pagination(BasePagination):
         """
         if self.ids_domain():
             return len(self.domain[0][2])
+        if self._count is not None:
+            return self._count
         return self.obj.search(domain=self.domain, count=True)
 
     def all_items(self):
