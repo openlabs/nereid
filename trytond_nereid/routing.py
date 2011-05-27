@@ -17,7 +17,6 @@ from nereid.helpers import login_required, key_from_list
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
 from wtforms import Form, TextField, PasswordField, validators
-import ccy
 
 # pylint: disable-msg=E1101
 class URLMap(ModelSQL, ModelView):
