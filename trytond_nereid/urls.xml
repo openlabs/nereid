@@ -146,5 +146,13 @@
             <field name="methods">("GET", "POST")</field>
             <field name="url_map" ref="nereid.default_url_map" />
         </record>
+
+        <record id="user_status" model="nereid.url_rule">
+            <field name="rule">/&lt;language&gt;/user_status</field>
+            <field name="endpoint">nereid.website.user_status</field>
+            <field name="sequence" eval="150" />
+            <field name="url_map" ref="nereid.default_url_map" />
+        </record>
+
     </data>
 </tryton>

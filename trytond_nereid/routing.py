@@ -359,6 +359,25 @@ class WebSite(ModelSQL, ModelView):
             request.values.get('next', url_for('nereid.website.home'))
             )
 
+    def _user_status(self):
+        """Returns the commonly required status parameters of the user
+
+        This method could be inherited and components could be added
+        """
+        if request.is_guest_user:
+            return {
+                'logged_id': False
+                }
+        return {
+            'logged_in': True,
+            'name': request.nereid_user.name
+            }
+
+    def user_status(self):
+        """Returns a JSON of the user_status
+        """
+        return jsonify(status=self._user_status())
+
 WebSite()
 
 
