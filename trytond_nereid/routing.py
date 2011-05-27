@@ -13,7 +13,7 @@ from ast import literal_eval
 from werkzeug import abort, redirect
 from nereid import jsonify, flash, render_template, url_for, cache
 from nereid.globals import session, request
-from nereid.helpers import login_required, key_from_list
+from nereid.helpers import login_required, key_from_list, get_flashed_messages
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
 from wtforms import Form, TextField, PasswordField, validators
@@ -364,14 +364,19 @@ class WebSite(ModelSQL, ModelView):
 
         This method could be inherited and components could be added
         """
-        if request.is_guest_user:
-            return {
-                'logged_id': False
-                }
-        return {
-            'logged_in': True,
-            'name': request.nereid_user.name
+        rv = {
+            'messages': get_flashed_messages()
             }
+        if request.is_guest_user:
+            rv.update({
+                'logged_id': False
+                })
+        else:
+            rv.update({
+                'logged_in': True,
+                'name': request.nereid_user.name
+                })
+        return rv
 
     def user_status(self):
         """Returns a JSON of the user_status
