@@ -226,12 +226,12 @@ class Address(ModelSQL, ModelView):
             flash('Invalid Activation Code')
         return redirect(url_for('nereid.website.login'))
 
-    def create_act_code(self, address):
+    def create_act_code(self, address, length=16):
         """Create activation code
         :param address: ID of the addresss
         """
         act_code = ''.join(
-                random.sample(string.letters + string.digits, 16))
+                random.sample(string.letters + string.digits, length))
         exists = self.search([('activation_code', '=', act_code)])
         if exists:
             return self.create_act_code(address)
@@ -335,7 +335,7 @@ class Address(ModelSQL, ModelView):
                 flash('Email is not associated with any account.')
                 return render_template('reset-password.jinja')
 
-            self.create_act_code(address[0])
+            self.create_act_code(address[0], length=12)
             flash('An email has been sent to your account for resetting'
                 ' your credentials')
             return redirect(url_for('nereid.website.login'))
@@ -371,6 +371,8 @@ class Address(ModelSQL, ModelView):
             return None
 
         address = self.browse(ids[0])
+        if address.activation_code and len(address.activation_code) == 16:
+            return None
         password += address.salt or ''
 
         if isinstance(password, unicode):

@@ -167,7 +167,11 @@ class TestNereidConfiguration(unittest.TestCase):
             new_user = self.address_obj.browse(new_user_id)
         app = self.get_app()
         with app.test_client() as c:
-
+            # Try logging in without activating the code        
+            response = c.post('/en_US/login', 
+                data={'email': u'new@example.com', 'password': u'password'})
+            self.assertEqual(response.status_code, 200)
+            
             # For account activation a link is send as email which is in 
             # format below, clicking on it will activate the account and 
             # set activation_code=False 
