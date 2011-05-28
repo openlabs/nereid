@@ -42,6 +42,26 @@
                           confirm="Do you want to create a web login for this contact?
 This will send an email with password to user." 
                           colspan="3"/>
+                        <newline/>
+                        <field name="additional_details" colspan="4">
+                            <form string="Additional Detail">
+                                <label name="type" />
+                                <field name="type" />
+                                <label name="value" />
+                                <field name="value" />
+                                <label name="active" />
+                                <field name="active" />
+                                <label name="sequence"/>
+                                <field name="sequence"/>
+                                <separator string="Comment" id="sepr_comment"/>
+                                <field name="comment" colspan="4"/>
+                            </form>              
+                            <tree string="Additional Details">
+                                <field name="type" />
+                                <field name="value" />
+                                <field name="sequence" />
+                            </tree>              
+                        </field>
                     </xpath>
                 </data>
                 ]]>

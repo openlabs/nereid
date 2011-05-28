@@ -23,7 +23,7 @@ from nereid import request, url_for, render_template, login_required, flash
 from nereid.globals import session, current_app
 from werkzeug import redirect
 from trytond.model import ModelView, ModelSQL, fields
-from trytond.pyson import Eval
+from trytond.pyson import Eval, Bool, Not
 from trytond.config import CONFIG
 
 
@@ -72,7 +72,66 @@ class ChangePasswordForm(NewPasswordForm):
     old_password = PasswordField('Old Password')
 
 
+STATES = {
+    'readonly': Not(Bool(Eval('active'))),
+}
+
+
 # pylint: disable-msg=E1101
+class AdditionalDetails(ModelSQL, ModelView):
+    "Additional Details for Address"
+    _name = "address.additional_details"
+    _description = __doc__
+    _rec_name = 'value'
+    
+    def get_types(self):
+        """
+        Wrapper to convert _get_types dictionary 
+        into a `list of tuple` for the use of Type Selection field
+        
+        This hook will scan all methods which start with _type_address_extend
+        
+        Your hook extension should look like:
+                
+        def _type_address_extend_<name>(self, cursor, user, context=None):
+            return {
+                        '<name>': '<value>'
+            }
+        
+        An example from ups:
+        
+        return {'type': 'value'
+            }
+        
+        :return: the list of tuple for Selection field
+        """
+        type_dict = {}
+        for attribute in dir(self):
+            if attribute.startswith('_type_address_extend'):
+                type_dict.update(getattr(self, attribute).__call__())
+        return type_dict.items()
+
+    type = fields.Selection('get_types', 'Type', required=True, states=STATES,
+        select=1)
+    value = fields.Char('Value', select=1, states=STATES)
+    comment = fields.Text('Comment', states=STATES)
+    address = fields.Many2One('party.address', 'Address', required=True,
+        ondelete='CASCADE', states=STATES, select=1)
+    active = fields.Boolean('Active', select=1)
+    sequence = fields.Integer('Sequence')
+
+    def default_active(self):
+        return True
+        
+    def _type_address_extend_default(self):
+        return {
+            'dob': 'Date of Birth',
+            'other': 'Other',
+        }
+    
+AdditionalDetails()
+
+
 class Address(ModelSQL, ModelView):
     """An address is considered as the equivalent of a user
     in a conventional Web application. Hence, the username and
@@ -104,6 +163,10 @@ class Address(ModelSQL, ModelView):
     #: A unique activation code required to match the user's request
     #: for activation of the account.
     activation_code = fields.Char('Unique Activation Code')
+    
+    # Extra fields to cater to extended registration
+    additional_details = fields.One2Many('address.additional_details', 
+        'address', 'Additional Details', states=STATES)
 
     def __init__(self):
         super(Address, self).__init__()

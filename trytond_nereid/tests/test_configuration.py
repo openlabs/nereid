@@ -368,6 +368,20 @@ class TestNereidConfiguration(unittest.TestCase):
         with app.test_client() as c:
             response = c.get('/en_US/subdivisions?country=%d' % country)
             self.assertEqual(not(len(eval(response.data)['result'])), 0)
+            
+    def test_0130_addtional_details(self):
+        "Test whether the additional details work"
+        address_additional = testing_proxy.pool.get('address.additional_details')
+        with Transaction().start(testing_proxy.db_name, testing_proxy.user, None):
+            any_user_id = self.address_obj.search([])[0]
+            additional_id = address_additional.create({
+                'type': 'dob',
+                'value': '1/1/2000',
+                'sequence': 10,
+                'address': any_user_id})
+            any_user = self.address_obj.browse(any_user_id)
+            self.assertEqual(any_user.additional_details[0].value, '1/1/2000')
+            
 
 def suite():
     "Nereid test suite"
