@@ -49,7 +49,7 @@ class Request(RequestBase):
         lang_obj = current_app.pool.get('ir.lang')
         lang_ids = lang_obj.search([('code', '=', Transaction().language)])
         if not lang_ids:
-            lang_ids = self.nereid_website.default_language.id
+            lang_ids = [self.nereid_website.default_language.id]
         return lang_obj.browse(lang_ids[0])
 
     @cached_property
