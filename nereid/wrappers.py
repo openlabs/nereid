@@ -9,6 +9,7 @@
 '''
 from werkzeug.utils import cached_property
 from flask.wrappers import Request as RequestBase, Response as ResponseBase
+from flask.helpers import flash
 from trytond.transaction import Transaction
 import ccy
 from .globals import current_app, session
@@ -49,6 +50,7 @@ class Request(RequestBase):
         lang_obj = current_app.pool.get('ir.lang')
         lang_ids = lang_obj.search([('code', '=', Transaction().language)])
         if not lang_ids:
+            flash("We are sorry we don't speak your language yet!")
             lang_ids = [self.nereid_website.default_language.id]
         return lang_obj.browse(lang_ids[0])
 
