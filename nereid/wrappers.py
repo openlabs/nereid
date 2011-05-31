@@ -10,7 +10,6 @@
 from werkzeug.utils import cached_property
 from flask.wrappers import Request as RequestBase, Response as ResponseBase
 from flask.helpers import flash
-from trytond.transaction import Transaction
 import ccy
 from .globals import current_app, session
 
@@ -47,6 +46,7 @@ class Request(RequestBase):
     @cached_property
     def nereid_language(self):
         """Return a browse record for the language."""
+        from trytond.transaction import Transaction
         lang_obj = current_app.pool.get('ir.lang')
         lang_ids = lang_obj.search([('code', '=', Transaction().language)])
         if not lang_ids:
