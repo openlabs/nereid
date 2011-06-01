@@ -10,7 +10,6 @@
 
 from werkzeug.exceptions import HTTPException, MethodNotAllowed
 from werkzeug.routing import Rule, Map
-from trytond.transaction import Transaction
 
 from .config import ConfigAttribute
 from .helpers import send_from_directory
@@ -80,6 +79,7 @@ class RoutingMixin(object):
         return value of the view or error handler.  This does not have to
         be a response object.
         """
+        from trytond.transaction import Transaction
         req = _request_ctx_stack.top.request
         try:
             if req.routing_exception is not None:
