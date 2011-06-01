@@ -18,11 +18,15 @@ import unicodedata
 from functools import wraps
 from hashlib import md5
 
+from otcltools.general.pagination import Pagination as BasePagination
 from flask.helpers import _assert_have_json, json, jsonify
 from werkzeug import Headers, wrap_file, redirect
 from werkzeug.exceptions import NotFound
+from werkzeug.utils import cached_property
 
 from .globals import session, _request_ctx_stack, current_app, request
+
+from .sphinxapi import SphinxClient
 
 _SLUGIFY_STRIP_RE = re.compile(r'[^\w\s-]')
 _SLUGIFY_HYPHENATE_RE = re.compile(r'[-\s]+')
@@ -365,3 +369,201 @@ def make_crumbs(browse_record, endpoint, add_home=True, max_depth=10,
     items.reverse()
 
     return items
+
+
+class Pagination(BasePagination):
+    """General purpose paginator for doing pagination which can be used by 
+    passing a search domain .Remember that this means the query will be built
+    and executed and passed on which could be slower than writing native SQL 
+    queries. While this fits into most use cases, if you would like to use
+    a SQL query rather than a domain use :class:QueryPagination instead
+    """
+
+    # The counting of all possible records can be really expensive if you
+    # have too many records and the selectivity of the query is low. For 
+    # example -  a query to display all products in a website would be quick
+    # in displaying the products but slow in building the navigation. So in 
+    # cases where this could be frequent, the value of count may be cached and
+    # assigned to this variable
+    _count = None
+
+    def __init__(self, obj, domain, page, per_page, order=None):
+        """
+        :param obj: The object itself. pass self within tryton object
+        :param domain: Domain for search in tryton
+        :param per_page: Items per page
+        :param page: The page to be displayed
+        """
+        self.obj = obj
+        self.domain = domain
+        self.order = order
+        super(Pagination, self).__init__(page, per_page)
+
+    @cached_property
+    def count(self):
+        """
+        Returns the count of entries
+        """
+        if self.ids_domain():
+            return len(self.domain[0][2])
+        if self._count is not None:
+            return self._count
+        return self.obj.search(domain=self.domain, count=True)
+
+    def all_items(self):
+        """Returns complete set of items"""
+        if self.ids_domain():
+            ids = self.domain[0][2]
+        else:
+            ids = self.obj.search(self.domain)
+        return self.obj.browse(ids)
+
+    def ids_domain(self):
+        """Returns True if the domain has only IDs and can skip SQL fetch
+        to directly browse the records. Else a False is returned
+        """
+        return (len(self.domain) == 1) and \
+            (self.domain[0][0] == 'id') and \
+            (self.domain[0][1] == 'in') and \
+            (self.order is None)
+
+    def items(self):
+        """Returns the list of browse records of items in the page
+        """
+        if self.ids_domain():
+            ids = self.domain[0][2][self.offset:self.offset + self.per_page]
+        else:
+            ids = self.obj.search(self.domain, offset=self.offset,
+                limit=self.per_page, order=self.order)
+        return self.obj.browse(ids)
+
+    @property
+    def prev(self, error_out=False):
+        """Returns a :class:`Pagination` object for the previous page."""
+        return self.obj.paginate(self.page - 1, self.per_page, error_out)
+
+    def next(self, error_out=False):
+        """Returns a :class:`Pagination` object for the next page."""
+        return self.obj.paginate(self.page + 1, self.per_page, error_out)
+
+
+class QueryPagination(BasePagination):
+    """A fast implementation of pagination which uses a SQL query for 
+    generating the IDS and hence the pagination"""
+
+    def __init__(self, obj, search_query, count_query, page, per_page):
+        """
+        :param search_query: Query to be used for search. It must not include
+            an OFFSET or LIMIT as they would be automatically added to the 
+            query
+        :param count_query: Query to be used to get the count of the pagination
+            use a query like `SELECT 1234 AS id` for a query where you do not
+            want to manipulate the count
+        :param per_page: Items per page
+        :param page: The page to be displayed
+        """
+        self.obj = obj
+        self.search_query = search_query
+        self.count_query = count_query
+        super(QueryPagination, self).__init__(page, per_page)
+
+    @cached_property
+    def count(self):
+        "Return the count of the Items"
+        from trytond.transaction import Transaction
+        with Transaction().new_cursor() as transaction:
+            transaction.cursor.execute(self.count_query)
+            return transaction.cursor.fetchone()[0]
+
+    def all_items(self):
+        """Returns complete set of items"""
+        from trytond.transaction import Transaction
+        with Transaction().new_cursor() as transaction:
+            transaction.cursor.execute(self.search_query)
+            rv = [x[0] for x in transaction.cursor.fetchall()]
+        return self.obj.browse(rv)
+
+    def items(self):
+        """Returns the list of browse records of items in the page
+        """
+        from trytond.transaction import Transaction
+        limit_string = ' LIMIT %d' % self.per_page
+        offset_string = ' OFFSET %d' % self.offset
+        with Transaction().new_cursor() as transaction:
+            transaction.cursor.execute(''.join([
+                self.search_query, limit_string, offset_string
+                ]))
+            rv = [x[0] for x in transaction.cursor.fetchall()]
+        return self.obj.browse(rv)
+
+
+class SphinxPagination(BasePagination):
+    """An implementation of Pagination to be used along with Sphinx Search
+
+    If you need to specify customer filters or range filters you can set that
+    on the sphinx_client attribute, which is an instance of SphinxClient. This
+    could be done anywhere before rendering or further use of the pagination
+    object as the query itself is lazy loaded on first access.
+
+    Example::
+
+        products = SphinxPagination(query, search_index, page, per_page)
+        products.sphinx_client.SetFilter("warranty", [1, 2])
+
+    The actual query is only executed when the items are fetched or pagination
+    items are called.
+    """
+
+    def __init__(self, obj, query, search_index, page, per_page):
+        """
+        :param obj: The object itself. pass self within tryton object
+        :param query: The Query text for pagination
+        :param search_index: The search indices in which to look for
+        :param page: The current page being displayed
+        :param per_page: The number of items per page
+        """
+        from trytond.config import CONFIG
+        if not self.sphinx_enabled():
+            raise RuntimeError("Sphinx is not available or configured")
+
+        self.obj = obj
+        self.query = query
+        self.search_index = search_index
+        self.sphinx_client = SphinxClient(
+            CONFIG['sphinx_server'], CONFIG['sphinx_port']
+            )
+        super(QueryPagination, self).__init__(page, per_page)
+
+    def sphinx_enabled(self):
+        """A helper method to check if the sphinx client is enabled and 
+        configured
+        """
+        from trytond.config import CONFIG
+        return CONFIG.get('SPHINX_SERVER') and CONFIG.get('SPHINX_PORT')
+
+    @cached_property
+    def count(self):
+        "Returns the count of the items"
+        return self.result['total_found']
+
+    @cached_property
+    def result(self):
+        """queries the server and fetches the result. This would only be 
+        executed once as this is decorated as a cached property
+        """
+        # Note: This makes setting limits on the sphinx client basically 
+        # useless as it would anyway be set using page and offset just before
+        # the query is run
+        self.sphinx_client.SetLimit(self.offset, self.per_page)
+        return self.sphinx_client.Query(self.query, self.search_index)
+
+    def all_items(self):
+        """Returns all items. Sphinx by default has a limit of 1000 items
+        """
+        self.sphinx_client.SetLimit(0, 1000)
+        return self.sphinx_client.Query(self.query, self.search_index)
+
+    def items(self):
+        """Returns the BrowseRecord of items in the current page"""
+        return self.obj.browse(
+            [record['id'] for record in self.result['matches']])
