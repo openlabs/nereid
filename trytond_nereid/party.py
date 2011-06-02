@@ -374,7 +374,8 @@ class Address(ModelSQL, ModelView):
         if address.activation_code and len(address.activation_code) == 16:
             current_app.logger.debug('%s not activated' % email)
             flash("Your account has not been activated yet!")
-            return None
+            return False # False so to avoid `invalid credentials` flash
+
         password += address.salt or ''
 
         if isinstance(password, unicode):

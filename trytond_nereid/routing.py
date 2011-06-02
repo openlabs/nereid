@@ -214,13 +214,19 @@ class WebSite(ModelSQL, ModelView):
             address_obj = self.pool.get('party.address')
             result = address_obj.authenticate(
                 login_form.email.data, login_form.password.data)
-            if result is None:
-                flash("Invalid login credentials")
-            else:
+            # Result can be the following:
+            # 1 - Browse record of User (successful login)
+            # 2 - None - Login failure without message
+            # 3 - Any other false value (no message is shown. useful if you 
+            #       want to handle the message shown to user)
+            if result:
                 flash("You are now logged in. Welcome %s" % result.name)
                 session['user'] = result.id
                 return redirect(request.values.get('next', 
                     url_for('nereid.website.home')))
+            elif result is None:
+                flash("Invalid login credentials")
+
         return render_template('login.jinja', login_form=login_form)
 
     def logout(self):
