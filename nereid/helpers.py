@@ -529,7 +529,8 @@ class SphinxPagination(BasePagination):
         self.obj = obj
         self.query = query
         self.search_index = search_index
-        self.sphinx_client = SphinxClient(
+        self.sphinx_client = SphinxClient()
+        self.sphinx_client.SetServer(
             CONFIG.options['sphinx_server'], CONFIG.options['sphinx_port']
             )
         super(QueryPagination, self).__init__(page, per_page)
@@ -539,8 +540,8 @@ class SphinxPagination(BasePagination):
         configured
         """
         from trytond.config import CONFIG
-        return 'SPHINX_SERVER' in CONFIG.options and \
-            'SPHINX_PORT' in CONFIG.options
+        return 'sphinx_server' in CONFIG.options and \
+            'sphinx_port' in CONFIG.options
 
     @cached_property
     def count(self):
