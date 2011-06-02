@@ -21,7 +21,7 @@ from wtforms import Form, TextField, IntegerField, SelectField, validators, \
 from wtfrecaptcha.fields import RecaptchaField
 from nereid import request, url_for, render_template, login_required, flash
 from nereid.globals import session, current_app
-from werkzeug import redirect
+from werkzeug import redirect, abort
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval, Bool, Not
 from trytond.config import CONFIG
@@ -206,11 +206,22 @@ class Address(ModelSQL, ModelView):
 
     @login_required
     def new_password(self):
-        "Create a new password"
+        """Create a new password, unlike change password this does not demand
+        the old password. And hence this method will check in the session for
+        a parameter called allow_new_password which has to be True. This acts
+        as a security against attempts to POST to this method and changing 
+        password.
+
+        This is intended to be used when a user requests for a password reset.
+        """
         form = NewPasswordForm(request.form)
         if request.method == 'POST' and form.validate():
+            if not session.get('allow_new_password', False):
+                current_app.logger.debug('New password not allowed in session')
+                abort(403)
             self.write(request.nereid_user.id, 
                 {'password': form.password.data})
+            session.pop('allow_new_password')
             flash('Your password has been successfully changed! '
                 'Please login again')
             session.pop('user')
@@ -218,10 +229,25 @@ class Address(ModelSQL, ModelView):
         return render_template('new-password.jinja', password_form=form)
 
     def activate(self, address_id, activation_code):
-        "A web request handler for activation"
+        """A web request handler for activation
+
+        :param activation_code: A 12 character activation code indicates reset
+            while 16 character activation code indicates a new registration
+        """
         try:
             self._activate(address_id, activation_code)
             flash('Your account has been activated')
+
+            # Log the user in.
+            session['user'] = address_id
+
+            # Redirect the user to the correct location according to the type
+            # of activation code.
+            if len(activation_code) == 12:
+                session['allow_new_password'] = True
+                return redirect(url_for('party.address.new_password'))
+            elif len(activation_code) == 16:
+                return redirect(url_for('nereid.website.home'))
         except AssertionError:
             flash('Invalid Activation Code')
         return redirect(url_for('nereid.website.login'))
