@@ -63,6 +63,14 @@
             <field name="url_map" ref="default_url_map" />
         </record>
 
+        <record id="new_pass_url" model="nereid.url_rule">
+            <field name="rule">/&lt;language&gt;/new-password</field>
+            <field name="endpoint">party.address.new_password</field>
+            <field name="sequence" eval="65" />
+            <field name="methods">("GET", "POST")</field>
+            <field name="url_map" ref="default_url_map" />
+        </record>
+
         <record id="activate_url" model="nereid.url_rule">
             <field name="rule">/&lt;language&gt;/activate-account/&lt;int:address_id&gt;/&lt;activation_code&gt;</field>
             <field name="endpoint">party.address.activate</field>
