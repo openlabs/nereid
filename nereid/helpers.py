@@ -531,7 +531,7 @@ class SphinxPagination(BasePagination):
         self.search_index = search_index
         self.sphinx_client = SphinxClient()
         self.sphinx_client.SetServer(
-            CONFIG.options['sphinx_server'], CONFIG.options['sphinx_port']
+            CONFIG.options['sphinx_server'], int(CONFIG.options['sphinx_port'])
             )
         super(QueryPagination, self).__init__(page, per_page)
 
