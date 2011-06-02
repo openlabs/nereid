@@ -556,7 +556,7 @@ class SphinxPagination(BasePagination):
         # Note: This makes setting limits on the sphinx client basically 
         # useless as it would anyway be set using page and offset just before
         # the query is run
-        self.sphinx_client.SetLimit(self.offset, self.per_page)
+        self.sphinx_client.SetLimits(self.offset, self.per_page)
         return self.sphinx_client.Query(self.query, self.search_index)
 
     def all_items(self):
