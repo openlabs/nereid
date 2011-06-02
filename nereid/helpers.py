@@ -559,7 +559,7 @@ class SphinxPagination(BasePagination):
         self.sphinx_client.SetLimits(self.offset, self.per_page)
         rv = self.sphinx_client.Query(self.query, self.search_index)
         if rv is None:
-            raise Exception(rv.GetLastError())
+            raise Exception(self.sphinx_client.GetLastError())
         return rv
 
     def all_items(self):
