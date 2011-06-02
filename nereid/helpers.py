@@ -533,7 +533,7 @@ class SphinxPagination(BasePagination):
         self.sphinx_client.SetServer(
             CONFIG.options['sphinx_server'], int(CONFIG.options['sphinx_port'])
             )
-        super(QueryPagination, self).__init__(page, per_page)
+        super(SphinxPagination, self).__init__(page, per_page)
 
     def sphinx_enabled(self):
         """A helper method to check if the sphinx client is enabled and 
