@@ -557,7 +557,10 @@ class SphinxPagination(BasePagination):
         # useless as it would anyway be set using page and offset just before
         # the query is run
         self.sphinx_client.SetLimits(self.offset, self.per_page)
-        return self.sphinx_client.Query(self.query, self.search_index)
+        rv = self.sphinx_client.Query(self.query, self.search_index)
+        if rv is None:
+            raise Exception(rv.GetLastError())
+        return rv
 
     def all_items(self):
         """Returns all items. Sphinx by default has a limit of 1000 items
