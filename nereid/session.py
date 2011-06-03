@@ -43,7 +43,7 @@ class MemcachedSessionStore(SessionStore):
         SessionStore.__init__(self, session_class)
 
     def save(self, session):
-        success = cache.set(session.sid, dict(session))
+        success = cache.set(session.sid, dict(session), 30 * 24 * 60 * 60)
 
     def delete(self, session):
         cache.delete(session.sid)
