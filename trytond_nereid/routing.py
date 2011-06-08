@@ -14,6 +14,7 @@ from werkzeug import abort, redirect
 from nereid import jsonify, flash, render_template, url_for, cache
 from nereid.globals import session, request
 from nereid.helpers import login_required, key_from_list, get_flashed_messages
+from nereid.signals import login, failed_login, logout
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
 from wtforms import Form, TextField, PasswordField, validators
@@ -222,16 +223,18 @@ class WebSite(ModelSQL, ModelView):
             if result:
                 flash("You are now logged in. Welcome %s" % result.name)
                 session['user'] = result.id
+                login.send(self)
                 return redirect(request.values.get('next', 
                     url_for('nereid.website.home')))
             elif result is None:
                 flash("Invalid login credentials")
-
+            failed_login.send(self, form=login_form)
         return render_template('login.jinja', login_form=login_form)
 
     def logout(self):
         "Log the user out"
         session.pop('user', None)
+        logout.send(self)
         flash('You have been logged out successfully. Thanks for visiting us')
         return redirect(request.args.get('next', 
             url_for('nereid.website.home')))
