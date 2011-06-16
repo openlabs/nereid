@@ -7,4 +7,4 @@ svn+http://ccy.googlecode.com/svn/trunk/#egg=ccy
 
 # The latest version of flask is required because of the way context
 # is built for cache and session to work.
-https://github.com/mitsuhiko/flask.git#egg=flask
+git+https://github.com/mitsuhiko/flask.git#egg=flask

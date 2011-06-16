@@ -14,5 +14,5 @@ trytond >2.0,<2.1
 # ELectronic mail and electronic mail tempalte are still in the
 # review stage and not available on PYPI
 
--e hg+http://bitbucket.org/sharoonthomas/electronic-mail#egg=trytond-electronic-mail
--e hg+http://bitbucket.org/sharoonthomas/electronic-mail-template#egg=trytond-electronic-mail-template
+hg+http://bitbucket.org/sharoonthomas/electronic-mail#egg=trytond-electronic-mail
+hg+http://bitbucket.org/sharoonthomas/electronic-mail-template#egg=trytond-electronic-mail-template
