@@ -53,6 +53,7 @@ if TRYTON_INSTALLED:
 
     package_dir.update({
         'trytond.modules.nereid': 'trytond_nereid',
+        'trytond.modules.nereid.tests': 'trytond_nereid/tests',
         'trytond.modules.test_nereid_module': 'tests/test_nereid_module',
         })
     package_data.update({
@@ -65,8 +66,9 @@ if TRYTON_INSTALLED:
     test_nereid_module = trytond.modules.test_nereid_module
     """
     packages.extend([
-        'trytond.modules.nereid', 
-        'trytond.modules.test_nereid_module'
+        'trytond.modules.nereid',
+        'trytond.modules.nereid.tests',
+        'trytond.modules.test_nereid_module',
         ])
 
 
