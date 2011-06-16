@@ -1,0 +1,10 @@
+# The requirements file is a way to get pip to install specific packages to 
+# make up an environment.
+
+# The default version of CCY module does not install because of empty
+# white space at the end of setup.py.
+svn+http://ccy.googlecode.com/svn/trunk/#egg=ccy
+
+# The latest version of flask is required because of the way context
+# is built for cache and session to work.
+https://github.com/mitsuhiko/flask.git#egg=flask
