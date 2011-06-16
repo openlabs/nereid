@@ -11,18 +11,32 @@ import re
 
 try:
     import trytond
-    tryton_installed = True
+    TRYTON_INSTALLED = True
 except ImportError:
-    tryton_installed = False
+    TRYTON_INSTALLED = False
 
-requires = ['flask', 'unittest2', 'minimock', 'ccy']
-package_dir = {'nereid': 'nereid'}
-package_data = { }
+requires = [
+    'flask', 
+    'wtforms',
+    'wtforms-recaptcha',
+    'ccy',
+
+    'unittest2', 
+    'minimock', 
+    ]
+package_dir = {
+    'nereid': 'nereid'
+    }
+package_data = {}
 entry_points = ''
 packages = ['nereid',]
 
 
-if tryton_installed:
+if TRYTON_INSTALLED:
+    # The tryton module and dependencies are installed only if tryton is 
+    # already installed. This is because the nereid library itself is used by
+    # other internal frameworks and backends for which tryton is not a 
+    # mandatory requirement.
     trytond_module_info = eval(open('trytond_nereid/__tryton__.py').read())
     major_version, minor_version, _ = trytond_module_info.get(
         'version', '0.0.1').split('.', 2)
@@ -36,6 +50,7 @@ if tryton_installed:
                         minor_version + 1))
     requires.append('trytond >= %s.%s, < %s.%s' %
             (major_version, minor_version, major_version, minor_version + 1))
+
     package_dir.update({
         'trytond.modules.nereid': 'trytond_nereid',
         'trytond.modules.test_nereid_module': 'tests/test_nereid_module',
@@ -69,11 +84,7 @@ setup(
     package_data=package_data,
     zip_safe=False,
     platforms='any',
-    install_requires=[
-        'flask',
-        'wtforms',
-        'wtforms-recaptcha',
-    ],
+    install_requires=requires,
     entry_points=entry_points,
     classifiers=[
         'Development Status :: 4 - Beta',
