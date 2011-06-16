@@ -24,6 +24,9 @@ suite = unittest2.TestSuite()
 
 # Begin loading tests
 if TRYTON_INSTALLED:
+    from trytond.modules import register_classes
+    register_classes()
+
     from trytond.modules.nereid.tests import suite as _suite
     suite.addTests([_suite])
 

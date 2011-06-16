@@ -9,7 +9,7 @@
 """
 from unittest import TestSuite
 
-from .configuration import suite as configuration_test_suite
+from .test_configuration import suite as configuration_test_suite
 from .test_currency import suite as currency_test_suite
 from .test_language import suite as language_test_suite
 
