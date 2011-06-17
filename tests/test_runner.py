@@ -28,7 +28,6 @@ if TRYTON_INSTALLED:
     from trytond.config import CONFIG
 
     CONFIG.parse() 
-    print CONFIG.options
 
     # Now load all modules
     from trytond.modules import register_classes
