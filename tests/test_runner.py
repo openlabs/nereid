@@ -24,11 +24,19 @@ suite = unittest2.TestSuite()
 
 # Begin loading tests
 if TRYTON_INSTALLED:
+    # First load a configuration to do the test
+    from trytond.config import CONFIG
+
+    CONFIG.parse() 
+    print CONFIG.options
+
+    # Now load all modules
     from trytond.modules import register_classes
     register_classes()
 
+    # Run this specific test suite
     from trytond.modules.nereid.tests import suite as _suite
-    suite.addTests([_suite])
+    suite.addTests([_suite()])
 
 
 if __name__ == '__main__':
