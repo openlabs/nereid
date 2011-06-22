@@ -13,6 +13,8 @@
 """
 import unittest2
 from nereid.testing import FailFastTextTestRunner
+from xmlrunner import XMLTestRunner
+
 
 try:
     import trytond
@@ -40,4 +42,6 @@ if TRYTON_INSTALLED:
 
 
 if __name__ == '__main__':
-    FailFastTextTestRunner(verbosity=2).run(suite)
+    with open('result.xml', 'wb') as stream:
+        XMLTestRunner(stream).run(suite)
+
