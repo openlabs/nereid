@@ -12,6 +12,7 @@
     :license: BSD, see LICENSE for more details.
 """
 import unittest2
+from nereid.testing import FailFastTextTestRunner
 
 try:
     import trytond
@@ -39,4 +40,4 @@ if TRYTON_INSTALLED:
 
 
 if __name__ == '__main__':
-    unittest2.TextTestRunner(verbosity=2).run(suite)
+    FailFastTextTestRunner(verbosity=2).run(suite)
