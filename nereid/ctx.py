@@ -9,7 +9,7 @@
     :copyright: (c) 2010 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
-from flask.ctx import _RequestGlobals, _RequestContext as _RequestContextBase
+from flask.ctx import _RequestGlobals, RequestContext as _RequestContextBase
 from flask.ctx import has_request_context
 from werkzeug.exceptions import HTTPException
 
