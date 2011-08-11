@@ -9,7 +9,7 @@
 '''
 # pylint: disable-msg=W0611
 from flask.signals import template_rendered, request_started, \
-        request_finished, got_request_exception, _signals
+        request_finished, got_request_exception, _signals, request_tearing_down
 
 #: Login signal
 #:  - This signal is triggered when a succesful login takes place
