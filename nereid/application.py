@@ -11,6 +11,7 @@
 from __future__ import with_statement
 
 import os
+import sys
 from threading import Lock
 from datetime import timedelta
 from itertools import chain
@@ -22,7 +23,8 @@ from .wrappers import Request, Response
 from .config import ConfigAttribute, Config
 from .ctx import _RequestContext
 from .globals import request, _request_ctx_stack, transaction
-from .signals import request_started, request_finished, got_request_exception
+from .signals import request_started, request_finished, got_request_exception,\
+    request_tearing_down
 
 from .backend import BackendMixin
 from .templating import TemplateMixin
@@ -436,3 +438,20 @@ class Nereid(BackendMixin, RoutingMixin,
             from .testing import NereidClient as cls
         return cls(self, self.response_class, use_cookies=use_cookies)
 
+    def do_teardown_request(self):
+        """Called after the actual request dispatching and will
+        call every as :meth:`teardown_request` decorated function.  This is
+        not actually called by the :class:`Flask` object itself but is always
+        triggered when the request context is popped.  That way we have a
+        tighter control over certain resources under testing environments.
+        """
+        funcs = reversed(self.teardown_request_funcs.get(None, ()))
+        bp = request.blueprint
+        if bp is not None and bp in self.teardown_request_funcs:
+            funcs = chain(funcs, reversed(self.teardown_request_funcs[bp]))
+        exc = sys.exc_info()[1]
+        for func in funcs:
+            rv = func(exc)
+            if rv is not None:
+                return rv
+        request_tearing_down.send(self)
