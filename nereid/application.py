@@ -552,3 +552,31 @@ class Nereid(BackendMixin, RoutingMixin,
             if rv is not None:
                 return rv
         request_tearing_down.send(self)
+
+    def open_session(self, request):
+        """Creates or opens a new session. Instead of overriding this method
+        we recommend replacing the :class:`session_interface`.
+
+        :param request: an instance of :attr:`request_class`.
+        """
+        return self.session_interface.open_session(self, request)
+
+    def save_session(self, session, response):
+        """Saves the session if it needs updates.  For the default
+        implementation, check :meth:`open_session`.  Instead of overriding this
+        method we recommend replacing the :class:`session_interface`.
+
+        :param session: the session to be saved (a
+                        :class:`~werkzeug.contrib.securecookie.SecureCookie`
+                        object)
+        :param response: an instance of :attr:`response_class`
+        """
+        return self.session_interface.save_session(self, session, response)
+
+    def make_null_session(self):
+        """Creates a new instance of a missing session.  Instead of overriding
+        this method we recommend replacing the :class:`session_interface`.
+
+        .. versionadded:: 0.2
+        """
+        return self.session_interface.make_null_session(self)

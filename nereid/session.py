@@ -11,8 +11,6 @@ from datetime import datetime
 
 from flask.sessions import SessionInterface
 from werkzeug.contrib.sessions import Session as SessionBase, SessionStore
-from werkzeug.contrib.sessions import FilesystemSessionStore
-from werkzeug.utils import import_string
 
 from .globals import cache
 
@@ -83,10 +81,7 @@ class NereidSessionInterface(SessionInterface):
         :param request: an instance of :attr:`request_class`.
         """
         sid = request.cookies.get(self.session_cookie_name, None)
-        if sid is None:
-            return self.session_store.new()
-        else:
-            return self.session_store.get(sid)
+        return (self.session_store.get(sid) if sid else None)
 
     def save_session(self, session, response):
         """Saves the session if it needs updates.  For the default
