@@ -14,6 +14,7 @@ from werkzeug.routing import Rule, Map
 from .config import ConfigAttribute
 from .helpers import send_from_directory
 from .globals import _request_ctx_stack, request
+from .signals import request_started, request_finished
 
 
 class RoutingMixin(object):
@@ -115,24 +116,58 @@ class RoutingMixin(object):
         be a response object.
         """
         from trytond.transaction import Transaction
+
         req = _request_ctx_stack.top.request
-        try:
-            if req.routing_exception is not None:
-                raise req.routing_exception
-            rule = req.url_rule
+        if req.routing_exception is not None:
+            self.raise_routing_exception(req)
 
-            # if we provide automatic options for this URL and the
-            # request came with the OPTIONS method, reply automatically
-            if rule.provide_automatic_options and req.method == 'OPTIONS':
-                return self.make_default_options_response()
+        rule = req.url_rule
+        # if we provide automatic options for this URL and the
+        # request came with the OPTIONS method, reply automatically
+        if getattr(rule, 'provide_automatic_options', False) \
+           and req.method == 'OPTIONS':
+            return self.make_default_options_response()
+        language = req.view_args.pop(
+            'language', req.nereid_website.default_language.code)
+        with Transaction().set_context(language=language):
             # otherwise dispatch to the handler for that endpoint
-            language = req.view_args.pop(
-                'language', req.nereid_website.default_language.code)
-            with Transaction().set_context(language=language):
-                return self.view_functions[rule.endpoint](**req.view_args)
+            return self.view_functions[rule.endpoint](**req.view_args)
 
-        except HTTPException, exception:
-            return self.handle_http_exception(exception)
+    def full_dispatch_request(self):
+        """Dispatches the request and on top of that performs request
+        pre and postprocessing as well as HTTP exception catching and
+        error handling.
+
+        .. versionadded:: 0.7
+        """
+        self.try_trigger_before_first_request_functions()
+        try:
+            request_started.send(self)
+            rv = self.preprocess_request()
+            if rv is None:
+                rv = self.dispatch_request()
+        except Exception, e:
+            rv = self.handle_user_exception(e)
+        response = self.make_response(rv)
+        response = self.process_response(response)
+        request_finished.send(self, response=response)
+        return response
+
+    def try_trigger_before_first_request_functions(self):
+        """Called before each request and will ensure that it triggers
+        the :attr:`before_first_request_funcs` and only exactly once per
+        application instance (which means process usually).
+
+        :internal:
+        """
+        if self._got_first_request:
+            return
+        with self._before_request_lock:
+            if self._got_first_request:
+                return
+            self._got_first_request = True
+            for func in self.before_first_request_funcs:
+                func()
 
     def make_default_options_response(self):
         """This method is called to create the default `OPTIONS` response.
@@ -193,13 +228,40 @@ class RoutingMixin(object):
             server_name=self.config['SERVER_NAME']
             )
 
-    def add_url_rule(self, rule, endpoint, view_func=None, **options):
+    def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
         """Connects a URL rule.  Works exactly like the :meth:`route`
         decorator.  If a view_func is provided it will be registered with the
         endpoint.
 
+        Basically this example::
+
+            @app.route('/')
+            def index():
+                pass
+
+        Is equivalent to the following::
+
+            def index():
+                pass
+            app.add_url_rule('/', 'index', index)
+
+        If the view_func is not provided you will need to connect the endpoint
+        to a view function like so::
+
+            app.view_functions['index'] = index
+
+        If a view function is provided some defaults can be specified directly
+        on the view function.  For more information refer to
+        :ref:`view-func-options`.
+
+        .. versionchanged:: 0.2
+           `view_func` parameter added.
+
+        .. versionchanged:: 0.6
+           `OPTIONS` is added automatically as method.
+
         :param rule: the URL rule as string
-        :param endpoint: the endpoint for the registered URL rule. Nereid 
+        :param endpoint: the endpoint for the registered URL rule.  Flask
                          itself assumes the name of the view function as
                          endpoint
         :param view_func: the function to call when serving a request to the
@@ -210,21 +272,38 @@ class RoutingMixin(object):
                         is a list of methods this rule should be limited
                         to (`GET`, `POST` etc.).  By default a rule
                         just listens for `GET` (and implicitly `HEAD`).
-                        `OPTIONS` is implicitly added and handled by the 
-                        standard request handling.
+                        Starting with Flask 0.6, `OPTIONS` is implicitly
+                        added and handled by the standard request handling.
         """
         options['endpoint'] = endpoint
+        methods = options.pop('methods', None)
 
-        methods = options.pop('methods', ('GET',))
-        provide_automatic_options = False
-        if 'OPTIONS' not in methods:
-            methods = tuple(methods) + ('OPTIONS',)
-            provide_automatic_options = True
+        # if the methods are not given and the view_func object knows its
+        # methods we can use that instead.  If neither exists, we go with
+        # a tuple of only `GET` as default.
+        if methods is None:
+            methods = getattr(view_func, 'methods', None) or ('GET',)
 
-        rule = Rule(rule, methods=methods, **options)
+        # starting with Flask 0.8 the view_func object can disable and
+        # force-enable the automatic options handling.
+        provide_automatic_options = getattr(view_func,
+            'provide_automatic_options', None)
+
+        if provide_automatic_options is None:
+            if 'OPTIONS' not in methods:
+                methods = tuple(methods) + ('OPTIONS',)
+                provide_automatic_options = True
+            else:
+                provide_automatic_options = False
+
+        # due to a werkzeug bug we need to make sure that the defaults are
+        # None if they are an empty dictionary.  This should not be necessary
+        # with Werkzeug 0.7
+        options['defaults'] = options.get('defaults') or None
+
+        rule = self.url_rule_class(rule, methods=methods, **options)
         rule.provide_automatic_options = provide_automatic_options
         self.url_map.add(rule)
-
         if view_func is not None:
             self.view_functions[endpoint] = view_func
 

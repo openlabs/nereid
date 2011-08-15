@@ -332,6 +332,57 @@ class Nereid(BackendMixin, RoutingMixin,
             return exception
         return handler(exception)
 
+    def trap_http_exception(self, e):
+        """Checks if an HTTP exception should be trapped or not.  By default
+        this will return `False` for all exceptions except for a bad request
+        key error if ``TRAP_BAD_REQUEST_ERRORS`` is set to `True`.  It
+        also returns `True` if ``TRAP_HTTP_EXCEPTIONS`` is set to `True`.
+
+        This is called for all HTTP exceptions raised by a view function.
+        If it returns `True` for any exception the error handler for this
+        exception is not called and it shows up as regular exception in the
+        traceback.  This is helpful for debugging implicitly raised HTTP
+        exceptions.
+
+        .. versionadded:: 0.8
+        """
+        if self.config['TRAP_HTTP_EXCEPTIONS']:
+            return True
+        if self.config['TRAP_BAD_REQUEST_ERRORS']:
+            return isinstance(e, BadRequest)
+        return False
+
+    def handle_user_exception(self, e):
+        """This method is called whenever an exception occurs that should be
+        handled.  A special case are
+        :class:`~werkzeug.exception.HTTPException`\s which are forwarded by
+        this function to the :meth:`handle_http_exception` method.  This
+        function will either return a response value or reraise the
+        exception with the same traceback.
+
+        .. versionadded:: 0.7
+        """
+        exc_type, exc_value, tb = sys.exc_info()
+        assert exc_value is e
+
+        # ensure not to trash sys.exc_info() at that point in case someone
+        # wants the traceback preserved in handle_http_exception.  Of course
+        # we cannot prevent users from trashing it themselves in a custom
+        # trap_http_exception method so that's their fault then.
+        if isinstance(e, HTTPException) and not self.trap_http_exception(e):
+            return self.handle_http_exception(e)
+
+        blueprint_handlers = ()
+        handlers = self.error_handler_spec.get(request.blueprint)
+        if handlers is not None:
+            blueprint_handlers = handlers.get(None, ())
+        app_handlers = self.error_handler_spec[None].get(None, ())
+        for typecheck, handler in chain(blueprint_handlers, app_handlers):
+            if isinstance(e, typecheck):
+                return handler(e)
+
+        raise exc_type, exc_value, tb
+
     def handle_exception(self, exception):
         """Default exception handling that kicks in when an exception
         occours that is not catched.  In debug mode the exception will
