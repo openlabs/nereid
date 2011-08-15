@@ -116,6 +116,7 @@ class Nereid(BackendMixin, RoutingMixin,
         'SESSION_STORE_CLASS': 'werkzeug.contrib.sessions.FilesystemSessionStore',
         'SESSION_CLASS': Session,
         'PERMANENT_SESSION_LIFETIME': timedelta(days=31),
+        'PRESERVE_CONTEXT_ON_EXCEPTION': None,
         'SESSION_STORE_PATH': '/tmp',
 
         'USE_X_SENDFILE': False,
@@ -388,6 +389,19 @@ class Nereid(BackendMixin, RoutingMixin,
             environ_overrides.setdefault('SERVER_PORT', http_port)
         return self.request_context(create_environ(*args, **kwargs))
 
+    def inject_url_defaults(self, endpoint, values):
+        """Injects the URL defaults for the given endpoint directly into
+        the values dictionary passed.  This is used internally and
+        automatically called on URL building.
+
+        .. versionadded:: 0.7
+        """
+        funcs = self.url_default_functions.get(None, ())
+        if '.' in endpoint:
+            bp = endpoint.split('.', 1)[0]
+            funcs = chain(funcs, self.url_default_functions.get(bp, ()))
+        for func in funcs:
+            func(endpoint, values)
 
     def preprocess_request(self):
         """Called before the actual request dispatching and will
@@ -395,32 +409,46 @@ class Nereid(BackendMixin, RoutingMixin,
         If any of these function returns a value it's handled as
         if it was the return value from the view and further
         request handling is stopped.
+
+        This also triggers the :meth:`url_value_processor` functions before
+        the actualy :meth:`before_request` functions are called.
         """
-        funcs = self.before_request_funcs.get(None, ())
-        mod = request.module
-        if mod and mod in self.before_request_funcs:
-            funcs = chain(funcs, self.before_request_funcs[mod])
+        bp = request.blueprint
+
+        funcs = self.url_value_preprocessors.get(None, ())
+        if bp is not None and bp in self.url_value_preprocessors:
+            funcs = chain(funcs, self.url_value_preprocessors[bp])
         for func in funcs:
-            result = func()
-            if result is not None:
-                return result
+            func(request.endpoint, request.view_args)
+
+        funcs = self.before_request_funcs.get(None, ())
+        if bp is not None and bp in self.before_request_funcs:
+            funcs = chain(funcs, self.before_request_funcs[bp])
+        for func in funcs:
+            rv = func()
+            if rv is not None:
+                return rv
 
     def process_response(self, response):
         """Can be overridden in order to modify the response object
         before it's sent to the WSGI server.  By default this will
         call all the :meth:`after_request` decorated functions.
 
+        .. versionchanged:: 0.5
+           As of Flask 0.5 the functions registered for after request
+           execution are called in reverse order of registration.
+
         :param response: a :attr:`response_class` object.
         :return: a new response object or the same, has to be an
                  instance of :attr:`response_class`.
         """
         ctx = _request_ctx_stack.top
-        mod = ctx.request.module
-        if not isinstance(ctx.session, _NullSession):
+        bp = ctx.request.blueprint
+        if not self.session_interface.is_null_session(ctx.session):
             self.save_session(ctx.session, response)
         funcs = ()
-        if mod and mod in self.after_request_funcs:
-            funcs = reversed(self.after_request_funcs[mod])
+        if bp is not None and bp in self.after_request_funcs:
+            funcs = reversed(self.after_request_funcs[bp])
         if None in self.after_request_funcs:
             funcs = chain(funcs, reversed(self.after_request_funcs[None]))
         for handler in funcs:
