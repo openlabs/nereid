@@ -26,7 +26,7 @@ class RoutingMixin(object):
     #:
     #: This is the default used for application and modules unless a
     #: different value is passed to the constructor.
-    static_path = '/static'
+    static_url_path = '/static'
 
     #: The location from where static files will be served
     static_fileroot = ConfigAttribute('STATIC_FILEROOT')
@@ -100,6 +100,7 @@ class RoutingMixin(object):
         #:    app.url_map.converters['list'] = ListConverter
         self.url_map = Map()
 
+        self._static_folder = self.static_fileroot
         # register the static folder for the application.  Do that even
         # if the folder does not exist.  First of all it might be created
         # while the server is running (usually happens during development)
