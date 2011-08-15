@@ -94,7 +94,13 @@ class Nereid(BackendMixin, RoutingMixin,
     #: `PERMANENT_SESSION_LIFETIME` configuration key.  Defaults to
     #: ``timedelta(days=31)``
     permanent_session_lifetime = ConfigAttribute('PERMANENT_SESSION_LIFETIME')
-    
+
+    #: the session interface to use.  By default an instance of
+    #: :class:`~nereid.session.NereidSessionInterface` is used here.
+    #:
+    #: .. versionadded:: 0.2
+    session_interface = NereidSessionInterface()
+
     #: The name of the logger to use.  By default the logger name is the
     #: package name passed to the constructor.
     logger_name = ConfigAttribute('LOGGER_NAME')
@@ -221,7 +227,6 @@ class Nereid(BackendMixin, RoutingMixin,
         CacheMixin.__init__(self, **config)
         TemplateMixin.__init__(self, **config)
 
-        self.session_interface = NereidSessionInterface(self)
 
         self.add_ctx_processors_from_db()
         self.add_urls_from_db()
