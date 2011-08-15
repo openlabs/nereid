@@ -9,13 +9,12 @@
 '''
 from datetime import datetime
 
-from flask.session import _NullSession
+from flask.sessions import SessionInterface
 from werkzeug.contrib.sessions import Session as SessionBase, SessionStore
 from werkzeug.contrib.sessions import FilesystemSessionStore
 from werkzeug.utils import import_string
 
-from .config import ConfigAttribute
-from .globals import current_app, cache
+from .globals import cache
 
 
 class Session(SessionBase):
@@ -31,6 +30,17 @@ class Session(SessionBase):
 
     permanent = property(_get_permanent, _set_permanent)
     del _get_permanent, _set_permanent
+
+    #: some session backends can tell you if a session is new, but that is
+    #: not necessarily guaranteed.  Use with caution.  The default mixin
+    #: implementation just hardcodes `False` in.
+    new = False
+
+    #: for some backends this will always be `True`, but some backends will
+    #: default this to false and detect changes in the dictionary for as
+    #: long as changes do not happen on mutable structures in the session.
+    #: The default mixin implementation just hardcodes `True` in.
+    modified = True
 
 
 class MemcachedSessionStore(SessionStore):
@@ -62,44 +72,10 @@ class MemcachedSessionStore(SessionStore):
         raise Exception("Not implemented yet")
 
 
-class SessionMixin(object):
+class NereidSessionInterface(SessionInterface):
     """Session Management Class"""
 
-    #: The session class to use.  Defaults to
-    #: :class:`werkzeug.contrib.sessions.Session`.
-    session_class = ConfigAttribute('SESSION_CLASS')
-
-    #: The class to generate the session store
-    #: Defaults to :class:`FilesystemSessionStore`
-    session_store_class = ConfigAttribute('SESSION_STORE_CLASS')
-
-    #: The secure cookie uses this for the name of the session cookie.
-    #: This attribute can also be configured from the config with the
-    #: `SESSION_COOKIE_NAME` configuration key.  Defaults to ``'session'``
-    session_cookie_name = ConfigAttribute('SESSION_COOKIE_NAME')
-
-    #: A :class:`~datetime.timedelta` which is used to set the expiration
-    #: date of a permanent session.  The default is 31 days which makes a
-    #: permanent session survive for roughly one month.
-    #:
-    #: This attribute can also be configured from the config with the
-    #: `PERMANENT_SESSION_LIFETIME` configuration key.  Defaults to
-    #: ``timedelta(days=31)``
-    permanent_session_lifetime = ConfigAttribute('PERMANENT_SESSION_LIFETIME')
-
-    #: Path where the session files can be stored. This is only for
-    #: Filesystem Cache. The FilesystemCache is a simple implementation
-    #: and does not scale for production use.
-    session_store_path = ConfigAttribute('SESSION_STORE_PATH')
-
-    def __init__(self, **config):
-        session_store_class = import_string(self.session_store_class)
-        if session_store_class == FilesystemSessionStore:
-            self.session_store = FilesystemSessionStore(
-                self.session_store_path, session_class=self.session_class)
-        elif session_store_class == MemcachedSessionStore:
-            self.session_store =   MemcachedSessionStore(
-                session_class=self.session_class)
+    session_store = MemcachedSessionStore()
 
     def open_session(self, request):
         """Creates or opens a new session.

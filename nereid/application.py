@@ -30,7 +30,7 @@ from .backend import BackendMixin
 from .helpers import _PackageBoundObject
 from .templating import TemplateMixin
 from .routing import RoutingMixin
-from .session import SessionMixin, Session, FilesystemSessionStore, _NullSession
+from .session import NereidSessionInterface
 from .cache import Cache, CacheMixin
 
 # a lock used for logger initialization
@@ -41,7 +41,7 @@ cache = Cache()
 
 
 class Nereid(BackendMixin, RoutingMixin,
-        TemplateMixin, SessionMixin, CacheMixin, _PackageBoundObject):
+        TemplateMixin, CacheMixin, _PackageBoundObject):
     """
     ...
 
@@ -81,6 +81,20 @@ class Nereid(BackendMixin, RoutingMixin,
     testing = ConfigAttribute('TESTING')
     test_client_class = None
 
+    #: The secure cookie uses this for the name of the session cookie.
+    #: This attribute can also be configured from the config with the
+    #: `SESSION_COOKIE_NAME` configuration key.  Defaults to ``'session'``
+    session_cookie_name = ConfigAttribute('SESSION_COOKIE_NAME')
+
+    #: A :class:`~datetime.timedelta` which is used to set the expiration
+    #: date of a permanent session.  The default is 31 days which makes a
+    #: permanent session survive for roughly one month.
+    #:
+    #: This attribute can also be configured from the config with the
+    #: `PERMANENT_SESSION_LIFETIME` configuration key.  Defaults to
+    #: ``timedelta(days=31)``
+    permanent_session_lifetime = ConfigAttribute('PERMANENT_SESSION_LIFETIME')
+    
     #: The name of the logger to use.  By default the logger name is the
     #: package name passed to the constructor.
     logger_name = ConfigAttribute('LOGGER_NAME')
@@ -113,8 +127,6 @@ class Nereid(BackendMixin, RoutingMixin,
         'PROPAGATE_EXCEPTIONS': None,
 
         'SESSION_COOKIE_NAME': 'session',
-        'SESSION_STORE_CLASS': 'werkzeug.contrib.sessions.FilesystemSessionStore',
-        'SESSION_CLASS': Session,
         'PERMANENT_SESSION_LIFETIME': timedelta(days=31),
         'PRESERVE_CONTEXT_ON_EXCEPTION': None,
         'SESSION_STORE_PATH': '/tmp',
@@ -208,7 +220,8 @@ class Nereid(BackendMixin, RoutingMixin,
         RoutingMixin.__init__(self, **config)
         CacheMixin.__init__(self, **config)
         TemplateMixin.__init__(self, **config)
-        SessionMixin.__init__(self, **config)
+
+        self.session_interface = NereidSessionInterface(self)
 
         self.add_ctx_processors_from_db()
         self.add_urls_from_db()
