@@ -25,7 +25,7 @@ class RoutingMixin(object):
     #:
     #: This is the default used for application and modules unless a
     #: different value is passed to the constructor.
-    static_path = '/static'
+    static_url_path = '/static'
 
     #: The location from where static files will be served
     static_fileroot = ConfigAttribute('STATIC_FILEROOT')
