@@ -19,7 +19,7 @@ from functools import wraps
 from hashlib import md5
 from math import ceil
 
-from flask.helpers import _assert_have_json, json, jsonify
+from flask.helpers import _assert_have_json, json, jsonify, _PackageBoundObject
 from werkzeug import Headers, wrap_file, redirect
 from werkzeug.exceptions import NotFound
 from werkzeug.utils import cached_property

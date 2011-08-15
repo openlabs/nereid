@@ -9,7 +9,7 @@
     :copyright: (c) 2010 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
-from flask.ctx import _RequestGlobals, RequestContext as _RequestContextBase
+from flask.ctx import _RequestGlobals, RequestContext as RequestContextBase
 from flask.ctx import has_request_context
 from werkzeug.exceptions import HTTPException
 
@@ -17,7 +17,7 @@ from .globals import _request_ctx_stack
 from .session import _NullSession
 
 
-class _RequestContext(_RequestContextBase):
+class RequestContext(RequestContextBase):
     """The request context contains all request relevant information.  It is
     created at the beginning of the request and pushed to the
     `_request_ctx_stack` and removed at the end of it.  It will create the
@@ -25,6 +25,6 @@ class _RequestContext(_RequestContextBase):
     """
 
     def __init__(self, app, environ):
-        super(_RequestContext, self).__init__(app, environ)
+        super(RequestContext, self).__init__(app, environ)
         self.transaction = None
         self.cache = app.cache

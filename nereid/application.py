@@ -21,12 +21,13 @@ from werkzeug.exceptions import InternalServerError
 
 from .wrappers import Request, Response
 from .config import ConfigAttribute, Config
-from .ctx import _RequestContext
+from .ctx import RequestContext
 from .globals import request, _request_ctx_stack, transaction
 from .signals import request_started, request_finished, got_request_exception,\
     request_tearing_down
 
 from .backend import BackendMixin
+from .helpers import _PackageBoundObject
 from .templating import TemplateMixin
 from .routing import RoutingMixin
 from .session import SessionMixin, Session, FilesystemSessionStore, _NullSession
@@ -40,7 +41,7 @@ cache = Cache()
 
 
 class Nereid(BackendMixin, RoutingMixin,
-        TemplateMixin, SessionMixin, CacheMixin):
+        TemplateMixin, SessionMixin, CacheMixin, _PackageBoundObject):
     """
     ...
 
@@ -201,7 +202,7 @@ class Nereid(BackendMixin, RoutingMixin,
         self._got_first_request = False
         self._before_request_lock = Lock()
 
-
+        _PackageBoundObject.__init__(self, __name__)
         BackendMixin.__init__(self, **config) 
         RoutingMixin.__init__(self, **config)
         CacheMixin.__init__(self, **config)
@@ -366,7 +367,7 @@ class Nereid(BackendMixin, RoutingMixin,
 
         :param environ: a WSGI environment
         """
-        return _RequestContext(self, environ)
+        return RequestContext(self, environ)
 
     def test_request_context(self, *args, **kwargs):
         """Creates a WSGI environment from the given values (see
