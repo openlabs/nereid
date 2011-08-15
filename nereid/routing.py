@@ -99,6 +99,7 @@ class RoutingMixin(object):
         #:    app.url_map.converters['list'] = ListConverter
         self.url_map = Map()
 
+        self._static_folder = self.static_fileroot
         # register the static folder for the application.  Do that even
         # if the folder does not exist.  First of all it might be created
         # while the server is running (usually happens during development)
