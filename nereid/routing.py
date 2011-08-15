@@ -9,7 +9,7 @@
 '''
 
 from werkzeug.exceptions import HTTPException, MethodNotAllowed
-from werkzeug.routing import Rule, Map
+from werkzeug.routing import Rule, Map, RequestRedirect
 
 from .config import ConfigAttribute
 from .helpers import send_from_directory
@@ -110,6 +110,22 @@ class RoutingMixin(object):
             self.add_url_rule(self.static_url_path + '/<path:filename>',
                               endpoint='static',
                               view_func=self.send_static_file)
+
+    def raise_routing_exception(self, request):
+        """Exceptions that are recording during routing are reraised with
+        this method.  During debug we are not reraising redirect requests
+        for non ``GET``, ``HEAD``, or ``OPTIONS`` requests and we're raising
+        a different error instead to help debug situations.
+
+        :internal:
+        """
+        if not self.debug \
+           or not isinstance(request.routing_exception, RequestRedirect) \
+           or request.method in ('GET', 'HEAD', 'OPTIONS'):
+            raise request.routing_exception
+
+        from flask.debughelpers import FormDataRoutingRedirect
+        raise FormDataRoutingRedirect(request)
 
     def dispatch_request(self):
         """Does the request dispatching.  Matches the URL and returns the
