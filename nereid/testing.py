@@ -12,6 +12,7 @@
 """
 import new
 
+import unittest2
 from werkzeug import Client, EnvironBuilder
 from nereid import _request_ctx_stack
 
@@ -67,6 +68,18 @@ class NereidClient(Client):
         self.preserve_context = False
         if self.context_preserved:
             _request_ctx_stack.pop()
+
+
+class FailFastTextTestRunner(unittest2.TextTestRunner):
+    """A subclass of TextTestRunner which fails fast by default
+    """
+    def _makeResult(self):
+        """This method returns an instance of the TestResult which infact 
+        handles the failfast behaviour in the core
+        """
+        rv = super(FailFastTextTestRunner, self)._makeResult()
+        rv.failfast = True
+        return rv
 
 
 class TestingProxy(object):

@@ -12,6 +12,9 @@
     :license: BSD, see LICENSE for more details.
 """
 import unittest2
+from nereid.testing import FailFastTextTestRunner
+from xmlrunner import XMLTestRunner
+
 
 try:
     import trytond
@@ -39,4 +42,6 @@ if TRYTON_INSTALLED:
 
 
 if __name__ == '__main__':
-    unittest2.TextTestRunner(verbosity=2).run(suite)
+    with open('result.xml', 'wb') as stream:
+        XMLTestRunner(stream).run(suite)
+

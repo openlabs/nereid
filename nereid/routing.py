@@ -42,11 +42,45 @@ class RoutingMixin(object):
     #: information.
     website_model = ConfigAttribute('WEBSITE_MODEL')
 
+    #: The rule object to use for URL rules created.  This is used by
+    #: :meth:`add_url_rule`.  Defaults to :class:`werkzeug.routing.Rule`.
+    #:
+    #: .. versionadded:: 0.2
+    url_rule_class = Rule
+
+    #: the test client that is used with when `test_client` is used.
+    #:
+    #: .. versionadded:: 0.2
+    test_client_class = None
+
+
     def __init__(self, **config):
         #: A dictionary of all view functions registered.  The keys will
         #: be model.function names which are also used to generate URLs and
         #: the values are the method objects themselves.
         self.view_functions = { }
+
+        #: A dictionary with lists of functions that can be used as URL
+        #: value processor functions.  Whenever a URL is built these functions
+        #: are called to modify the dictionary of values in place.  The key
+        #: `None` here is used for application wide
+        #: callbacks, otherwise the key is the name of the blueprint.
+        #: Each of these functions has the chance to modify the dictionary
+        #:
+        #: .. versionadded:: 0.2
+        self.url_value_preprocessors = {}
+
+        #: A dictionary with lists of functions that can be used as URL value
+        #: preprocessors.  The key `None` here is used for application wide
+        #: callbacks, otherwise the key is the name of the blueprint.
+        #: Each of these functions has the chance to modify the dictionary
+        #: of URL values before they are used as the keyword arguments of the
+        #: view function.  For each function registered this one should also
+        #: provide a :meth:`url_defaults` function that adds the parameters
+        #: automatically again that were removed that way.
+        #:
+        #: .. versionadded:: 0.2
+        self.url_default_functions = {}
 
         #: The :class:`~werkzeug.routing.Map` for this instance.  You can use
         #: this to change the routing converters after the class was created
@@ -70,9 +104,10 @@ class RoutingMixin(object):
         # while the server is running (usually happens during development)
         # but also because google appengine stores static files somewhere
         # else when mapped with the .yml file.
-        self.add_url_rule(self.static_path + '/<path:filename>',
-                          endpoint='static',
-                          view_func=self.send_static_file)
+        if self.has_static_folder:
+            self.add_url_rule(self.static_url_path + '/<path:filename>',
+                              endpoint='static',
+                              view_func=self.send_static_file)
 
     def dispatch_request(self):
         """Does the request dispatching.  Matches the URL and returns the
