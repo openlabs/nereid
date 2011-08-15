@@ -23,7 +23,7 @@ from .config import ConfigAttribute
 from .globals import _request_ctx_stack
 from .signals import template_rendered
 from .helpers import url_for, get_flashed_messages, _rst_to_html_filter, \
-    make_crumbs
+    make_crumbs, locked_cached_property
 
 
 def _default_template_ctx_processor():
@@ -205,19 +205,16 @@ class TemplateMixin(object):
             None: [_default_template_ctx_processor]
         }
 
-        #: The Jinja2 environment.  It is created from the
-        #: :attr:`jinja_options`.
-        self.jinja_env = self.create_jinja_environment()
-
-        # Setup for fragmented caching
-        self.jinja_env.fragment_cache = self.cache
-        self.jinja_env.fragment_cache_prefix = self.cache_key_prefix + "-frag-"
-
-        self.init_jinja_globals()
+    @locked_cached_property
+    def jinja_env(self):
+        """The Jinja2 environment used to load templates."""
+        return self.create_jinja_environment()
 
     def create_jinja_environment(self):
         """Creates the Jinja2 environment based on :attr:`jinja_options`
-        and :meth:`select_jinja_autoescape`.
+        and :meth:`select_jinja_autoescape`. Since 0.2 this also adds
+        the Jinja2 globals and filters after initialization.  Override
+        this function to customize the behavior.
         """
         options = dict(self.jinja_options)
         if 'autoescape' not in options:
@@ -226,14 +223,28 @@ class TemplateMixin(object):
                 self.cache_type=='werkzeug.contrib.cache.MemcachedCache':
             options['bytecode_cache'] = MemcachedBytecodeCache(self.cache)
         loader_class = import_string(self.template_loader_class)
-        return Environment(
-            loader=loader_class(self), 
-            **options)
+        rv = Environment(loader=loader_class(self), **options)
+        rv.globals.update(
+            url_for=url_for,
+            get_flashed_messages=get_flashed_messages
+        )
+        rv.filters.update(
+            tojson = _tojson_filter,
+            rst = _rst_to_html_filter,
+        )
+
+        # Setup for fragmented caching
+        rv.fragment_cache = self.cache
+        rv.fragment_cache_prefix = self.cache_key_prefix + "-frag-"
+
+        return rv
 
     def init_jinja_globals(self):
         """Called directly after the environment was created to inject
         some defaults (like `url_for`, `get_flashed_messages` and the
-        `tojson` filter.
+        `tojson` filter. Since 0.2 this also adds
+        the Jinja2 globals and filters after initialization.  Override
+        this function to customize the behavior.
         """
         self.jinja_env.globals.update(
             url_for=url_for,

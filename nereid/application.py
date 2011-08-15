@@ -39,7 +39,7 @@ _logger_lock = Lock()
 cache = Cache()
 
 
-class Nereid(BackendMixin, RoutingMixin, 
+class Nereid(BackendMixin, RoutingMixin,
         TemplateMixin, SessionMixin, CacheMixin):
     """
     ...
@@ -70,7 +70,7 @@ class Nereid(BackendMixin, RoutingMixin,
     #: configuration key.  Defaults to `False`.
     debug = ConfigAttribute('DEBUG')
 
-    #: The testing flask.  Set this to `True` to enable the test mode of
+    #: The testing flag.  Set this to `True` to enable the test mode of
     #: Flask extensions (and in the future probably also Flask itself).
     #: For example this might activate unittest helpers that have an
     #: additional runtime cost which should not be enabled by default.
@@ -168,6 +168,13 @@ class Nereid(BackendMixin, RoutingMixin,
         #: function here, use the :meth:`before_request` decorator.
         self.before_request_funcs = {}
 
+        #: A lists of functions that should be called at the beginning of the
+        #: first request to this instance.  To register a function here, use
+        #: the :meth:`before_first_request` decorator.
+        #:
+        #: .. versionadded:: 0.2
+        self.before_first_request_funcs = []
+
         #: A dictionary with lists of functions that should be called after
         #: each request.  The key of the dictionary is the name of the module
         #: this function is active for, `None` for all requests.  This can for
@@ -175,6 +182,25 @@ class Nereid(BackendMixin, RoutingMixin,
         #: currently logged in user.  To register a function here, use the
         #: :meth:`after_request` decorator.
         self.after_request_funcs = {}
+
+        #: A dictionary with lists of functions that are called after
+        #: each request, even if an exception has occurred. The key of the
+        #: dictionary is the name of the blueprint this function is active for,
+        #: `None` for all requests. These functions are not allowed to modify
+        #: the request, and their return values are ignored. If an exception
+        #: occurred while processing the request, it gets passed to each
+        #: teardown_request function. To register a function here, use the
+        #: :meth:`teardown_request` decorator.
+        #:
+        #: .. versionadded:: 0.2
+        self.teardown_request_funcs = {}
+
+
+        # tracks internally if the application already handled at least one
+        # request.
+        self._got_first_request = False
+        self._before_request_lock = Lock()
+
 
         BackendMixin.__init__(self, **config) 
         RoutingMixin.__init__(self, **config)
@@ -184,6 +210,41 @@ class Nereid(BackendMixin, RoutingMixin,
 
         self.add_ctx_processors_from_db()
         self.add_urls_from_db()
+
+    @property
+    def propagate_exceptions(self):
+        """Returns the value of the `PROPAGATE_EXCEPTIONS` configuration
+        value in case it's set, otherwise a sensible default is returned.
+
+        .. versionadded:: 0.7
+        """
+        rv = self.config['PROPAGATE_EXCEPTIONS']
+        if rv is not None:
+            return rv
+        return self.testing or self.debug
+
+    @property
+    def preserve_context_on_exception(self):
+        """Returns the value of the `PRESERVE_CONTEXT_ON_EXCEPTION`
+        configuration value in case it's set, otherwise a sensible default
+        is returned.
+
+        .. versionadded:: 0.7
+        """
+        rv = self.config['PRESERVE_CONTEXT_ON_EXCEPTION']
+        if rv is not None:
+            return rv
+        return self.debug
+
+    @property
+    def got_first_request(self):
+        """This attribute is set to `True` if the application started
+        handling the first request.
+
+        .. versionadded:: 0.2
+        """
+        return self._got_first_request
+
 
     def run(self, host='127.0.0.1', port=5000, **options):
         """Runs the application on a local development server.  If the
@@ -250,17 +311,6 @@ class Nereid(BackendMixin, RoutingMixin,
         if handler is None:
             return exception
         return handler(exception)
-
-    @property
-    def propagate_exceptions(self):
-        """Returns the value of the `PROPAGATE_EXCEPTIONS` configuration
-        value in case it's set, otherwise a sensible default is returned.
-
-        """
-        result = self.config['PROPAGATE_EXCEPTIONS']
-        if result is not None:
-            return result
-        return self.testing or self.debug
 
     def handle_exception(self, exception):
         """Default exception handling that kicks in when an exception
