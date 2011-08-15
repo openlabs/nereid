@@ -75,7 +75,7 @@ class NereidSessionInterface(SessionInterface):
 
     session_store = MemcachedSessionStore()
 
-    def open_session(self, request):
+    def open_session(self, app, request):
         """Creates or opens a new session.
 
         :param request: an instance of :attr:`request_class`.
@@ -83,7 +83,7 @@ class NereidSessionInterface(SessionInterface):
         sid = request.cookies.get(self.session_cookie_name, None)
         return (self.session_store.get(sid) if sid else None)
 
-    def save_session(self, session, response):
+    def save_session(self, app, session, response):
         """Saves the session if it needs updates.  For the default
         implementation, check :meth:`open_session`.
 
