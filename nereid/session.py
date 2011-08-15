@@ -80,7 +80,7 @@ class NereidSessionInterface(SessionInterface):
 
         :param request: an instance of :attr:`request_class`.
         """
-        sid = request.cookies.get(self.session_cookie_name, None)
+        sid = request.cookies.get(app.session_cookie_name, None)
         return (self.session_store.get(sid) if sid else None)
 
     def save_session(self, app, session, response):
@@ -94,8 +94,8 @@ class NereidSessionInterface(SessionInterface):
             self.session_store.save(session)
             expires = domain = None
             if session.permanent:
-                expires = datetime.utcnow() + self.permanent_session_lifetime
-            if self.config['SERVER_NAME'] is not None:
-                domain = '.' + self.config['SERVER_NAME']
-            response.set_cookie(self.session_cookie_name, session.sid, 
+                expires = datetime.utcnow() + app.permanent_session_lifetime
+            if app.config['SERVER_NAME'] is not None:
+                domain = '.' + app.config['SERVER_NAME']
+            response.set_cookie(app.session_cookie_name, session.sid, 
                 expires=expires, httponly=True, domain=domain)
