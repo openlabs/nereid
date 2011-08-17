@@ -41,6 +41,21 @@ class Session(SessionBase):
     modified = True
 
 
+class NullSession(Session):
+    """Class used to generate nicer error messages if sessions are not
+    available.  Will still allow read-only access to the empty session
+    but fail on setting.
+    """
+
+    def _fail(self, *args, **kwargs):
+        raise RuntimeError('the session is unavailable because no secret '
+                           'key was set.  Set the secret_key on the '
+                           'application to something unique and secret.')
+    __setitem__ = __delitem__ = clear = pop = popitem = \
+        update = setdefault = _fail
+    del _fail
+
+
 class MemcachedSessionStore(SessionStore):
     """Session store that stores session on memcached
 
@@ -74,6 +89,7 @@ class NereidSessionInterface(SessionInterface):
     """Session Management Class"""
 
     session_store = MemcachedSessionStore()
+    null_session_class = NullSession
 
     def open_session(self, app, request):
         """Creates or opens a new session.
