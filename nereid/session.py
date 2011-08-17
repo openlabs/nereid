@@ -97,7 +97,10 @@ class NereidSessionInterface(SessionInterface):
         :param request: an instance of :attr:`request_class`.
         """
         sid = request.cookies.get(app.session_cookie_name, None)
-        return (self.session_store.get(sid) if sid else None)
+        if sid:
+            return self.session_store.get(sid)
+        else:
+            return self.session_store.new()
 
     def save_session(self, app, session, response):
         """Saves the session if it needs updates.  For the default
