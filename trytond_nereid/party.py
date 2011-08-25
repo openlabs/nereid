@@ -487,7 +487,7 @@ class Address(ModelSQL, ModelView):
             form.country.choices = [
                 (c.id, c.name) for c in request.nereid_website.countries
             ]
-        return render_template('address-edit.jinja', form=form)
+        return render_template('address-edit.jinja', form=form, address=address)
 
     @login_required
     def view_address(self):
