@@ -32,7 +32,6 @@ from .sphinxapi import SphinxClient
 _SLUGIFY_STRIP_RE = re.compile(r'[^\w\s-]')
 _SLUGIFY_HYPHENATE_RE = re.compile(r'[-\s]+')
 
-
 def url_for(endpoint, **values):
     """Generates a URL to the given endpoint with the method provided.
     The endpoint is relative to the active module if modules are in use.
@@ -57,12 +56,30 @@ def url_for(endpoint, **values):
     :param endpoint: the endpoint of the URL (name of the function)
     :param values: the variable arguments of the URL rule
     :param _external: if set to `True`, an absolute URL is generated.
+    :param _secure: if set to `True`, returns an absolute https URL.
     """
     ctx = _request_ctx_stack.top
     external = values.pop('_external', False)
+
+    secure = values.pop('_secure', False)
+    if secure:
+        # A secure url can only be generated on an external url
+        external = True
+
     if 'language' not in values:
         values['language'] = request.nereid_language.code
-    return ctx.url_adapter.build(endpoint, values, force_external=external)
+    rv = ctx.url_adapter.build(endpoint, values, force_external=external)
+    return (rv.replace('http://', 'https://') if secure else rv)
+
+
+def secure(function):
+    @wraps(function)
+    def decorated_function(*args, **kwargs):
+        if not request.is_secure:
+            return redirect(request.url.replace('http://', 'https://'))
+        else:
+            return function(*args, **kwargs)
+    return decorated_function
 
 
 def login_required(function):
