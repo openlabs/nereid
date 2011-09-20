@@ -17,7 +17,7 @@ from datetime import timedelta
 from itertools import chain
 
 from werkzeug import ImmutableDict
-from werkzeug.exceptions import InternalServerError
+from werkzeug.exceptions import InternalServerError, HTTPException
 
 from .wrappers import Request, Response
 from .config import ConfigAttribute, Config
@@ -161,7 +161,10 @@ class Nereid(BackendMixin, RoutingMixin,
         'TEMPLATE_LOADER_CLASS': 'nereid.templating.TrytonTemplateLoader',
         # Specify this if you are using the nereid.templating.FileSystemLoader
         # Argument can be '/path/to/template' or ['path1', 'path2']
-        'TEMPLATE_SEARCH_PATH': ''
+        'TEMPLATE_SEARCH_PATH': '',
+
+        'TRAP_BAD_REQUEST_ERRORS': False,
+        'TRAP_HTTP_EXCEPTIONS': False,
     })
 
     def __init__(self, **config):
@@ -551,16 +554,12 @@ class Nereid(BackendMixin, RoutingMixin,
                     result = self.preprocess_request()
                     if result is None:
                         result = self.dispatch_request()
-                    response = self.make_response(result)
+                        transaction.cursor.commit()
                 except Exception, exception:
-                    response = self.make_response(
-                        self.handle_exception(exception))
-                try:
-                    response = self.process_response(response)
-                    transaction.cursor.commit()
-                except Exception, exception:
-                    response = self.make_response(
-                        self.handle_exception(exception))
+                    result = self.handle_user_exception(exception)
+                
+                response = self.make_response(result)
+                response = self.process_response(response)
                 request_finished.send(self, response=response)
                 return response(environ, start_response)
 
