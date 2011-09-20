@@ -332,16 +332,21 @@ class Nereid(BackendMixin, RoutingMixin,
             self._logger = result = create_logger(self)
             return result
 
-    def handle_http_exception(self, exception):
+    def handle_http_exception(self, e):
         """Handles an HTTP exception.  By default this will invoke the
         registered error handlers and fall back to returning the
         exception as response.
 
+        .. versionadded: 0.3
         """
-        handler = self.error_handlers.get(exception.code)
+        handlers = self.error_handler_spec.get(request.blueprint)
+        if handlers and e.code in handlers:
+            handler = handlers[e.code]
+        else:
+            handler = self.error_handler_spec[None].get(e.code)
         if handler is None:
-            return exception
-        return handler(exception)
+            return e
+        return handler(e)
 
     def trap_http_exception(self, e):
         """Checks if an HTTP exception should be trapped or not.  By default
