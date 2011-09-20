@@ -746,6 +746,10 @@ class SitemapIndex(object):
             return url_for('product.product.render', 
                 uri=browse_record.uri, **kwargs)
     """
+    #: The limit to the number of URLs the protocol has specified per file, 
+    #: is 50000, but generating all the records is highly inefficient and hence
+    #: the sitemap is shortened to 10000
+    limit = 10000
 
     def __init__(self, model, domain, cache_timeout = 60 * 60 * 24):
         """A collection of SitemapSection objects which are automatically
@@ -796,7 +800,7 @@ class SitemapIndex(object):
         >>> int(ceil(100001.00/50000.00))
         3
         """
-        return int(ceil(float(self.count) / 10000.00))
+        return int(ceil(float(self.count) / float(self.limit)))
 
 
 class SitemapSection(object):
