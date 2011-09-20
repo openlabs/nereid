@@ -283,7 +283,7 @@ class TemplateMixin(object):
                         to add extra variables.
         """
         funcs = self.template_context_processors[None]
-        mod = _request_ctx_stack.top.request.module
+        mod = _request_ctx_stack.top.request.blueprint
         if mod is not None and mod in self.template_context_processors:
             funcs = chain(funcs, self.template_context_processors[mod])
         orig_ctx = context.copy()

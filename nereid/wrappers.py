@@ -61,13 +61,6 @@ class Request(RequestBase):
             raise RuntimeError("Guest user is not defined for app")
         return ('user' not in session)
 
-    @property
-    def blueprint(self):
-        """The name of the current blueprint
-
-        Nereid does not work with the blueprint implementation
-        """
-        return None
 
 class Response(ResponseBase):
     pass
