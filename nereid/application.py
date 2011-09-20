@@ -115,7 +115,6 @@ class Nereid(BackendMixin, RoutingMixin,
         '-' * 80
     )
 
-
     #: ID of the party.address to be used as a Guest account
     #: Defaults to None, Not specifying the GUEST USER will
     #: limit the application from performing certain tasks 
@@ -176,12 +175,21 @@ class Nereid(BackendMixin, RoutingMixin,
         self._logger = None
         self.logger_name = 'NEREID'
 
-        #: A dictionary of all registered error handlers.  The key is
-        #: be the error code as integer, the value the function that
-        #: should handle that error.
+        # support for the now deprecated `error_handlers` attribute.  The
+        # :attr:`error_handler_spec` shall be used now.
+        self._error_handlers = {}
+
+        #: A dictionary of all registered error handlers.  The key is `None`
+        #: for error handlers active on the application, otherwise the key is
+        #: the name of the blueprint.  Each key points to another dictionary
+        #: where they key is the status code of the http exception.  The
+        #: special key `None` points to a list of tuples where the first item
+        #: is the class for the instance check and the second the error handler
+        #: function.
+        #:
         #: To register a error handler, use the :meth:`errorhandler`
         #: decorator.
-        self.error_handlers = {}
+        self.error_handler_spec = {None: self._error_handlers}
 
         #: A dictionary with lists of functions that should be called at the
         #: beginning of the request.  The key of the dictionary is the name of
