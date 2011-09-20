@@ -179,6 +179,13 @@ class Nereid(BackendMixin, RoutingMixin,
         # :attr:`error_handler_spec` shall be used now.
         self._error_handlers = {}
 
+        #: all the attached blueprints in a directory by name.  Blueprints
+        #: can be attached multiple times so this dictionary does not tell
+        #: you how often they got attached.
+        #:
+        #: .. versionadded:: 0.7
+        self.blueprints = {}
+
         #: A dictionary of all registered error handlers.  The key is `None`
         #: for error handlers active on the application, otherwise the key is
         #: the name of the blueprint.  Each key points to another dictionary
