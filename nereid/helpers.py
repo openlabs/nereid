@@ -973,3 +973,28 @@ class SitemapSection(object):
         timestamp = item.write_date or item.create_date
         timestamp_in_utc = pytz.utc.localize(timestamp)
         return timestamp_in_utc.isoformat()
+
+
+class SitemapSectionSQL(SitemapSection):
+    """A performance improvement implementation of :class:`SitemapSection` which
+    accepts a SQL query instead of a domain expression for high speed data
+    recovery in SQL record pagination for large datasets.
+    """
+    def __init__(self, model, query, page):
+        self.model = model
+        self.query = query
+        self.page = page
+
+    def __iter__(self):
+        """The default implementation searches for the domain and finds the
+        ids and generates xml for it
+        """
+        from trytond.transaction import Transaction
+        with Transaction().new_cursor() as txn:
+            query = "%s LIMIT %%s OFFSET %%s" % self.query
+            txn.cursor.execute(query, (self.limit, self.offset))
+	    for rec_id, in txn.cursor.cursor:
+                 record = self.model.browse(rec_id)
+                 yield(self.get_url_xml(record))
+                 del record
+
