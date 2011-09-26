@@ -24,6 +24,7 @@ from nereid.globals import session, current_app
 from werkzeug import redirect, abort
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval, Bool, Not
+from trytond.transaction import Transaction
 from trytond.config import CONFIG
 
 
@@ -506,6 +507,9 @@ class Party(ModelSQL, ModelView):
     # does not make business or technical sense to have website of multiple
     # companies share the authentication.
     company = fields.Many2One('company.company', 'Company')
+
+    def default_company(self):
+        return Transaction().context.get('company') or False
 
 Party()
 
