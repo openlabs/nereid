@@ -161,6 +161,7 @@ class Nereid(BackendMixin, RoutingMixin,
         # Specify this if you are using the nereid.templating.FileSystemLoader
         # Argument can be '/path/to/template' or ['path1', 'path2']
         'TEMPLATE_SEARCH_PATH': '',
+        'TRANSLATIONS_PATH': None,
 
         'TRAP_BAD_REQUEST_ERRORS': False,
         'TRAP_HTTP_EXCEPTIONS': False,

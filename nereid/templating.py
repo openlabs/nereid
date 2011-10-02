@@ -189,11 +189,12 @@ class TemplateMixin(object):
     #: Options that are passed directly to the Jinja2 environment.
     jinja_options = ImmutableDict(
         extensions=['jinja2.ext.autoescape', 'jinja2.ext.with_', 
-            FragmentCacheExtension],
+            'jinja2.ext.i18n', FragmentCacheExtension],
         autoescape=True,
     )
     template_loader_class = ConfigAttribute('TEMPLATE_LOADER_CLASS')
     context_proc_model = 'nereid.template.context_processor'
+    translations_path = ConfigAttribute('TRANSLATIONS_PATH')
 
     def __init__(self, **config):
         #: A dictionary with list of functions that are called without argument
