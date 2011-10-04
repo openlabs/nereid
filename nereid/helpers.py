@@ -734,7 +734,7 @@ class SitemapIndex(object):
                 self, self.search_domain
                 )
             return index.render()
-        
+
         def sitemap(self, page):
             sitemap_section = SitemapSection(
                 self, self.search_domain, page
@@ -746,10 +746,8 @@ class SitemapIndex(object):
             return url_for('product.product.render', 
                 uri=browse_record.uri, **kwargs)
     """
-    #: The limit to the number of URLs the protocol has specified per file, 
-    #: is 50000, but generating all the records is highly inefficient and hence
-    #: the sitemap is shortened to 10000
-    limit = 10000
+    #: Batch Size: The number of URLs per sitemap page
+    batch_size = 1000
 
     def __init__(self, model, domain, cache_timeout = 60 * 60 * 24):
         """A collection of SitemapSection objects which are automatically
@@ -784,8 +782,13 @@ class SitemapIndex(object):
     def count(self):
         """Returns the number of items of the object
         """
-        return self.model.search(self.domain, count=True)
-    
+        from trytond.transaction import Transaction
+        with Transaction().new_cursor() as txn:
+            query = 'SELECT max(id) FROM "%s"' % self.model._table
+            txn.cursor.execute(query)
+            max_id, = txn.cursor.fetchone()
+            return max_id
+
     @cached_property
     def page_count(self):
         """Returns the number of pages that will exist for the sitemap index
@@ -800,7 +803,7 @@ class SitemapIndex(object):
         >>> int(ceil(100001.00/50000.00))
         3
         """
-        return int(ceil(float(self.count) / float(self.limit)))
+        return int(ceil(float(self.count) / float(self.batch_size)))
 
 
 class SitemapSection(object):
@@ -893,17 +896,13 @@ class SitemapSection(object):
     #: is only used to select between URLs on your site.
     priority = 0.5
 
-    #: The limit to the number of URLs the protocol has specified per file, 
-    #: is 50000, but generating all the records is highly inefficient and hence
-    #: the sitemap is shortened to 10000
-    limit = 10000
-
     #: It is really memory intensive to call complete records and generate site
     #: maps from them if the collection is large. Hence the queries may be 
     #: divided into batches of this size
-    batch_size = 100
+    batch_size = 1000
 
-    offset = property(lambda self: (self.page - 1) * self.limit)
+    min_id = property(lambda self: (self.page -1) * self.batch_size)
+    max_id = property(lambda self: self.min_id + self.batch_size)
 
     def __init__(self, model, domain, page):
         self.model = model
@@ -914,7 +913,10 @@ class SitemapSection(object):
         """The default implementation searches for the domain and finds the
         ids and generates xml for it
         """
-        ids = self.model.search(self.domain, limit=self.limit, offset=self.offset)
+        domain = [('id', '>', self.min_id), ('id', '<=', self.max_id)]
+        domain = domain + self.domain
+
+        ids = self.model.search(domain)
         for id in ids:
             record = self.model.browse(id)
             yield(self.get_url_xml(record))
@@ -993,7 +995,7 @@ class SitemapSectionSQL(SitemapSection):
         with Transaction().new_cursor() as txn:
             query = "%s LIMIT %%s OFFSET %%s" % self.query
             txn.cursor.execute(query, (self.limit, self.offset))
-	    for rec_id, in txn.cursor.cursor:
+            for rec_id, in txn.cursor.cursor:
                  record = self.model.browse(rec_id)
                  yield(self.get_url_xml(record))
                  del record
