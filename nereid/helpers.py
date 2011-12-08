@@ -14,6 +14,7 @@ import mimetypes
 from time import time
 from zlib import adler32
 import re
+import urllib
 import unicodedata
 from functools import wraps
 from hashlib import md5
@@ -61,6 +62,9 @@ def url_for(endpoint, **values):
     :param values: the variable arguments of the URL rule
     :param _external: if set to `True`, an absolute URL is generated.
     :param _secure: if set to `True`, returns an absolute https URL.
+    :param _params: if specified as list of tuples or dict, additional url parameters.
+            If params is specified then the default behaviour of appending_unknown
+            paramters to URL generated is disabled
     """
     ctx = _request_ctx_stack.top
     external = values.pop('_external', False)
@@ -70,9 +74,14 @@ def url_for(endpoint, **values):
         # A secure url can only be generated on an external url
         external = True
 
+    params = values.pop('_params', None)
+
     if 'language' not in values:
         values['language'] = request.nereid_language.code
-    rv = ctx.url_adapter.build(endpoint, values, force_external=external)
+    rv = ctx.url_adapter.build(
+        endpoint, values, force_external=external, append_unknown=not params)
+    if params:
+        rv = u'%s?%s' % (rv, urllib.urlencode(params))
     return (rv.replace('http://', 'https://') if secure else rv)
 
 
