@@ -224,11 +224,15 @@ class WebSite(ModelSQL, ModelView):
                 flash("You are now logged in. Welcome %s" % result.name)
                 session['user'] = result.id
                 login.send(self)
+                if request.is_xhr:
+                    return 'OK'
                 return redirect(request.values.get('next', 
                     url_for('nereid.website.home')))
             elif result is None:
                 flash("Invalid login credentials")
             failed_login.send(self, form=login_form)
+            if request.is_xhr:
+                return 'NOK'
         return render_template('login.jinja', login_form=login_form)
 
     def logout(self):
