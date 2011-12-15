@@ -117,4 +117,4 @@ class NereidSessionInterface(SessionInterface):
             if app.config['SERVER_NAME'] is not None:
                 domain = '.' + app.config['SERVER_NAME']
             response.set_cookie(app.session_cookie_name, session.sid, 
-                expires=expires, httponly=True, domain=domain)
+                expires=expires, httponly=False, domain=domain)
