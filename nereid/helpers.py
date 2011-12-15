@@ -81,6 +81,7 @@ def url_for(endpoint, **values):
     rv = ctx.url_adapter.build(
         endpoint, values, force_external=external, append_unknown=not params)
     if params:
+        params = [(k, v.encode('UTF-8')) for k, v in params]
         rv = u'%s?%s' % (rv, urllib.urlencode(params))
     return (rv.replace('http://', 'https://') if secure else rv)
 
