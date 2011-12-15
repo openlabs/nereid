@@ -177,8 +177,16 @@ class WebSite(ModelSQL, ModelView):
         ids = subdivision_obj.search([('country', '=', country)])
         subdivisions = subdivision_obj.browse(ids)
         return jsonify(
-            result = [{'key': s.id, 'value': s.name} for s in subdivisions]
-            )
+            result = [{
+                'key': s.id, 
+                'value': s.name,
+                # The above two arguments will be deprecated in future version
+                'id': s.id,
+                'name': s.name,
+                'code': s.code,
+                } for s in subdivisions
+            ]
+        )
 
     def get_urls(self, name):
         """
