@@ -15,6 +15,8 @@ import new
 import unittest2
 from werkzeug import Client, EnvironBuilder
 from nereid import _request_ctx_stack
+from nereid.session import Session
+from werkzeug.contrib.sessions import FilesystemSessionStore
 
 
 class NereidClient(Client):
@@ -38,6 +40,9 @@ class NereidClient(Client):
         follow_redirects = kwargs.pop('follow_redirects', False)
 
         builder = EnvironBuilder(*args, **kwargs)
+
+        self.application.session_interface.session_store = \
+            FilesystemSessionStore(session_class=Session)
 
         if self.application.config.get('SERVER_NAME'):
             server_name = self.application.config.get('SERVER_NAME')
