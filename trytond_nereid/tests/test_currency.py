@@ -25,7 +25,7 @@ class TestCurrency(unittest.TestCase):
             cls.site = testing_proxy.create_site('testsite.com')
             testing_proxy.create_template(
                 'home.jinja', 
-                '{{request.nereid_website.get_currencies()}}',
+                '{{request.nereid_website.get_currencies()|safe}}',
                 cls.site)
             txn.cursor.commit()
 
