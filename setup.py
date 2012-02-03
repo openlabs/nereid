@@ -74,7 +74,7 @@ if TRYTON_INSTALLED:
 
 setup(
     name='Nereid',
-    version='0.2',
+    version='0.3',
     url='http://openlabs.co.in/nereid',
     license='GPLv3',
     author='Sharoon Thomas',
