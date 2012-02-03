@@ -261,6 +261,7 @@ class TestNereidConfiguration(unittest.TestCase):
                 [('email', '=', new_user_email)])
             new_user = self.address_obj.browse(new_user_id)
         app = self.get_app()
+
         with app.test_client() as c:
             c.post('/en_US/login', 
                 data={'email': 'new@example.com', 'password': 'password'})
@@ -270,6 +271,7 @@ class TestNereidConfiguration(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
 
             # On submitting url with id the address must change
+
         with Transaction().start(testing_proxy.db_name, testing_proxy.user, None):
             website_id = self.website_obj.search([])[0]
             website = self.website_obj.browse(website_id)
@@ -285,6 +287,7 @@ class TestNereidConfiguration(unittest.TestCase):
                 'subdivision': subdivision.id,
                 'email': new_user_email,
                 }
+
         with app.test_client() as c:
             c.post('/en_US/login', 
                 data={'email': 'new@example.com', 'password': 'password'})
@@ -306,7 +309,9 @@ class TestNereidConfiguration(unittest.TestCase):
                 }
             response = c.post('/en_US/edit-address/%d' % 0, data=address_data)
             self.assertEqual(response.status_code, 302)
+
         with Transaction().start(testing_proxy.db_name, testing_proxy.user, None):
+            new_user = self.address_obj.browse(new_user_id)
             self.assertEqual(len(new_user.party.addresses), 2)
 
     def test_0070_view_address(self):
