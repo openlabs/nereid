@@ -11,7 +11,7 @@ The basic steps in translation are:
 To extract translations
 -----------------------
 
-    pybabel extract -F babel.cfg -o i18n/messages.pot nereid trytond_nereod
+    pybabel extract -F babel.cfg -o i18n/messages.pot .
 
 
 To Translate to new language
