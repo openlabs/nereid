@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: Nereid 0.3\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2012-02-10 15:35-0500\n"
-"PO-Revision-Date: 2012-02-10 14:36-0500\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2012-02-10 16:57-0500\n"
+"Last-Translator: Esteban <esteban@dhtsglobal.com>\n"
 "Language-Team: pt_BR <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n > 1)\n"
 "MIME-Version: 1.0\n"
@@ -17,124 +17,127 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.6\n"
 
-#: party.py:40 party.py:65
+#: party.py:40
+#: party.py:65
 msgid "Name"
-msgstr ""
+msgstr "Nome e Sombrenome"
 
-#: party.py:41 routing.py:96
+#: party.py:41
+#: routing.py:96
 msgid "e-mail"
-msgstr ""
+msgstr "e-mail"
 
-#: party.py:42 party.py:84
+#: party.py:42
+#: party.py:84
 msgid "New Password"
-msgstr ""
+msgstr "Nova Senha"
 
-#: party.py:44 party.py:86
+#: party.py:44
+#: party.py:86
 msgid "Passwords must match"
-msgstr ""
+msgstr "Senhas devem coincidir"
 
 #: party.py:45
 msgid "Confirm Password"
-msgstr ""
+msgstr "Confirme Sua Senha"
 
 #: party.py:66
 msgid "Street"
-msgstr ""
+msgstr "Endereco Completo"
 
 #: party.py:67
 msgid "Street (Bis)"
-msgstr ""
+msgstr "Bairro"
 
 #: party.py:68
 msgid "Post Code"
-msgstr ""
+msgstr "CEP"
 
 #: party.py:69
 msgid "City"
-msgstr ""
+msgstr "Cidade"
 
 #: party.py:70
 msgid "Country"
-msgstr ""
+msgstr "País"
 
 #: party.py:71
 msgid "State/County"
-msgstr ""
+msgstr "Estado"
 
 #: party.py:87
 msgid "Repeat Password"
-msgstr ""
+msgstr "Repetir Senha"
 
 #: party.py:100
 msgid "Old Password"
-msgstr ""
+msgstr "Senha Antiga"
 
 #: party.py:344
-msgid ""
-"A registration already exists with this email. Please contact customer "
-"care"
-msgstr ""
+msgid "A registration already exists with this email. Please contact customer care"
+msgstr "Um cadastro já existe com este email. Entre em contato com nosso central de atendimento"
 
 #: party.py:355
 msgid "Registration Complete. Check your email for activation"
-msgstr ""
+msgstr "Cadastro completo. Verifique seu e-mail para ativação"
 
-#: party.py:390 party.py:430
+#: party.py:390
+#: party.py:430
 msgid "Your password has been successfully changed! Please login again"
-msgstr ""
+msgstr "Sua senha foi alterada com sucesso! Por favor, faça login novamente"
 
 #: party.py:396
 msgid "The current password you entered is invalid"
-msgstr ""
+msgstr "A senha digitada é inválida"
 
 #: party.py:447
 msgid "Invalid Activation Code"
-msgstr ""
+msgstr "Código de ativação inválido"
 
 #: party.py:458
 msgid "Your account has been activated"
-msgstr ""
+msgstr "Sua conta foi ativada"
 
 #: party.py:497
 msgid "Invalid email address"
-msgstr ""
+msgstr "Email inválido"
 
 #: party.py:501
 msgid "An email has been sent to your account for resetting your credentials"
-msgstr ""
+msgstr "Um email foi enviado para a sua conta para redefinir suas credenciais"
 
 #: party.py:536
 msgid "Your account has not been activated yet!"
-msgstr ""
+msgstr "Sua conta ainda não foi ativada!"
 
 #: routing.py:97
 msgid "Password"
-msgstr ""
+msgstr "Senha"
 
 #: routing.py:234
 #, python-format
 msgid "You are now logged in. Welcome %(name)s"
-msgstr ""
+msgstr "Você está conectado agora. Bem-vindo %(name)s"
 
 #: routing.py:247
 msgid "Invalid login credentials"
-msgstr ""
+msgstr "Credenciais de login inválido"
 
 #: routing.py:261
 msgid "You have been logged out successfully. Thanks for visiting us"
-msgstr ""
+msgstr "Você saiu com sucesso. Obrigado por nos visitar"
 
 #: routing.py:318
 msgid "The currency has been successfully changed"
-msgstr ""
+msgstr "A moeda foi alterada com sucesso"
 
 #: routing.py:374
 msgid "Your language preference have been saved."
-msgstr ""
+msgstr "Sua preferência de idioma foi salva."
 
 #: routing.py:376
 msgid "Sorry! we do not speak your language yet!"
-msgstr ""
+msgstr "Desculpe! ainda não falam seu idioma!"
 
 #: tests/test_i18n.py:50
 msgid "en_US"
@@ -147,4 +150,3 @@ msgstr "pt_BR"
 
 #~ msgid "You are now logged in. Welcome"
 #~ msgstr ""
-
