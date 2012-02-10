@@ -1,0 +1,131 @@
+# Portuguese (Brazil) translations for Nereid.
+# Copyright (C) 2012 ORGANIZATION
+# This file is distributed under the same license as the Nereid project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2012.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Nereid 0.3\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2012-02-10 14:36-0500\n"
+"PO-Revision-Date: 2012-02-10 14:36-0500\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: pt_BR <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 0.9.6\n"
+
+#: trytond_nereid/party.py:39 trytond_nereid/party.py:64
+msgid "Name"
+msgstr ""
+
+#: trytond_nereid/party.py:40
+msgid "e-mail"
+msgstr ""
+
+#: trytond_nereid/party.py:41 trytond_nereid/party.py:83
+msgid "New Password"
+msgstr ""
+
+#: trytond_nereid/party.py:43
+msgid "Passwords must match"
+msgstr ""
+
+#: trytond_nereid/party.py:44
+msgid "Confirm Password"
+msgstr ""
+
+#: trytond_nereid/party.py:65
+msgid "Street"
+msgstr ""
+
+#: trytond_nereid/party.py:66
+msgid "Street (Bis)"
+msgstr ""
+
+#: trytond_nereid/party.py:67
+msgid "Post Code"
+msgstr ""
+
+#: trytond_nereid/party.py:68
+msgid "City"
+msgstr ""
+
+#: trytond_nereid/party.py:69
+msgid "Country"
+msgstr ""
+
+#: trytond_nereid/party.py:70
+msgid "State/County"
+msgstr ""
+
+#: trytond_nereid/party.py:86
+msgid "Repeat Password"
+msgstr ""
+
+#: trytond_nereid/party.py:99
+msgid "Old Password"
+msgstr ""
+
+#: trytond_nereid/party.py:343
+msgid ""
+"A registration already exists with this email. Please contact customer "
+"care"
+msgstr ""
+
+#: trytond_nereid/party.py:353
+msgid ""
+"Registration Complete. Check your email for\n"
+"                    activation"
+msgstr ""
+
+#: trytond_nereid/party.py:389 trytond_nereid/party.py:429
+msgid "Your password has been successfully changed! Please login again"
+msgstr ""
+
+#: trytond_nereid/party.py:395
+msgid "The current password you entered is invalid"
+msgstr ""
+
+#: trytond_nereid/party.py:446
+msgid "Invalid Activation Code"
+msgstr ""
+
+#: trytond_nereid/party.py:457
+msgid "Your account has been activated"
+msgstr ""
+
+#: trytond_nereid/party.py:496
+msgid "Invalid email address"
+msgstr ""
+
+#: trytond_nereid/party.py:500
+msgid "An email has been sent to your account for resetting your credentials"
+msgstr ""
+
+#: trytond_nereid/party.py:535
+msgid "Your account has not been activated yet!"
+msgstr ""
+
+#: trytond_nereid/routing.py:97
+msgid "Password"
+msgstr ""
+
+#: trytond_nereid/routing.py:234
+msgid "You are now logged in. Welcome"
+msgstr ""
+
+#: trytond_nereid/routing.py:246
+msgid "Invalid login credentials"
+msgstr ""
+
+#: trytond_nereid/routing.py:260
+msgid "You have been logged out successfully. Thanks for visiting us"
+msgstr ""
+
+#: trytond_nereid/tests/test_i18n.py:50
+msgid "en_US"
+msgstr "pt_BR"
+

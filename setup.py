@@ -6,8 +6,9 @@
     :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
     :license: BSD, see LICENSE for more details
 '''
-from setuptools import Command, setup
 import re
+from setuptools import setup
+from babel.messages import frontend as babel
 
 try:
     import trytond
@@ -60,7 +61,8 @@ if TRYTON_INSTALLED:
         })
     package_data.update({
         'trytond.modules.nereid': trytond_module_info.get('xml', []) \
-                + trytond_module_info.get('translation', []),
+                + trytond_module_info.get('translation', []) \
+                + ['i18n/*.pot', 'i18n/pt_BR/LC_MESSAGES/*'],
         })
     entry_points += """
     [trytond.modules]
@@ -100,6 +102,18 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
+    cmdclass = {
+        'compile_catalog': babel.compile_catalog,
+        'extract_messages': babel.extract_messages,
+        'init_catalog': babel.init_catalog,
+        'update_catalog': babel.update_catalog
+    },
+    message_extractors = {
+        '.': [
+            ('nereid/**.py', 'python', None),
+            ('trytond_nereid/**.py', 'python', None),
+        ],
+    }
 )
 
 
