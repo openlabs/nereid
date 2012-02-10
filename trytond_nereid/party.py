@@ -20,11 +20,12 @@ from werkzeug import redirect, abort
 
 from nereid import request, url_for, render_template, login_required, flash
 from nereid.globals import session, current_app
-from nereid.i18n import _, get_translations
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval, Bool, Not
 from trytond.transaction import Transaction
 from trytond.config import CONFIG
+
+from .i18n import _, get_translations
 
 
 class RegistrationForm(Form):
@@ -82,7 +83,7 @@ class NewPasswordForm(Form):
 
     password = PasswordField(_('New Password'), [
         validators.Required(),
-        validators.EqualTo('confirm', message='Passwords must match')])
+        validators.EqualTo('confirm', message=_('Passwords must match'))])
     confirm = PasswordField(_('Repeat Password'))
 
 
@@ -350,8 +351,8 @@ class NereidUser(ModelSQL, ModelView):
                     'password': registration_form.password.data,
                     })
                 self.create_act_code(user_id)
-                flash(_('''Registration Complete. Check your email for
-                    activation''')
+                flash(
+                    _('Registration Complete. Check your email for activation')
                 )
                 return redirect(
                     request.args.get('next', url_for('nereid.website.home'))

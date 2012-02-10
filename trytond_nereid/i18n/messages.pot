@@ -1,14 +1,14 @@
-# Translations template for Nereid.
+# Translations template for PROJECT.
 # Copyright (C) 2012 ORGANIZATION
-# This file is distributed under the same license as the Nereid project.
+# This file is distributed under the same license as the PROJECT project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2012.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Nereid 0.3\n"
+"Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2012-02-10 14:36-0500\n"
+"POT-Creation-Date: 2012-02-10 15:35-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,113 +17,126 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.6\n"
 
-#: trytond_nereid/party.py:39 trytond_nereid/party.py:64
+#: party.py:40 party.py:65
 msgid "Name"
 msgstr ""
 
-#: trytond_nereid/party.py:40
+#: party.py:41 routing.py:96
 msgid "e-mail"
 msgstr ""
 
-#: trytond_nereid/party.py:41 trytond_nereid/party.py:83
+#: party.py:42 party.py:84
 msgid "New Password"
 msgstr ""
 
-#: trytond_nereid/party.py:43
+#: party.py:44 party.py:86
 msgid "Passwords must match"
 msgstr ""
 
-#: trytond_nereid/party.py:44
+#: party.py:45
 msgid "Confirm Password"
 msgstr ""
 
-#: trytond_nereid/party.py:65
+#: party.py:66
 msgid "Street"
 msgstr ""
 
-#: trytond_nereid/party.py:66
+#: party.py:67
 msgid "Street (Bis)"
 msgstr ""
 
-#: trytond_nereid/party.py:67
+#: party.py:68
 msgid "Post Code"
 msgstr ""
 
-#: trytond_nereid/party.py:68
+#: party.py:69
 msgid "City"
 msgstr ""
 
-#: trytond_nereid/party.py:69
+#: party.py:70
 msgid "Country"
 msgstr ""
 
-#: trytond_nereid/party.py:70
+#: party.py:71
 msgid "State/County"
 msgstr ""
 
-#: trytond_nereid/party.py:86
+#: party.py:87
 msgid "Repeat Password"
 msgstr ""
 
-#: trytond_nereid/party.py:99
+#: party.py:100
 msgid "Old Password"
 msgstr ""
 
-#: trytond_nereid/party.py:343
-msgid "A registration already exists with this email. Please contact customer care"
-msgstr ""
-
-#: trytond_nereid/party.py:353
+#: party.py:344
 msgid ""
-"Registration Complete. Check your email for\n"
-"                    activation"
+"A registration already exists with this email. Please contact customer "
+"care"
 msgstr ""
 
-#: trytond_nereid/party.py:389 trytond_nereid/party.py:429
+#: party.py:355
+msgid "Registration Complete. Check your email for activation"
+msgstr ""
+
+#: party.py:390 party.py:430
 msgid "Your password has been successfully changed! Please login again"
 msgstr ""
 
-#: trytond_nereid/party.py:395
+#: party.py:396
 msgid "The current password you entered is invalid"
 msgstr ""
 
-#: trytond_nereid/party.py:446
+#: party.py:447
 msgid "Invalid Activation Code"
 msgstr ""
 
-#: trytond_nereid/party.py:457
+#: party.py:458
 msgid "Your account has been activated"
 msgstr ""
 
-#: trytond_nereid/party.py:496
+#: party.py:497
 msgid "Invalid email address"
 msgstr ""
 
-#: trytond_nereid/party.py:500
+#: party.py:501
 msgid "An email has been sent to your account for resetting your credentials"
 msgstr ""
 
-#: trytond_nereid/party.py:535
+#: party.py:536
 msgid "Your account has not been activated yet!"
 msgstr ""
 
-#: trytond_nereid/routing.py:97
+#: routing.py:97
 msgid "Password"
 msgstr ""
 
-#: trytond_nereid/routing.py:234
-msgid "You are now logged in. Welcome"
+#: routing.py:234
+#, python-format
+msgid "You are now logged in. Welcome %(name)s"
 msgstr ""
 
-#: trytond_nereid/routing.py:246
+#: routing.py:247
 msgid "Invalid login credentials"
 msgstr ""
 
-#: trytond_nereid/routing.py:260
+#: routing.py:261
 msgid "You have been logged out successfully. Thanks for visiting us"
 msgstr ""
 
-#: trytond_nereid/tests/test_i18n.py:50
+#: routing.py:318
+msgid "The currency has been successfully changed"
+msgstr ""
+
+#: routing.py:374
+msgid "Your language preference have been saved."
+msgstr ""
+
+#: routing.py:376
+msgid "Sorry! we do not speak your language yet!"
+msgstr ""
+
+#: tests/test_i18n.py:50
 msgid "en_US"
 msgstr ""
 

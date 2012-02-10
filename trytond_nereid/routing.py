@@ -16,11 +16,11 @@ from wtforms import Form, TextField, PasswordField, validators
 from nereid import jsonify, flash, render_template, url_for, cache
 from nereid.globals import session, request
 from nereid.helpers import login_required, key_from_list, get_flashed_messages
-from nereid.i18n import _
 from nereid.signals import login, failed_login, logout
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
 
+from .i18n import _
 
 # pylint: disable-msg=E1101
 class URLMap(ModelSQL, ModelView):
@@ -93,7 +93,7 @@ URLMap()
 
 class LoginForm(Form):
     "Default Login Form"
-    email = TextField('e-mail', [validators.Required(), validators.Email()])
+    email = TextField(_('e-mail'), [validators.Required(), validators.Email()])
     password = PasswordField(_('Password'), [validators.Required()])
 
 
@@ -231,7 +231,8 @@ class WebSite(ModelSQL, ModelView):
             #       want to handle the message shown to user)
             if result:
                 # NOTE: Translators leave %s as such
-                flash(_("You are now logged in. Welcome") + result.name)
+                flash(_("You are now logged in. Welcome %(name)s",
+                    name=result.name))
                 session['user'] = result.id
                 login.send(self)
                 if request.is_xhr:
@@ -314,7 +315,7 @@ class WebSite(ModelSQL, ModelView):
             abort(403)  # Forbidden currency
 
         session['currency'] = currency
-        message = "The currency has been successfully changed"
+        message = _("The currency has been successfully changed")
 
         if request.is_xhr:
             return jsonify(result = {'success': True, 'message': message})
@@ -370,9 +371,9 @@ class WebSite(ModelSQL, ModelView):
         exists = lang_obj.search([('code', '=', language)], limit=1)
 
         if exists:
-            flash('Your language preference have been saved.')
+            flash(_('Your language preference have been saved.'))
         else:
-            flash('Sorry! we do not speak your language yet!')
+            flash(_('Sorry! we do not speak your language yet!'))
 
         # redirect to the next url if given else take to home page
         redirect_to = request.values.get('next')

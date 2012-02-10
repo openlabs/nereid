@@ -12,7 +12,7 @@ from trytond.config import CONFIG
 CONFIG.options['db_type'] = 'sqlite'
 from trytond.modules import register_classes
 register_classes()
-from trytond.modules.nereid.i18n import _, get_translations
+from trytond.modules.nereid.i18n import _
 from nereid.testing import testing_proxy, TestCase
 from trytond.transaction import Transaction
 
@@ -49,9 +49,7 @@ class TestI18N(TestCase):
         with Transaction().start(testing_proxy.db_name, 1, None):
             s = _("en_US")
             self.assertEqual(s, u'en_US')
-            print get_translations()
             with Transaction().set_context(language="pt_BR"):
-                print get_translations(), s, str(s)
                 self.assertEqual(s, u'pt_BR')
 
 
