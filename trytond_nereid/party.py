@@ -6,22 +6,21 @@
     Partner Address is also considered as the login user
 
     :copyright: (c) 2010 by Sharoon Thomas.
+    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
     :license: BSD, see LICENSE for more details
 '''
 import random
 import string
-try:
-    import hashlib
-except ImportError:
-    hashlib = None
-    import sha
+import hashlib
 
 from wtforms import Form, TextField, IntegerField, SelectField, validators, \
     PasswordField
 from wtfrecaptcha.fields import RecaptchaField
+from werkzeug import redirect, abort
+
 from nereid import request, url_for, render_template, login_required, flash
 from nereid.globals import session, current_app
-from werkzeug import redirect, abort
+from nereid.i18n import _, get_translations
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval, Bool, Not
 from trytond.transaction import Transaction
@@ -30,47 +29,74 @@ from trytond.config import CONFIG
 
 class RegistrationForm(Form):
     "Simple Registration form"
-    name = TextField('Name', [validators.Required(),])
-    company = TextField('Company')
-    street = TextField('Street', [validators.Required(),])
-    streetbis = TextField('Street (Bis)')
-    zip = TextField('Post Code', [validators.Required(),])
-    city = TextField('City', [validators.Required(),])
-    country = SelectField('Country', [validators.Required(),], coerce=int)
-    subdivision = IntegerField('State/Country', [validators.Required()])
-    email = TextField('e-mail', [validators.Required(), validators.Email()])
+
+    def _get_translations(self):
+        """
+        Provide alternate translations factory.
+        """
+        return get_translations()
+
+    name = TextField(_('Name'), [validators.Required(),])
+    email = TextField(_('e-mail'), [validators.Required(), validators.Email()])
+    password = PasswordField(_('New Password'), [
+        validators.Required(),
+        validators.EqualTo('confirm', message=_('Passwords must match'))])
+    confirm = PasswordField(_('Confirm Password'))
+
     if 're_captcha_public' in CONFIG.options:
         captcha = RecaptchaField(
             public_key=CONFIG.options['re_captcha_public'], 
-            private_key=CONFIG.options['re_captcha_private'], secure=True)
-    password = PasswordField('New Password', [
-        validators.Required(),
-        validators.EqualTo('confirm', message='Passwords must match')])
-    confirm = PasswordField('Confirm Password')
+            private_key=CONFIG.options['re_captcha_private'], 
+            secure=True
+        )
 
 
 class AddressForm(Form):
-    "A Form resembling the party.address"
-    name = TextField('Name', [validators.Required(),])
-    street = TextField('Street', [validators.Required(),])
-    streetbis = TextField('Street (Bis)')
-    zip = TextField('Post Code', [validators.Required(),])
-    city = TextField('City', [validators.Required(),])
-    country = SelectField('Country', [validators.Required(),], coerce=int)
-    subdivision = IntegerField('State/Country', [validators.Required()])
+    """
+    A form resembling the party.address
+    """
+    def _get_translations(self):
+        """
+        Provide alternate translations factory.
+        """
+        return get_translations()
+
+    name = TextField(_('Name'), [validators.Required(),])
+    street = TextField(_('Street'), [validators.Required(),])
+    streetbis = TextField(_('Street (Bis)'))
+    zip = TextField(_('Post Code'), [validators.Required(),])
+    city = TextField(_('City'), [validators.Required(),])
+    country = SelectField(_('Country'), [validators.Required(),], coerce=int)
+    subdivision = IntegerField(_('State/County'), [validators.Required()])
 
 
 class NewPasswordForm(Form):
-    "Form to set a new password"
-    password = PasswordField('New Password', [
+    """
+    Form to set a new password
+    """
+    def _get_translations(self):
+        """
+        Provide alternate translations factory.
+        """
+        return get_translations()
+
+    password = PasswordField(_('New Password'), [
         validators.Required(),
         validators.EqualTo('confirm', message='Passwords must match')])
-    confirm = PasswordField('Repeat Password')
+    confirm = PasswordField(_('Repeat Password'))
 
 
 class ChangePasswordForm(NewPasswordForm):
-    "Form to change the password"
-    old_password = PasswordField('Old Password')
+    """
+    Form to change the password
+    """
+    def _get_translations(self):
+        """
+        Provide alternate translations factory.
+        """
+        return get_translations()
+
+    old_password = PasswordField(_('Old Password'))
 
 
 STATES = {
@@ -112,8 +138,9 @@ class AdditionalDetails(ModelSQL, ModelView):
                 type_dict.update(getattr(self, attribute).__call__())
         return type_dict.items()
 
-    type = fields.Selection('get_types', 'Type', required=True, states=STATES,
-        select=1)
+    type = fields.Selection(
+        'get_types', 'Type', required=True, states=STATES, select=1
+    )
     value = fields.Char('Value', select=1, states=STATES)
     comment = fields.Text('Comment', states=STATES)
     address = fields.Many2One('party.address', 'Address', required=True,
@@ -142,313 +169,31 @@ class Address(ModelSQL, ModelView):
 
     registration_form = RegistrationForm
 
-    #: The email to which all application related emails like
-    #: registration, password reset etc is managed
-    email = fields.Many2One('party.contact_mechanism', 'E-Mail',
-        domain=[('party', '=', Eval('party')), ('type', '=', 'email')], 
-        depends=['party'])
-
-    #: Similar to email
-    phone = fields.Many2One('party.contact_mechanism', 'Phone',
-        domain=[('party', '=', Eval('party')), ('type', '=', 'phone')], 
-        depends=['party'])
-
-    #: The password is the user password + the salt, which is
-    #: then hashed together
-    password = fields.Sha('Password')
-
-    #: The salt which was used to make the hash is separately
-    #: stored. Needed for 
-    salt = fields.Char('Salt', size=8)
-
-    #: A unique activation code required to match the user's request
-    #: for activation of the account.
-    activation_code = fields.Char('Unique Activation Code')
-    
-    # Extra fields to cater to extended registration
-    additional_details = fields.One2Many('address.additional_details', 
-        'address', 'Additional Details', states=STATES)
-
-    def __init__(self):
-        super(Address, self).__init__()
-        self._sql_constraints += [
-            ('unique_email', 'UNIQUE(email)',
-                'email must be unique.'),
-            ('unique_activation_code', 'UNIQUE(activation_code)',
-                'Activation code must be unique.'),
-        ]
-        self._error_messages.update({
-            'no_email': 'The user does not have an email assigned'
-            })
-        self._rpc.update({
-            'create_web_account': True,
-            'reset_web_account': True
-            })
-
-    def _activate(self, address_id, activation_code):
-        "Activate the address account"
-        address = self.browse(address_id)
-        assert address.activation_code == activation_code, 'Invalid Act Code'
-        return self.write(address.id, {'activation_code': False})
-
-    @login_required
-    def change_password(self):
-        "Changes the password"
-        form = ChangePasswordForm(request.form)
-        if request.method == 'POST' and form.validate():
-            self.write(request.nereid_user.id, 
-                {'password': form.password.data})
-            flash('Your password has been successfully changed! '
-                'Please login again')
-            session.pop('user')
-            return redirect(url_for('nereid.website.login'))
-        return render_template('change-password.jinja', 
-            change_password_form=form)
-
-    @login_required
-    def new_password(self):
-        """Create a new password, unlike change password this does not demand
-        the old password. And hence this method will check in the session for
-        a parameter called allow_new_password which has to be True. This acts
-        as a security against attempts to POST to this method and changing 
-        password.
-
-        This is intended to be used when a user requests for a password reset.
-        """
-        form = NewPasswordForm(request.form)
-        if request.method == 'POST' and form.validate():
-            if not session.get('allow_new_password', False):
-                current_app.logger.debug('New password not allowed in session')
-                abort(403)
-            self.write(request.nereid_user.id, 
-                {'password': form.password.data})
-            session.pop('allow_new_password')
-            flash('Your password has been successfully changed! '
-                'Please login again')
-            session.pop('user')
-            return redirect(url_for('nereid.website.login'))
-        return render_template('new-password.jinja', password_form=form)
-
-    def activate(self, address_id, activation_code):
-        """A web request handler for activation
-
-        :param activation_code: A 12 character activation code indicates reset
-            while 16 character activation code indicates a new registration
-        """
-        try:
-            self._activate(address_id, activation_code)
-            flash('Your account has been activated')
-
-            # Log the user in.
-            session['user'] = address_id
-
-            # Redirect the user to the correct location according to the type
-            # of activation code.
-            if len(activation_code) == 12:
-                session['allow_new_password'] = True
-                return redirect(url_for('party.address.new_password'))
-            elif len(activation_code) == 16:
-                return redirect(url_for('nereid.website.home'))
-        except AssertionError:
-            flash('Invalid Activation Code')
-        return redirect(url_for('nereid.website.login'))
-
-    def create_act_code(self, address, length=16):
-        """Create activation code
-        :param address: ID of the addresss
-        """
-        act_code = ''.join(
-                random.sample(string.letters + string.digits, length))
-        exists = self.search([('activation_code', '=', act_code)])
-        if exists:
-            return self.create_act_code(address)
-        return self.write(address, {'activation_code': act_code})
-
-    def create_web_account(self, ids, return_password=False):
-        """Create a new web account for given address
-
-        This is a Tryton only interface
-
-        :return: The set password
-        """
-        address = self.browse(ids[0])
-        if not address.email:
-            self.raise_user_error('no_email')
-
-        password = ''.join(
-            random.sample(string.letters + string.digits, 16))
-        self.write(address.id, {'password': password})
-        return return_password and password or True
-
-    def registration(self):
-        if 're_captcha_public' in CONFIG.options:
-            register_form = self.registration_form(request.form, 
-                captcha={'ip_address': request.remote_addr})
-        else:
-            register_form = self.registration_form(request.form)
-
-        register_form.country.choices = [
-            (c.id, c.name) for c in request.nereid_website.countries
-            ]
-        if request.method == 'POST' and register_form.validate():
-            address_obj = self.pool.get('party.address')
-            contact_mech_obj = self.pool.get('party.contact_mechanism')
-            party_obj = self.pool.get('party.party')
-
-            registration_data = register_form.data
-
-            # First search if an address with the email already exists
-            existing = contact_mech_obj.search([
-                ('value', '=', registration_data['email']),
-                ('type', '=', 'email'),
-                ('party.company', '=', request.nereid_website.company.id),
-                ])
-            if existing:
-                flash('A registration already exists with this email. '
-                    'Please contact customer care')
-            else:
-                # Create Party
-                party_id = party_obj.create({
-                    'name': registration_data['company'] or \
-                        registration_data['name'],
-                    'company': request.nereid_website.company.id,
-                    'addresses': [
-                        ('create', {
-                            'name': registration_data['name'],
-                            'street': registration_data['street'],
-                            'streetbis': registration_data['streetbis'],
-                            'zip': registration_data['zip'],
-                            'city': registration_data['city'],
-                            'country': registration_data['country'],
-                            'subdivision': registration_data['subdivision'],
-                            'password': registration_data['password']
-                            })],
-                    })
-                party = party_obj.browse(party_id)
-
-                # Create email as contact mech and assign as email
-                contact_mech_id = contact_mech_obj.create({
-                        'type': 'email',
-                        'party': party.id,
-                        'email': registration_data['email'],
-                    })
-                address_obj.write(party.addresses[0].id, 
-                    {'email': contact_mech_id})
-                address_obj.create_act_code(party.addresses[0].id)
-
-                flash('Registration Complete. Check your email for activation')
-                return redirect(request.args.get('next', 
-                    url_for('nereid.website.home')))
-        return render_template('registration.jinja', form=register_form)
-
-    def reset_account(self):
-        """Reset the password for the user
-
-        This is a web interface
-        """
-        contact_mech_obj = self.pool.get('party.contact_mechanism')
-
-        if request.method == 'POST':
-            contact = contact_mech_obj.search([
-                ('value', '=', request.form['email']),
-                ('type', '=', 'email'),
-                ('party.company', '=', request.nereid_website.company.id),
-                ])
-            if not contact:
-                flash('Invalid email address')
-                return render_template('reset-password.jinja')
-            address = self.search([('email', '=', contact[0])])
-            if not address:
-                flash('Email is not associated with any account.')
-                return render_template('reset-password.jinja')
-
-            self.create_act_code(address[0], length=12)
-            flash('An email has been sent to your account for resetting'
-                ' your credentials')
-            return redirect(url_for('nereid.website.login'))
-
-        return render_template('reset-password.jinja')
-
-    def authenticate(self, email, password):
-        """Assert credentials and if correct return the
-        browse record of the user
-
-        :param email: email of the user
-        :param password: password of the user
-        :return: Browse Record or None
-        """
-        contact_mech_obj = self.pool.get('party.contact_mechanism')
-
-        guest_user = self.browse(current_app.guest_user)
-        contact = contact_mech_obj.search([
-            ('value', '=', email),
-            ('type', '=', 'email'),
-            ('party.company', '=', request.nereid_website.company.id),
-            ('party', '!=', guest_user.party.id)
-            ])
-        if not contact:
-            current_app.logger.debug('%s not found' % email)
-            return None
-
-        ids = self.search([
-            ('email', '=', contact[0])
-            ])
-        if not ids or len(ids) > 1:
-            current_app.logger.debug('%s not attached to addresses' % email)
-            return None
-
-        address = self.browse(ids[0])
-        if address.activation_code and len(address.activation_code) == 16:
-            current_app.logger.debug('%s not activated' % email)
-            flash("Your account has not been activated yet!")
-            return False # False so to avoid `invalid credentials` flash
-
-        password += address.salt or ''
-
-        if isinstance(password, unicode):
-            password = password.encode('utf-8')
-
-        if hashlib:
-            password_sha = hashlib.sha1(password).hexdigest()
-        else:
-            password_sha = sha.new(password).hexdigest()
-
-        if password_sha == address.password:
-            return address
-
-        return None
-
-    def _convert_values(self, values):
-        if 'password' in values and values['password']:
-            values['salt'] = ''.join(random.sample(
-                string.ascii_letters + string.digits, 8))
-            values['password'] += values['salt']
-        return values
-
-    def create(self, values):
-        """
-        Create, but add salt before saving
-
-        :param values: Dictionary of Values
-        """
-        return super(Address, self).create(self._convert_values(values))
-
-    def write(self, ids, values):
-        """
-        Update salt before saving
-
-        :param ids: IDs of the records
-        :param values: Dictionary of values
-        """
-        return super(Address, self).write(ids, self._convert_values(values))
+    #: Extra fields to cater to extended registration
+    #: This field is retained only for legacy purposes.
+    #: Additional details is now directly stored on the user object
+    additional_details = fields.One2Many(
+        'address.additional_details', 
+        'address', 'Additional Details', states=STATES
+    )
 
     @login_required
     def edit_address(self, address=None):
-        form = AddressForm(request.form)
-        form.country.choices = [
+        """
+        Create/Edit an Address
+
+        POST will create a new address or update and existing address depending
+        on the value of address.
+        GET will return a new address/existing address edit form
+
+        :param address: ID of the address
+        """
+        form = AddressForm(request.form, name=request.nereid_user.name)
+        countries = [
             (c.id, c.name) for c in request.nereid_website.countries
             ]
-        if address not in [a.id for a in request.nereid_user.party.addresses]:
+        form.country.choices = countries
+        if address not in (a.id for a in request.nereid_user.party.addresses):
             address = None
         if request.method == 'POST' and form.validate():
             if address is not None:
@@ -485,9 +230,7 @@ class Address(ModelSQL, ModelView):
                 country=record.country.id,
                 subdivision=record.subdivision.id
             )
-            form.country.choices = [
-                (c.id, c.name) for c in request.nereid_website.countries
-            ]
+            form.country.choices = countries
         return render_template('address-edit.jinja', form=form, address=address)
 
     @login_required
@@ -498,20 +241,347 @@ class Address(ModelSQL, ModelView):
 Address()
 
 
-class Party(ModelSQL, ModelView):
-    """Add company to the user"""
-    _name = "party.party"
+class NereidUser(ModelSQL, ModelView):
+    """
+    Nereid Users
+    
+    The Users were address records in versions before 0.3
+
+    .. versionadded:: 0.3
+    """
+    _name = "nereid.user"
+    _description = __doc__
+    _inherits = {"party.party": 'party'}
+
+    party = fields.Many2One('party.party', 'Party', required=True,
+            ondelete='CASCADE', select=1)
+
+    #: The email of the user is also the login name/username of the user
+    email = fields.Char("e-Mail", select=1)
+
+    #: The password is the user password + the salt, which is
+    #: then hashed together
+    password = fields.Sha('Password')
+
+    #: The salt which was used to make the hash is separately
+    #: stored. Needed for 
+    salt = fields.Char('Salt', size=8)
+
+    #: A unique activation code required to match the user's request
+    #: for activation of the account.
+    activation_code = fields.Char('Unique Activation Code')
 
     # The company of the website(s) to which the user is affiliated. This 
     # allows websites of the same company to share authentication/users. It 
     # does not make business or technical sense to have website of multiple
     # companies share the authentication.
-    company = fields.Many2One('company.company', 'Company')
+    #
+    # .. versionchanged:: 0.3
+    #     Company is mandatory
+    company = fields.Many2One('company.company', 'Company', required=True)
 
     def default_company(self):
         return Transaction().context.get('company') or False
 
-Party()
+    def __init__(self):
+        super(NereidUser, self).__init__()
+        self._sql_constraints += [
+            ('unique_email_company', 'UNIQUE(email, company)',
+                'Email must be unique in a company'),
+            ]
+
+    def _activate(self, user_id, activation_code):
+        """
+        Activate the User account
+
+        .. note::
+            This method will raise an assertion error if the activation_code is
+            not valid.
+
+        :param user_id: ID of the user
+        :param activation_code: The activation code used
+        :return: True if the activation code was correct
+        """
+        user = self.browse(user_id)
+        assert user.activation_code == activation_code, \
+                    'Invalid Activation Code'
+        return self.write(user.id, {'activation_code': False})
+
+    def get_registration_form(self):
+        """
+        Returns a registration form for use in the site
+
+        .. tip::
+
+            Configuration of re_captcha
+
+            Remember to forward X-Real-IP in the case of Proxy servers
+
+        """
+        # Add re_captcha if the configuration has such an option
+        if 're_captcha_public' in CONFIG.options:
+            registration_form = RegistrationForm(
+                request.form, captcha={'ip_address': request.remote_addr}
+            )
+        else:
+            registration_form = RegistrationForm(request.form)
+
+        return registration_form
+        
+    def registration(self):
+        """
+        Invokes registration of an user
+        """
+        registration_form = self.get_registration_form()
+
+        if request.method == 'POST' and registration_form.validate():
+            existing = self.search([
+                ('email', '=', request.form['email']),
+                ('company', '=', request.nereid_website.company.id),
+                ])
+            if existing:
+                flash(_('A registration already exists with this email. '
+                    'Please contact customer care')
+                )
+            else:
+                user_id = self.create({
+                    'name': registration_form.name.data,
+                    'email': registration_form.email.data,
+                    'password': registration_form.password.data,
+                    })
+                self.create_act_code(user_id)
+                flash(_('''Registration Complete. Check your email for
+                    activation''')
+                )
+                return redirect(
+                    request.args.get('next', url_for('nereid.website.home'))
+                )
+
+        return render_template('registration.jinja', form=registration_form)
+
+    @login_required
+    def change_password(self):
+        """
+        Changes the password
+
+        .. tip::
+            On changing the password, the user is logged out and the login page
+            is thrown at the user
+        """
+        form = ChangePasswordForm(request.form)
+
+        if request.method == 'POST' and form.validate():
+            user = request.nereid_user
+
+            # Confirm the current password
+            password = form.old_password.data
+            password += user.salt or ''
+            if isinstance(password, unicode):
+                password = password.encode('utf-8')
+            password_sha = hashlib.sha1(password).hexdigest()
+
+            if password_sha == user.password:
+                self.write(
+                    request.nereid_user.id, 
+                    {'password': form.password.data}
+                )
+                flash(
+                    _('Your password has been successfully changed! '
+                    'Please login again')
+                )
+                session.pop('user')
+                return redirect(url_for('nereid.website.login'))
+            else:
+                flash(_("The current password you entered is invalid"))
+        
+        return render_template(
+            'change-password.jinja', change_password_form=form
+        )
+
+    @login_required
+    def new_password(self):
+        """Create a new password
+        
+        .. tip::
+
+            Unlike change password this does not demand the old password. 
+            And hence this method will check in the session for a parameter 
+            called allow_new_password which has to be True. This acts as a 
+            security against attempts to POST to this method and changing 
+            password.
+
+            The allow_new_password flag is popped on successful saving
+
+        This is intended to be used when a user requests for a password reset.
+        """
+        form = NewPasswordForm(request.form)
+
+        if request.method == 'POST' and form.validate():
+            if not session.get('allow_new_password', False):
+                current_app.logger.debug('New password not allowed in session')
+                abort(403)
+
+            self.write(
+                request.nereid_user.id, 
+                {'password': form.password.data}
+            )
+            session.pop('allow_new_password')
+            flash(_('Your password has been successfully changed! '
+                'Please login again')
+            )
+            session.pop('user')
+            return redirect(url_for('nereid.website.login'))
+
+        return render_template('new-password.jinja', password_form=form)
+
+    def activate(self, user_id, activation_code):
+        """A web request handler for activation
+
+        :param activation_code: A 12 character activation code indicates reset
+            while 16 character activation code indicates a new registration
+        """
+        try:
+            self._activate(user_id, activation_code)
+        except AssertionError:
+            flash(_('Invalid Activation Code'))
+        else:
+            # Log the user in since the activation code is correct
+            session['user'] = user_id
+
+            # Redirect the user to the correct location according to the type
+            # of activation code.
+            if len(activation_code) == 12:
+                session['allow_new_password'] = True
+                return redirect(url_for('nereid.user.new_password'))
+            elif len(activation_code) == 16:
+                flash(_('Your account has been activated'))
+                return redirect(url_for('nereid.website.home'))
+
+        return redirect(url_for('nereid.website.login'))
+
+    def create_act_code(self, user_id, code_type="new"):
+        """Create activation code
+            
+        A 12 character activation code indicates reset while 16 
+        character activation code indicates a new registration
+        
+        :param user_id: ID of the User
+        :param code_type:   "new" for new activation code
+                            "reset" for resetting existing account
+        """
+        assert code_type in ("new", "reset")
+        length = 16 if code_type == "new" else 12
+
+        act_code = ''.join(
+            random.sample(string.letters + string.digits, length)
+        )
+        return self.write(user_id, {'activation_code': act_code})
+
+    def reset_account(self):
+        """
+        Reset the password for the user. 
+
+        .. tip::
+            This does NOT reset the password, but just creates an activation
+            code and sends the link to the email of the user. If the user uses
+            the link, he can change his password.
+        """
+        if request.method == 'POST':
+            user_ids = self.search([
+                ('email', '=', request.form['email']),
+                ('company', '=', request.nereid_website.company.id),
+                ])
+
+            if not user_ids:
+                flash(_('Invalid email address'))
+                return render_template('reset-password.jinja')
+            
+            self.create_act_code(user_ids[0], "reset")
+            flash(_('An email has been sent to your account for resetting'
+                ' your credentials'))
+            return redirect(url_for('nereid.website.login'))
+
+        return render_template('reset-password.jinja')
+
+    def authenticate(self, email, password):
+        """Assert credentials and if correct return the
+        browse record of the user
+
+        :param email: email of the user
+        :param password: password of the user
+        :return: 
+            Browse Record: Successful Login
+            None: User cannot be found or wrong password
+            False: Account is inactive
+        """
+
+        user_ids = self.search([
+            ('email', '=', request.form['email']),
+            ('company', '=', request.nereid_website.company.id),
+            ])
+
+        if not user_ids:
+            current_app.logger.debug("No user with email %s" % email)
+            return None
+
+        if len(user_ids) > 1:
+            current_app.logger.debug('%s has too many accounts' % email)
+            return None
+
+        user = self.browse(user_ids[0])
+        if user.activation_code and len(user.activation_code) == 16:
+            # A new account with activation pending
+            current_app.logger.debug('%s not activated' % email)
+            flash(_("Your account has not been activated yet!"))
+            return False # False so to avoid `invalid credentials` flash
+
+        password += user.salt or ''
+
+        if isinstance(password, unicode):
+            password = password.encode('utf-8')
+
+        password_sha = hashlib.sha1(password).hexdigest()
+        if password_sha == user.password:
+            # Reset any reset activation code that might be there since its a 
+            # successful login with the old password
+            if user.activation_code:
+                self.write(user.id, {'activation_code': False})
+            return user
+
+        return None
+
+    def _convert_values(self, values):
+        """
+        A helper method which looks if the password is specified in the values.
+        If it is, then the salt is also made and added
+
+        :param values: A dictionary of field: value pairs
+        """
+        if 'password' in values and values['password']:
+            values['salt'] = ''.join(random.sample(
+                string.ascii_letters + string.digits, 8))
+            values['password'] += values['salt']
+        return values
+
+    def create(self, values):
+        """
+        Create, but add salt before saving
+
+        :param values: Dictionary of Values
+        """
+        return super(NereidUser, self).create(self._convert_values(values))
+
+    def write(self, ids, values):
+        """
+        Update salt before saving
+
+        :param ids: IDs of the records
+        :param values: Dictionary of values
+        """
+        return super(NereidUser, self).write(ids, self._convert_values(values))
+
+
+NereidUser()
 
 
 class EmailTemplate(ModelSQL, ModelView):

@@ -1,0 +1,10 @@
+Version 0.3
+===========
+
+ * User model is now nereid.user. Previously user records were stored in 
+   party.address. Now it _inherits from party and is stored in a separate
+   table
+
+ * All tests must inherit from nereid.testing.TestCase as it implements an
+   automatic creation of database and dropping of it after each TestCase is
+   executed.

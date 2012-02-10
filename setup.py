@@ -20,6 +20,8 @@ requires = [
     'wtforms',
     'wtforms-recaptcha',
     'ccy',
+    'babel',
+    'speaklater',
 
     'unittest2', 
     'minimock', 

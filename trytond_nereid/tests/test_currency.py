@@ -9,19 +9,20 @@ CONFIG.options['db_type'] = 'sqlite'
 from trytond.modules import register_classes
 register_classes()
 
-from nereid.testing import testing_proxy
+from nereid.testing import testing_proxy, TestCase
 from trytond.transaction import Transaction
 
 
-class TestCurrency(unittest.TestCase):
+class TestCurrency(TestCase):
     """Test Currency"""
 
     @classmethod
     def setUpClass(cls):
+        super(TestCurrency, cls).setUpClass()
         testing_proxy.install_module('nereid')
         with Transaction().start(testing_proxy.db_name, 1, None) as txn:
             company = testing_proxy.create_company('Test Company')
-            cls.guest_user = testing_proxy.create_guest_user()
+            cls.guest_user = testing_proxy.create_guest_user(company=company)
             cls.site = testing_proxy.create_site('testsite.com')
             testing_proxy.create_template(
                 'home.jinja', 
@@ -49,7 +50,9 @@ class TestCurrency(unittest.TestCase):
 
         with Transaction().start(testing_proxy.db_name, 1, None) as txn:
             currency_ids = self.currency_obj.search([], limit=5)
-            self.site_obj.write(self.site, {'currencies': [('set', currency_ids)]})
+            self.site_obj.write(
+                self.site, {'currencies': [('set', currency_ids)]}
+            )
             txn.cursor.commit()
 
         with app.test_client() as c:
@@ -64,7 +67,7 @@ class TestCurrency(unittest.TestCase):
             data = literal_eval(rv.data)
             allowed_currencies = [c['id'] for c in data]
 
-        with Transaction().start(testing_proxy.db_name, 1, None) as txn:
+        with Transaction().start(testing_proxy.db_name, 1, None):
             invalid_id, = self.currency_obj.search(
                 [('id', 'not in', allowed_currencies)], limit=1)
 
@@ -79,7 +82,10 @@ class TestCurrency(unittest.TestCase):
             rv = c.get('/en_US/')
             data = literal_eval(rv.data)
             allowed_currencies = [each['id'] for each in data]
-            rv = c.post('/en_US/set_currency', data={'currency': allowed_currencies[0]})
+            rv = c.post(
+                '/en_US/set_currency', 
+                data={'currency': allowed_currencies[0]}
+            )
             self.assertEqual(rv.status_code, 302)
 
     def test_0040_set_currency_get(self):
@@ -90,7 +96,9 @@ class TestCurrency(unittest.TestCase):
             data = literal_eval(rv.data)
             allowed_currencies = [each['id'] for each in data]
             rv = c.get(
-                '/en_US/set_currency?currency=%s&next=/next' % allowed_currencies[0])
+                '/en_US/set_currency?currency=%s&next=/next' % (
+                    allowed_currencies[0],)
+            )
             self.assertEqual(rv.status_code, 302)
             self.assertEqual(rv.location, 'http://localhost/next')
 

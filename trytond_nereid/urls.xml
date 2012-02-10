@@ -42,7 +42,7 @@
 
         <record id="registration_url" model="nereid.url_rule">
             <field name="rule">/&lt;language&gt;/registration</field>
-            <field name="endpoint">party.address.registration</field>
+            <field name="endpoint">nereid.user.registration</field>
             <field name="methods">("GET", "POST")</field>
             <field name="sequence" eval="40" />
             <field name="url_map" ref="default_url_map" />
@@ -57,7 +57,7 @@
 
         <record id="change_pass_url" model="nereid.url_rule">
             <field name="rule">/&lt;language&gt;/change-password</field>
-            <field name="endpoint">party.address.change_password</field>
+            <field name="endpoint">nereid.user.change_password</field>
             <field name="sequence" eval="60" />
             <field name="methods">("GET", "POST")</field>
             <field name="url_map" ref="default_url_map" />
@@ -65,15 +65,15 @@
 
         <record id="new_pass_url" model="nereid.url_rule">
             <field name="rule">/&lt;language&gt;/new-password</field>
-            <field name="endpoint">party.address.new_password</field>
+            <field name="endpoint">nereid.user.new_password</field>
             <field name="sequence" eval="65" />
             <field name="methods">("GET", "POST")</field>
             <field name="url_map" ref="default_url_map" />
         </record>
 
         <record id="activate_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/activate-account/&lt;int:address_id&gt;/&lt;activation_code&gt;</field>
-            <field name="endpoint">party.address.activate</field>
+            <field name="rule">/&lt;language&gt;/activate-account/&lt;int:user_id&gt;/&lt;activation_code&gt;</field>
+            <field name="endpoint">nereid.user.activate</field>
             <field name="sequence" eval="70" />
             <field name="methods">("GET", "POST")</field>
             <field name="url_map" ref="default_url_map" />
@@ -81,7 +81,7 @@
 
         <record id="reset_account_url" model="nereid.url_rule">
             <field name="rule">/&lt;language&gt;/reset-account</field>
-            <field name="endpoint">party.address.reset_account</field>
+            <field name="endpoint">nereid.user.reset_account</field>
             <field name="sequence" eval="80" />
             <field name="methods">("GET", "POST")</field>
             <field name="url_map" ref="default_url_map" />

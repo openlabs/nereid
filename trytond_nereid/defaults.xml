@@ -12,21 +12,21 @@ this repository contains the full copyright notices and license terms. -->
     <record id="password_send_email" model="electronic_mail.template">
       <field name="mailbox" ref="password_emails"/>
       <field name="from_">Account Services</field>
-      <field name="to">${record.email.value}</field>
+      <field name="to">${record.email}</field>
       <field name="subject">Account Activation</field>
       <field name="engine">genshi</field>
-      <field name="model" search="[('model', '=', 'party.address')]"/>
+      <field name="model" search="[('model', '=', 'nereid.user')]"/>
       <field name="plain">To activate your email account click the link below:
-      ${ url_for('party.address.activate', address_id=record.id, activation_code=record.activation_code, _external=True) }
+      ${ url_for('nereid.user.activate', user_id=record.id, activation_code=record.activation_code, _external=True) }
       </field>
       <field name="html">To activate your email account click the link below:
-      ${ url_for('party.address.activate', address_id=record.id, activation_code=record.activation_code, _external=True) }
+      ${ url_for('nereid.user.activate', user_id=record.id, activation_code=record.activation_code, _external=True) }
       </field>
     </record>
 
     <record id="trigger_password_change" model='ir.trigger'>
       <field name="name">Activation Email</field>
-      <field name="model" search="[('model', '=', 'party.address')]"/>
+      <field name="model" search="[('model', '=', 'nereid.user')]"/>
       <field name="on_write" eval="True"/>
       <field name="on_create" eval="True"/>
       <field name="condition">self.activation_code</field>

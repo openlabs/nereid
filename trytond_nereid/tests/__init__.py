@@ -7,17 +7,24 @@
     :copyright: (c) 2011 by Openlabs Technologies & Consulting (P) Limited
     :license: BSD, see LICENSE for more details.
 """
-from unittest import TestSuite
+import unittest2 as unittest
 
-from .test_configuration import suite as configuration_test_suite
-from .test_currency import suite as currency_test_suite
-from .test_language import suite as language_test_suite
+from test_auth import TestAuth 
+from test_address import TestAddress
+from test_currency import TestCurrency
 
 def suite():
-    suite_ = TestSuite()
-    suite_.addTests([
-        configuration_test_suite(),
-        currency_test_suite(),
-        language_test_suite(),
-        ])
-    return suite_
+    suite = unittest.TestSuite()
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(TestAuth)
+    )
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(TestAddress)
+    )
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(TestCurrency)
+    )
+    return suite
+
+if __name__ == '__main__':
+    unittest.TextTestRunner(verbosity=2).run(suite())

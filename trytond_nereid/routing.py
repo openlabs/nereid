@@ -5,19 +5,22 @@
     Routing: Sites, URLs
 
     :copyright: (c) 2010 by Sharoon Thomas
-    :copyright: (c) 2010 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
     :license: GPLv3, see LICENSE for more details
 """
 from ast import literal_eval
 
 from werkzeug import abort, redirect
+from wtforms import Form, TextField, PasswordField, validators
+
 from nereid import jsonify, flash, render_template, url_for, cache
 from nereid.globals import session, request
 from nereid.helpers import login_required, key_from_list, get_flashed_messages
+from nereid.i18n import _
 from nereid.signals import login, failed_login, logout
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
-from wtforms import Form, TextField, PasswordField, validators
+
 
 # pylint: disable-msg=E1101
 class URLMap(ModelSQL, ModelView):
@@ -91,7 +94,7 @@ URLMap()
 class LoginForm(Form):
     "Default Login Form"
     email = TextField('e-mail', [validators.Required(), validators.Email()])
-    password = PasswordField('Password', [validators.Required()])
+    password = PasswordField(_('Password'), [validators.Required()])
 
 
 class WebSite(ModelSQL, ModelView):
@@ -178,9 +181,6 @@ class WebSite(ModelSQL, ModelView):
         subdivisions = subdivision_obj.browse(ids)
         return jsonify(
             result = [{
-                'key': s.id, 
-                'value': s.name,
-                # The above two arguments will be deprecated in future version
                 'id': s.id,
                 'name': s.name,
                 'code': s.code,
@@ -208,7 +208,7 @@ class WebSite(ModelSQL, ModelView):
             % (request, arguments, request.environ)
 
     def home(self):
-        "A sample home method"
+        "A dummy home method which just renders home.jinja"
         return render_template('home.jinja')
 
     def login(self):
@@ -220,48 +220,49 @@ class WebSite(ModelSQL, ModelView):
         login_form = LoginForm(request.form)
 
         if request.method == 'POST' and login_form.validate():
-            address_obj = self.pool.get('party.address')
-            result = address_obj.authenticate(
-                login_form.email.data, login_form.password.data)
+            user_obj = self.pool.get('nereid.user')
+            result = user_obj.authenticate(
+                login_form.email.data, login_form.password.data
+            )
             # Result can be the following:
             # 1 - Browse record of User (successful login)
             # 2 - None - Login failure without message
             # 3 - Any other false value (no message is shown. useful if you 
             #       want to handle the message shown to user)
             if result:
-                flash("You are now logged in. Welcome %s" % result.name)
+                # NOTE: Translators leave %s as such
+                flash(_("You are now logged in. Welcome") + result.name)
                 session['user'] = result.id
                 login.send(self)
                 if request.is_xhr:
                     return 'OK'
-                return redirect(request.values.get('next', 
-                    url_for('nereid.website.home')))
+                else:
+                    return redirect(
+                        request.values.get(
+                            'next', url_for('nereid.website.home')
+                        )
+                    )
             elif result is None:
-                flash("Invalid login credentials")
+                flash(_("Invalid login credentials"))
+
             failed_login.send(self, form=login_form)
+
             if request.is_xhr:
                 return 'NOK'
+
         return render_template('login.jinja', login_form=login_form)
 
     def logout(self):
         "Log the user out"
         session.pop('user', None)
         logout.send(self)
-        flash('You have been logged out successfully. Thanks for visiting us')
-        return redirect(request.args.get('next', 
-            url_for('nereid.website.home')))
-
-    def registration(self):
-        """The form for registration
-
-        .. deprecated:: 0.2
-
-        This functionality is deprecated. Use the party.address object
-        and the registration method in it directly
-        """
-        raise DeprecationWarning(__doc__)
-        address_obj = self.pool.get('party.address')
-        return address_obj.registration()
+        flash(
+            _('You have been logged out successfully. Thanks for visiting us')
+        )
+        return redirect(
+            request.args.get('next', 
+            url_for('nereid.website.home'))
+        )
 
     def account_context(self):
         """This fills the account context for the template
@@ -271,7 +272,7 @@ class WebSite(ModelSQL, ModelView):
         return dict(
             user = request.nereid_user,
             party = request.nereid_user.party,
-            )
+        )
 
     @login_required
     def account(self):
@@ -281,9 +282,10 @@ class WebSite(ModelSQL, ModelView):
     def get_currencies(self):
         """Returns available currencies for current site
 
-        .. note:: A special method is required so that the fetch
-        can be speeded up, by pushing the categories to the central cache
-        which cannot be done directly on a browse node.
+        .. note:: 
+            A special method is required so that the fetch can be speeded up, 
+            by pushing the categories to the central cache which cannot be 
+            done directly on a browse node.
         """
         cache_key = key_from_list([
             Transaction().cursor.dbname,
@@ -400,7 +402,8 @@ class WebSite(ModelSQL, ModelView):
         return rv
 
     def user_status(self):
-        """Returns a JSON of the user_status
+        """
+        Returns a JSON of the user_status
         """
         return jsonify(status=self._user_status())
 

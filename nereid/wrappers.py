@@ -27,12 +27,12 @@ class Request(RequestBase):
     @cached_property
     def nereid_user(self):
         """Fetch the browse record of current user or None."""
-        address_obj = current_app.pool.get('party.address')
+        user_obj = current_app.pool.get('nereid.user')
         if 'user' not in session:
             if current_app.guest_user:
-                return address_obj.browse(current_app.guest_user)
+                return user_obj.browse(current_app.guest_user)
             return None
-        return address_obj.browse(session['user'])
+        return user_obj.browse(session['user'])
 
     @cached_property
     def nereid_currency(self):

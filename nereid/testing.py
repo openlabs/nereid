@@ -75,6 +75,7 @@ class NereidClient(Client):
             _request_ctx_stack.pop()
 
 
+
 class FailFastTextTestRunner(unittest2.TextTestRunner):
     """A subclass of TextTestRunner which fails fast by default
     """
@@ -119,6 +120,16 @@ class TestingProxy(object):
 
         self.user = 1
         self.context = None
+        self.initialised = True
+
+    def drop_database(self):
+        """
+        Drop the database that was used for testing
+        """
+        if not self.initialised:
+            raise Exception("Cannot drop database when not initialised")
+        from trytond.protocols.dispatcher import drop
+        drop(self.db_name, 'admin')
 
     def install_module(self, module):
         if not self.initialised:
@@ -166,51 +177,72 @@ class TestingProxy(object):
 testing_proxy = TestingProxy()
 
 
+class TestCase(unittest2.TestCase):
+    """
+    A TestCase template that could be subclassed by test implementations
+
+    Subclassing this gives automatic database creation on setupClass and drop
+    of database at the end of execution of the TestCase.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        testing_proxy.init()
+
+    @classmethod
+    def tearDownClass(cls):
+        testing_proxy.drop_database()    
+
+
 @testing_proxy.register()
 def create_company(obj, name, currency='USD'):
     """Creates a new company and returns the ID
     """
     company_obj = obj.pool.get('company.company')
     currency_obj = obj.pool.get('currency.currency')
+
     currency_id, = currency_obj.search([('code', '=', currency)], limit=1)
     return company_obj.create({'name': name, 'currency': currency_id})
 
 
-
 @testing_proxy.register()
-def create_user_party(obj, name, email, password, **kwargs):
+def create_user_party(obj, name, email, password, company):
     """Creates a user with given data
 
-    :param kwargs: All extra arguments are treated as data for party
+    :param obj: The instance of :class:TestingProxy. This value need not be
+                passed as the decorator automatically assigns this value
+    :param name: The name for the user
+    :param email: The email for the user (login)
+    :param password: The password of the user
+    :param company: The company to which the user must belong
+    :return: ID of the created user
     """
-    party_obj = obj.pool.get('party.party')
-    address_obj = obj.pool.get('party.address')
-    contact_mechanism_obj = obj.pool.get('party.contact_mechanism')
+    user_obj = obj.pool.get('nereid.user')
 
-    kwargs['name'] = name
-    party_id = party_obj.create(kwargs)
-    party = party_obj.browse(party_id)
-
-    email_id = contact_mechanism_obj.create({
-        'type': 'email',
-        'value': email,
-        'party': party_id,
-        })
-    address_obj.write(party.addresses[0].id, {
-        'name': name + 'Address',
+    return user_obj.create({
+        'name': name,
+        'email': email,
         'password': password,
-        'email': email_id,
-        'party': party_id,
+        'company': company,
         })
-
-    return party.addresses[0].id
 
 
 @testing_proxy.register()
-def create_guest_user(obj, name='Guest', email='guest@example.com', **options):
+def create_guest_user(obj, name='Guest', email='guest@example.com',
+        company=None):
     """Create guest user
+
+    .. note::
+        This is a wrapper around :function:`create_user_party`
+
+    :param obj: The instance of :class:TestingProxy. This value need not be
+                passed as the decorator automatically assigns this value
+    :param name: Name of the user, defaults to `Guest`
+    :param email: Email of the user, defaults to `guest@example.com`
+    :param company: The company to which the user must belong
+    :return: ID of the created user
     """
-    return obj.create_user_party(name, email, 'password', **options)
+    return obj.create_user_party(name, email, 'password', company)
 
 
 @testing_proxy.register()
