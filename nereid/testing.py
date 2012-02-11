@@ -41,8 +41,11 @@ class NereidClient(Client):
 
         builder = EnvironBuilder(*args, **kwargs)
 
-        self.application.session_interface.session_store = \
-            FilesystemSessionStore(session_class=Session)
+        if not isinstance(
+                self.application.session_interface.session_store,
+                FilesystemSessionStore):
+            self.application.session_interface.session_store = \
+                    FilesystemSessionStore(session_class=Session)
 
         if self.application.config.get('SERVER_NAME'):
             server_name = self.application.config.get('SERVER_NAME')
