@@ -14,7 +14,7 @@ import os
 import logging
 
 from babel import support
-from speaklater import make_lazy_gettext
+from speaklater import is_lazy_string, make_lazy_string
 
 from trytond.transaction import Transaction
 
@@ -69,5 +69,26 @@ def ngettext(singular, plural, n):
         return (plural if n > 1 else singular) % {'num': n}
     return t.ungettext(singular, plural) % {'num': n}
 
+
+def make_lazy_gettext(lookup_func):
+    """Creates a lazy gettext function dispatches to a gettext
+    function as returned by `lookup_func`.
+
+    Example:
+
+    >>> translations = {u'Yes': u'Ja'}
+    >>> lazy_gettext = make_lazy_gettext(lambda: translations.get)
+    >>> x = lazy_gettext(u'Yes')
+    >>> x
+    lu'Ja'
+    >>> translations[u'Yes'] = u'Si'
+    >>> x
+    lu'Si'
+    """
+    def lazy_gettext(string, *args, **kwargs):
+        if is_lazy_string(string):
+            return string
+        return make_lazy_string(lookup_func(), string, *args, **kwargs)
+    return lazy_gettext
 
 _, N_ = make_lazy_gettext(lambda: gettext), make_lazy_gettext(lambda: ngettext)

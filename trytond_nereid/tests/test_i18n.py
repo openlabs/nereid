@@ -52,6 +52,17 @@ class TestI18N(TestCase):
             with Transaction().set_context(language="pt_BR"):
                 self.assertEqual(s, u'pt_BR')
 
+    def test_0020_kwargs(self):
+        """
+        Test if kwargs work
+        """
+        with Transaction().start(testing_proxy.db_name, 1, None):
+            s = _("Hi %(name)s", name="Sharoon")
+            self.assertEqual(s, u"Hi Sharoon")
+            with Transaction().set_context(language="pt_BR"):
+                self.assertEqual(s, u'Oi Sharoon')
+
+
 
 def suite():
     "Nereid test suite"

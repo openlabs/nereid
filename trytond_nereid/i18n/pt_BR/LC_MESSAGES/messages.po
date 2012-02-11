@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Nereid 0.3\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2012-02-10 15:35-0500\n"
+"POT-Creation-Date: 2012-02-10 19:41-0500\n"
 "PO-Revision-Date: 2012-02-10 16:57-0500\n"
 "Last-Translator: Esteban <esteban@dhtsglobal.com>\n"
 "Language-Team: pt_BR <LL@li.org>\n"
@@ -17,23 +17,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.6\n"
 
-#: party.py:40
-#: party.py:65
+#: party.py:40 party.py:65
 msgid "Name"
 msgstr "Nome e Sombrenome"
 
-#: party.py:41
-#: routing.py:96
+#: party.py:41 routing.py:96
 msgid "e-mail"
 msgstr "e-mail"
 
-#: party.py:42
-#: party.py:84
+#: party.py:42 party.py:84
 msgid "New Password"
 msgstr "Nova Senha"
 
-#: party.py:44
-#: party.py:86
+#: party.py:44 party.py:86
 msgid "Passwords must match"
 msgstr "Senhas devem coincidir"
 
@@ -74,15 +70,18 @@ msgid "Old Password"
 msgstr "Senha Antiga"
 
 #: party.py:344
-msgid "A registration already exists with this email. Please contact customer care"
-msgstr "Um cadastro já existe com este email. Entre em contato com nosso central de atendimento"
+msgid ""
+"A registration already exists with this email. Please contact customer "
+"care"
+msgstr ""
+"Um cadastro já existe com este email. Entre em contato com nosso central "
+"de atendimento"
 
 #: party.py:355
 msgid "Registration Complete. Check your email for activation"
 msgstr "Cadastro completo. Verifique seu e-mail para ativação"
 
-#: party.py:390
-#: party.py:430
+#: party.py:390 party.py:430
 msgid "Your password has been successfully changed! Please login again"
 msgstr "Sua senha foi alterada com sucesso! Por favor, faça login novamente"
 
@@ -143,10 +142,8 @@ msgstr "Desculpe! ainda não falam seu idioma!"
 msgid "en_US"
 msgstr "pt_BR"
 
-#~ msgid ""
-#~ "Registration Complete. Check your email for\n"
-#~ "                    activation"
-#~ msgstr ""
+#: tests/test_i18n.py:60
+#, python-format
+msgid "Hi %(name)s"
+msgstr "Oi %(name)s"
 
-#~ msgid "You are now logged in. Welcome"
-#~ msgstr ""
