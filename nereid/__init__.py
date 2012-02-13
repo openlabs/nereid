@@ -24,4 +24,3 @@ from .helpers import flash, get_flashed_messages, jsonify, url_for, \
 
 from .application import Nereid, Request, Response, cache
 from .session import Session
-

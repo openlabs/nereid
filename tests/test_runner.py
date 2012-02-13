@@ -13,7 +13,7 @@
 """
 import unittest2
 from nereid.testing import FailFastTextTestRunner
-from xmlrunner import XMLTestRunner
+from nereid.contrib.testing import xmlrunner
 
 
 try:
@@ -21,21 +21,18 @@ try:
     TRYTON_INSTALLED = True
 except ImportError:
     TRYTON_INSTALLED = False
+else:
+    from trytond.config import CONFIG
+    CONFIG.options['db_type'] = 'sqlite'
+    CONFIG.options['data_path'] = '/tmp/temp_tryton_data/'
+    from trytond.modules import register_classes
+    register_classes()
 
 # Test Suite into which all tests are collected
 suite = unittest2.TestSuite()
 
 # Begin loading tests
 if TRYTON_INSTALLED:
-    # First load a configuration to do the test
-    from trytond.config import CONFIG
-
-    CONFIG.parse() 
-
-    # Now load all modules
-    from trytond.modules import register_classes
-    register_classes()
-
     # Run this specific test suite
     from trytond.modules.nereid.tests import suite as _suite
     suite.addTests([_suite()])
@@ -43,5 +40,5 @@ if TRYTON_INSTALLED:
 
 if __name__ == '__main__':
     with open('result.xml', 'wb') as stream:
-        XMLTestRunner(stream).run(suite)
+        xmlrunner.XMLTestRunner(stream).run(suite)
 

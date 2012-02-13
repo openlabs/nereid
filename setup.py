@@ -27,11 +27,17 @@ requires = [
     'minimock', 
     ]
 package_dir = {
-    'nereid': 'nereid'
+    'nereid': 'nereid',
+    'nereid.contrib': 'nereid/contrib',
+    'nereid.contrib.testing': 'nereid/contrib/testing'
     }
 package_data = {}
 entry_points = ''
-packages = ['nereid',]
+packages = [
+    'nereid', 
+    'nereid.contrib', 
+    'nereid.contrib.testing',
+]
 
 
 if TRYTON_INSTALLED:
