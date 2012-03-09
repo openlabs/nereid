@@ -1,0 +1,51 @@
+=================
+Migration Details 
+=================
+
+Version 0.3
+===========
+
+1. SQL to move party_address to nereid_user
+-------------------------------------------
+
+Address which was used for login was migrated to nereid_user. To
+retain the existing users and their IDs (used in sessions) the
+users data needs to be migrated from party.address to nereid.user
+
+SQL::
+
+INSERT INTO nereid_user 
+SELECT 
+	"address"."id" AS id,
+	"address"."create_date" AS create_date, 
+	"address"."write_date" AS write_date, 
+	"address"."create_uid" AS create_uid, 
+	"address"."write_uid" AS write_uid, 
+	"party"."company" AS company,
+	"address"."party" AS party,
+	"address"."activation_code" AS activation_code,
+	"address"."salt" AS salt,
+	"contact_mechanism"."value" AS email,
+	"address"."password" AS password
+FROM party_address AS address
+JOIN party_party AS party ON party.id = address.party
+LEFT JOIN party_contact_mechanism AS contact_mechanism ON contact_mechanism.id = address.email
+WHERE 
+	"address"."email" IS NOT NULL 
+    AND "address"."password" IS NOT NULL 
+    AND "party"."company" IS NOT NULL;
+
+
+2. Application Settings
+-----------------------
+
+`TRYTON_USER` and `GUEST_USER` which were application config parameters in
+previous version are now part of `nereid.website` settings. This avoids
+looking up IDs of these records from  database to then build the app settings.
+
+This affects two places:
+
+  1. Application settings in launchers: `TRYTON_USER` and `GUEST_USER` needs
+     not be specified anymore.
+  2. Unit Tests: `application_user` (eqv. of `TRYTON_USER`) and `guest_user`
+     are not 

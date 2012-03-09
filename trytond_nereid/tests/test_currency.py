@@ -23,7 +23,10 @@ class TestCurrency(TestCase):
         with Transaction().start(testing_proxy.db_name, 1, None) as txn:
             company = testing_proxy.create_company('Test Company')
             cls.guest_user = testing_proxy.create_guest_user(company=company)
-            cls.site = testing_proxy.create_site('testsite.com')
+            cls.site = testing_proxy.create_site(
+                'testsite.com',
+                application_user = 1, guest_user = cls.guest_user
+            )
             testing_proxy.create_template(
                 'home.jinja', 
                 '{{request.nereid_website.get_currencies()|safe}}',

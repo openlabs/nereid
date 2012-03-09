@@ -146,8 +146,17 @@ class WebSite(ModelSQL, ModelView):
         'website', 'currency', 'Currencies Available')
 
     #: Default language
-    default_language = fields.Many2One('ir.lang', 'Default Language', 
+    default_language = fields.Many2One('ir.lang', 'Default Language',
         required=True)
+
+    #: The res.user with which the nereid application will be loaded
+    #:  .. versionadded: 0.3
+    application_user = fields.Many2One(
+        'res.user', 'Application User', required=True
+    )
+    guest_user = fields.Many2One(
+        'nereid.user', 'Guest user', required=True
+    )
 
     def default_active(self):
         return True

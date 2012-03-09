@@ -241,7 +241,7 @@ class Nereid(BackendMixin, RoutingMixin,
         self._before_request_lock = Lock()
 
         _PackageBoundObject.__init__(self, __name__)
-        BackendMixin.__init__(self, **config) 
+        BackendMixin.__init__(self, **config)
         RoutingMixin.__init__(self, **config)
         CacheMixin.__init__(self, **config)
         TemplateMixin.__init__(self, **config)

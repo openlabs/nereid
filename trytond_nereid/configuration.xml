@@ -89,6 +89,10 @@ This will send an email with password to user."
                     <field name="company"/>
                     <label name="default_language"/>
                     <field name="default_language"/>
+                    <label name="application_user"/>
+                    <field name="application_user"/>
+                    <label name="guest_user"/>
+                    <field name="guest_user"/>
                     <notebook colspan="4">
                       <page id="Countries" string="Countries">
                         <field name="countries"/>

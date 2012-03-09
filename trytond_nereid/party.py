@@ -328,7 +328,7 @@ class NereidUser(ModelSQL, ModelView):
             registration_form = RegistrationForm(request.form)
 
         return registration_form
-        
+
     def registration(self):
         """
         Invokes registration of an user
@@ -496,7 +496,7 @@ class NereidUser(ModelSQL, ModelView):
             if not user_ids:
                 flash(_('Invalid email address'))
                 return render_template('reset-password.jinja')
-            
+
             self.create_act_code(user_ids[0], "reset")
             flash(_('An email has been sent to your account for resetting'
                 ' your credentials'))
@@ -510,7 +510,7 @@ class NereidUser(ModelSQL, ModelView):
 
         :param email: email of the user
         :param password: password of the user
-        :return: 
+        :return:
             Browse Record: Successful Login
             None: User cannot be found or wrong password
             False: Account is inactive

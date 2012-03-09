@@ -285,6 +285,9 @@ def create_site(obj, name, url_map=None, company=None, **options):
         options['default_language'], = lang_obj.search(
             [('code', '=', 'en_US')])
 
+    if 'application_user' not in options:
+        options['application_user'] = 1
+
     return site_obj.create(options)
 
 

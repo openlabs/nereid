@@ -40,6 +40,13 @@ class BackendMixin(object):
     #: Configuration file for Tryton
     tryton_configfile = ConfigAttribute('TRYTON_CONFIG')
     database_name = ConfigAttribute('DATABASE_NAME')
+
+    #: This attribute was previously used to specify ID of the res.user
+    #: that nereid should be using to connect to Tryton. This attribute
+    #: is now set during the initialisation of the class. If any attribute
+    #: is set in the config settings, they are ignored
+    #: 
+    #: ..versionchanged:0.3
     tryton_user = ConfigAttribute('TRYTON_USER')
     tryton_context = ConfigAttribute('TRYTON_CONTEXT')
 
@@ -48,6 +55,26 @@ class BackendMixin(object):
             from trytond.config import CONFIG
             CONFIG.configfile = self.tryton_configfile
             CONFIG.load()
+        with self.root_transaction:
+            website_obj = self.pool.get('nereid.website')
+            user_obj = self.pool.get('res.user')
+
+            # Find the application_user and guest_user
+            website_id, = website_obj.search([
+                ('name', '=', self.site)
+            ])
+            website = website_obj.browse(website_id)
+            self.tryton_user = website.application_user.id
+            self.guest_user = website.guest_user.id
+
+            # Update the Tryton context
+            if not self.tryton_context:
+                self.tryton_context = {}
+            new_context = user_obj._get_preferences(
+                website.application_user, context_only=True
+            )
+            self.tryton_context.update(new_context)
+
 
     def load_connection(self):
         "Actual loading of connection takes place here"
@@ -81,7 +108,7 @@ class BackendMixin(object):
 
     @property
     def transaction(self):
-        """Allows the use of the transaction as a context manager. 
+        """Allows the use of the transaction as a context manager.
 
         Example::
 
@@ -92,6 +119,15 @@ class BackendMixin(object):
         """
         return TransactionManager(
             self.database_name, self.tryton_user, self.tryton_context)
+
+    @property
+    def root_transaction(self):
+        """Allows the use of the transaction as a context manager with the
+        root user.
+
+        .. versionadded::0.3
+        """
+        return TransactionManager(self.database_name, 0, self.tryton_context)
 
     def get_method(self, model_method):
         """Get the object from pool and fetch the method from it

@@ -53,19 +53,21 @@ class TestAddress(TestCase):
 
             cls.available_countries = country_obj.search([], limit=5)
             cls.site = testing_proxy.create_site(
-                'testsite.com', 
-                countries = [('set', cls.available_countries)])
+                'testsite.com',
+                countries = [('set', cls.available_countries)],
+                application_user = 1, guest_user = cls.guest_user
+                )
 
             testing_proxy.create_template(
-                'home.jinja', 
+                'home.jinja',
                 '{{get_flashed_messages()}}', cls.site)
             testing_proxy.create_template(
-                'login.jinja', 
+                'login.jinja',
                 '{{ login_form.errors }} {{get_flashed_messages()}}', cls.site)
             testing_proxy.create_template(
-                'registration.jinja', 
+                'registration.jinja',
                 '{{ form.errors }} {{get_flashed_messages()}}', cls.site)
-            
+
             testing_proxy.create_template(
                 'reset-password.jinja', '', cls.site)
             testing_proxy.create_template(
@@ -84,10 +86,9 @@ class TestAddress(TestCase):
     def get_app(self, **options):
         options.update({
             'SITE': 'testsite.com',
-            'GUEST_USER': self.guest_user,
             })
         return testing_proxy.make_app(**options)
-        
+
     def setUp(self):
         self.nereid_user_obj = testing_proxy.pool.get('nereid.user')
         self.address_obj = testing_proxy.pool.get('party.address')

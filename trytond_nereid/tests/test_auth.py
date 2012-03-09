@@ -54,7 +54,8 @@ class TestAuth(TestCase):
             cls.available_countries = country_obj.search([], limit=5)
             cls.site = testing_proxy.create_site(
                 'testsite.com', 
-                countries = [('set', cls.available_countries)]
+                countries = [('set', cls.available_countries)],
+                application_user = 1, guest_user = cls.guest_user
             )
 
             testing_proxy.create_template(
