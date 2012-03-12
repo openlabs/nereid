@@ -13,5 +13,5 @@ trytond >2.0,<2.1
 
 # ELectronic mail and electronic mail tempalte are still in the
 # review stage and not available on PYPI
-git+git://github.com/openlabs/electronic-mail.git#egg=trytond-electronic-mail
-git+git://github.com/openlabs/electronic-mail-template.git#egg=trytond-electronic-mail-template
+git+git://github.com/openlabs/electronic-mail.git@2.0#egg=trytond-electronic-mail
+git+git://github.com/openlabs/electronic-mail-template.git@2.0#egg=trytond-electronic-mail-template
