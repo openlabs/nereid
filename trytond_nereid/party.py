@@ -97,7 +97,7 @@ class ChangePasswordForm(NewPasswordForm):
         """
         return get_translations()
 
-    old_password = PasswordField(_('Old Password'))
+    old_password = PasswordField(_('Old Password'), [validators.Required()])
 
 
 STATES = {
