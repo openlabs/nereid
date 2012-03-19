@@ -12,7 +12,7 @@
 import flaskext.babel
 from flaskext.babel import Babel
 from babel import support, Locale
-from .globals import _request_ctx_stack
+from nereid.globals import _request_ctx_stack
 
 
 def get_translations():
