@@ -9,8 +9,8 @@ Tryton module to support Nereid
 :license: BSD, see LICENSE for more details
 '''
 
+from .party import Address, NereidUser
 from .routing import *
 from .template import Template
 from .static_file import NereidStaticFolder, NereidStaticFile
-from .party import Address
 from .currency import Currency
