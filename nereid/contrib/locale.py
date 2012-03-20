@@ -59,3 +59,5 @@ def get_locale():
             locale = Locale.parse(rv)
         ctx.babel_locale = locale
     return locale
+
+flaskext.babel.get_locale = get_locale
