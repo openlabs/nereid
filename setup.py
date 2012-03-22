@@ -22,6 +22,7 @@ requires = [
     'ccy',
     'babel',
     'speaklater',
+    'Flask-Babel',
 
     'unittest2', 
     'minimock', 
@@ -29,7 +30,7 @@ requires = [
 package_dir = {
     'nereid': 'nereid',
     'nereid.contrib': 'nereid/contrib',
-    'nereid.contrib.testing': 'nereid/contrib/testing'
+    'nereid.contrib.testing': 'nereid/contrib/testing',
     }
 package_data = {}
 entry_points = ''
@@ -105,6 +106,6 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
-        'Topic :: Software Development :: Libraries :: Python Modules'
+        'Topic :: Software Development :: Libraries :: Python Modules',
     ],
 )
