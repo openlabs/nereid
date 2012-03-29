@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2012-02-10 19:41-0500\n"
+"POT-Creation-Date: 2012-03-29 09:11-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,93 +17,93 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.6\n"
 
-#: party.py:40 party.py:65
+#: party.py:39 party.py:64
 msgid "Name"
 msgstr ""
 
-#: party.py:41 routing.py:96
+#: party.py:40 routing.py:96
 msgid "e-mail"
 msgstr ""
 
-#: party.py:42 party.py:84
+#: party.py:41 party.py:83
 msgid "New Password"
 msgstr ""
 
-#: party.py:44 party.py:86
+#: party.py:43 party.py:85
 msgid "Passwords must match"
 msgstr ""
 
-#: party.py:45
+#: party.py:44
 msgid "Confirm Password"
 msgstr ""
 
-#: party.py:66
+#: party.py:65
 msgid "Street"
 msgstr ""
 
-#: party.py:67
+#: party.py:66
 msgid "Street (Bis)"
 msgstr ""
 
-#: party.py:68
+#: party.py:67
 msgid "Post Code"
 msgstr ""
 
-#: party.py:69
+#: party.py:68
 msgid "City"
 msgstr ""
 
-#: party.py:70
+#: party.py:69
 msgid "Country"
 msgstr ""
 
-#: party.py:71
+#: party.py:70
 msgid "State/County"
 msgstr ""
 
-#: party.py:87
+#: party.py:86
 msgid "Repeat Password"
 msgstr ""
 
-#: party.py:100
+#: party.py:99
 msgid "Old Password"
 msgstr ""
 
-#: party.py:344
+#: party.py:343
 msgid ""
 "A registration already exists with this email. Please contact customer "
 "care"
 msgstr ""
 
-#: party.py:355
+#: party.py:354
 msgid "Registration Complete. Check your email for activation"
 msgstr ""
 
-#: party.py:390 party.py:430
+#: party.py:389 party.py:429
 msgid "Your password has been successfully changed! Please login again"
 msgstr ""
 
-#: party.py:396
+#: party.py:395
 msgid "The current password you entered is invalid"
 msgstr ""
 
-#: party.py:447
+#: party.py:446
 msgid "Invalid Activation Code"
 msgstr ""
 
-#: party.py:458
+#: party.py:457
 msgid "Your account has been activated"
 msgstr ""
 
-#: party.py:497
+#: party.py:496
 msgid "Invalid email address"
 msgstr ""
 
-#: party.py:501
+#: party.py:500
 msgid "An email has been sent to your account for resetting your credentials"
 msgstr ""
 
-#: party.py:536
+#: party.py:535
 msgid "Your account has not been activated yet!"
 msgstr ""
 
@@ -111,28 +111,28 @@ msgstr ""
 msgid "Password"
 msgstr ""
 
-#: routing.py:234
+#: routing.py:243
 #, python-format
 msgid "You are now logged in. Welcome %(name)s"
 msgstr ""
 
-#: routing.py:247
+#: routing.py:256
 msgid "Invalid login credentials"
 msgstr ""
 
-#: routing.py:261
+#: routing.py:270
 msgid "You have been logged out successfully. Thanks for visiting us"
 msgstr ""
 
-#: routing.py:318
+#: routing.py:327
 msgid "The currency has been successfully changed"
 msgstr ""
 
-#: routing.py:374
+#: routing.py:383
 msgid "Your language preference have been saved."
 msgstr ""
 
-#: routing.py:376
+#: routing.py:385
 msgid "Sorry! we do not speak your language yet!"
 msgstr ""
 
@@ -143,5 +143,10 @@ msgstr ""
 #: tests/test_i18n.py:60
 #, python-format
 msgid "Hi %(name)s"
+msgstr ""
+
+#: tests/test_i18n.py:71 tests/test_i18n.py:74
+#, python-format
+msgid "%(num)d apple"
 msgstr ""
 

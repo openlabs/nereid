@@ -1,17 +1,18 @@
-# Portuguese (Brazil) translations for Nereid.
+# Spanish translations for PROJECT.
 # Copyright (C) 2012 ORGANIZATION
-# This file is distributed under the same license as the Nereid project.
+# This file is distributed under the same license as the PROJECT project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2012.
 #
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Nereid 0.3\n"
+"Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2012-03-29 09:11-0400\n"
-"PO-Revision-Date: 2012-02-10 16:57-0500\n"
-"Last-Translator: Esteban <esteban@dhtsglobal.com>\n"
-"Language-Team: pt_BR <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n > 1)\n"
+"PO-Revision-Date: 2012-03-29 09:13-0400\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -19,133 +20,131 @@ msgstr ""
 
 #: party.py:39 party.py:64
 msgid "Name"
-msgstr "Nome e Sombrenome"
+msgstr ""
 
 #: party.py:40 routing.py:96
 msgid "e-mail"
-msgstr "e-mail"
+msgstr ""
 
 #: party.py:41 party.py:83
 msgid "New Password"
-msgstr "Nova Senha"
+msgstr ""
 
 #: party.py:43 party.py:85
 msgid "Passwords must match"
-msgstr "Senhas devem coincidir"
+msgstr ""
 
 #: party.py:44
 msgid "Confirm Password"
-msgstr "Confirme Sua Senha"
+msgstr ""
 
 #: party.py:65
 msgid "Street"
-msgstr "Endereco Completo"
+msgstr ""
 
 #: party.py:66
 msgid "Street (Bis)"
-msgstr "Bairro"
+msgstr ""
 
 #: party.py:67
 msgid "Post Code"
-msgstr "CEP"
+msgstr ""
 
 #: party.py:68
 msgid "City"
-msgstr "Cidade"
+msgstr ""
 
 #: party.py:69
 msgid "Country"
-msgstr "País"
+msgstr ""
 
 #: party.py:70
 msgid "State/County"
-msgstr "Estado"
+msgstr ""
 
 #: party.py:86
 msgid "Repeat Password"
-msgstr "Repetir Senha"
+msgstr ""
 
 #: party.py:99
 msgid "Old Password"
-msgstr "Senha Antiga"
+msgstr ""
 
 #: party.py:343
 msgid ""
 "A registration already exists with this email. Please contact customer "
 "care"
 msgstr ""
-"Um cadastro já existe com este email. Entre em contato com nosso central "
-"de atendimento"
 
 #: party.py:354
 msgid "Registration Complete. Check your email for activation"
-msgstr "Cadastro completo. Verifique seu e-mail para ativação"
+msgstr ""
 
 #: party.py:389 party.py:429
 msgid "Your password has been successfully changed! Please login again"
-msgstr "Sua senha foi alterada com sucesso! Por favor, faça login novamente"
+msgstr ""
 
 #: party.py:395
 msgid "The current password you entered is invalid"
-msgstr "A senha digitada é inválida"
+msgstr ""
 
 #: party.py:446
 msgid "Invalid Activation Code"
-msgstr "Código de ativação inválido"
+msgstr ""
 
 #: party.py:457
 msgid "Your account has been activated"
-msgstr "Sua conta foi ativada"
+msgstr ""
 
 #: party.py:496
 msgid "Invalid email address"
-msgstr "Email inválido"
+msgstr ""
 
 #: party.py:500
 msgid "An email has been sent to your account for resetting your credentials"
-msgstr "Um email foi enviado para a sua conta para redefinir suas credenciais"
+msgstr ""
 
 #: party.py:535
 msgid "Your account has not been activated yet!"
-msgstr "Sua conta ainda não foi ativada!"
+msgstr ""
 
 #: routing.py:97
 msgid "Password"
-msgstr "Senha"
+msgstr ""
 
 #: routing.py:243
 #, python-format
 msgid "You are now logged in. Welcome %(name)s"
-msgstr "Você está conectado agora. Bem-vindo %(name)s"
+msgstr ""
 
 #: routing.py:256
 msgid "Invalid login credentials"
-msgstr "Credenciais de login inválido"
+msgstr ""
 
 #: routing.py:270
 msgid "You have been logged out successfully. Thanks for visiting us"
-msgstr "Você saiu com sucesso. Obrigado por nos visitar"
+msgstr ""
 
 #: routing.py:327
 msgid "The currency has been successfully changed"
-msgstr "A moeda foi alterada com sucesso"
+msgstr ""
 
 #: routing.py:383
 msgid "Your language preference have been saved."
-msgstr "Sua preferência de idioma foi salva."
+msgstr ""
 
 #: routing.py:385
 msgid "Sorry! we do not speak your language yet!"
-msgstr "Desculpe! ainda não falam seu idioma!"
+msgstr ""
 
 #: tests/test_i18n.py:50
 msgid "en_US"
-msgstr "pt_BR"
+msgstr ""
 
 #: tests/test_i18n.py:60
 #, python-format
 msgid "Hi %(name)s"
-msgstr "Oi %(name)s"
+msgstr ""
 
 #: tests/test_i18n.py:71 tests/test_i18n.py:74
 #, python-format
