@@ -97,6 +97,8 @@ This will send an email with password to user."
                       <page id="Countries" string="Countries">
                         <field name="countries"/>
                       </page>
+                      <page string="Configuration" id="configuration">
+                      </page>
                     </notebook>
                 </form>
                 ]]>
