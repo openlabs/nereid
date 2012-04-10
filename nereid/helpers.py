@@ -363,7 +363,7 @@ def key_from_list(list_of_args):
 
 
 def make_crumbs(browse_record, endpoint, add_home=True, max_depth=10, 
-        field_map_changes=None):
+        field_map_changes=None, root_ids=None):
     """Makes bread crumbs for a given browse record based on the field
     parent of the browse record
 
@@ -375,6 +375,12 @@ def make_crumbs(browse_record, endpoint, add_home=True, max_depth=10,
     :param field_map_changes: A dictionary/list of key value pair (tuples) to 
         update the default field_map. Only the changing entries need to be 
         provided.
+    :param root_ids: IDs of root nodes where the recursion to a parent node
+        will need to be stopped. If not specified the recursion continues
+        upto the max_depth. Expects a list or tuple  of ids.
+
+    .. versionchanged:: 0.3
+        Added root_ids
     """
     field_map = dict(
         parent_field = 'parent',
@@ -383,14 +389,22 @@ def make_crumbs(browse_record, endpoint, add_home=True, max_depth=10,
         )
     if field_map_changes is not None:
         field_map.update(field_map_changes)
+    if root_ids is None:
+        root_ids = tuple()
 
     def recurse(node, level=1):
         if level > max_depth or not node:
             return []
-        return [
-            (url_for(endpoint, uri=getattr(node, field_map['uri_field'])), 
-             getattr(node, field_map['title_field']))
-            ] + recurse(getattr(node, field_map['parent_field']), level + 1)
+        data_pair = (
+            url_for(endpoint, uri=getattr(node, field_map['uri_field'])),
+            getattr(node, field_map['title_field'])
+        )
+        if node.id in root_ids:
+            return [data_pair]
+        else:
+            return [data_pair] + recurse(
+                getattr(node, field_map['parent_field']), level + 1
+            )
 
     items = recurse(browse_record)
 
