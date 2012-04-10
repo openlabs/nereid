@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the PROJECT project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2012.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2012-03-29 09:11-0400\n"
-"PO-Revision-Date: 2012-03-29 09:13-0400\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2012-03-29 11:14-0500\n"
+"Last-Translator: Esteban <esteban@dhtsglobal.com>\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
@@ -18,136 +17,140 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.6\n"
 
-#: party.py:39 party.py:64
+#: party.py:39
+#: party.py:64
 msgid "Name"
-msgstr ""
+msgstr "Nombre Completo"
 
-#: party.py:40 routing.py:96
+#: party.py:40
+#: routing.py:96
 msgid "e-mail"
-msgstr ""
+msgstr "e-mail"
 
-#: party.py:41 party.py:83
+#: party.py:41
+#: party.py:83
 msgid "New Password"
-msgstr ""
+msgstr "Nueva Contraseña"
 
-#: party.py:43 party.py:85
+#: party.py:43
+#: party.py:85
 msgid "Passwords must match"
-msgstr ""
+msgstr "Contraseñas deven coincidir"
 
 #: party.py:44
 msgid "Confirm Password"
-msgstr ""
+msgstr "Confirmar Seña"
 
 #: party.py:65
 msgid "Street"
-msgstr ""
+msgstr "Calle"
 
 #: party.py:66
 msgid "Street (Bis)"
-msgstr ""
+msgstr "Número"
 
 #: party.py:67
 msgid "Post Code"
-msgstr ""
+msgstr "Código Postal"
 
 #: party.py:68
 msgid "City"
-msgstr ""
+msgstr "Ciudad"
 
 #: party.py:69
 msgid "Country"
-msgstr ""
+msgstr "Pais"
 
 #: party.py:70
 msgid "State/County"
-msgstr ""
+msgstr "Estado"
 
 #: party.py:86
 msgid "Repeat Password"
-msgstr ""
+msgstr "Repetir Seña"
 
 #: party.py:99
 msgid "Old Password"
-msgstr ""
+msgstr "Contraseña Antigua"
 
 #: party.py:343
-msgid ""
-"A registration already exists with this email. Please contact customer "
-"care"
-msgstr ""
+msgid "A registration already exists with this email. Please contact customer care"
+msgstr "Un registro que ya existe con este correo electrónico. Por favor, póngase en contacto con nuestra cetral de atención al cliente"
 
 #: party.py:354
 msgid "Registration Complete. Check your email for activation"
-msgstr ""
+msgstr "Registro completo. Revise su correo electrónico para activar su cuenta"
 
-#: party.py:389 party.py:429
+#: party.py:389
+#: party.py:429
 msgid "Your password has been successfully changed! Please login again"
-msgstr ""
+msgstr "Su contraseña ha sido cambiado con éxito! Por favor inicie sesión nuevamente"
 
 #: party.py:395
 msgid "The current password you entered is invalid"
-msgstr ""
+msgstr "La contraseña introducida no es válida"
 
 #: party.py:446
 msgid "Invalid Activation Code"
-msgstr ""
+msgstr "Código de activación válido"
 
 #: party.py:457
 msgid "Your account has been activated"
-msgstr ""
+msgstr "Su cuenta ha sido activada"
 
 #: party.py:496
 msgid "Invalid email address"
-msgstr ""
+msgstr "E-mail invalido"
 
 #: party.py:500
 msgid "An email has been sent to your account for resetting your credentials"
-msgstr ""
+msgstr "Un correo electrónico ha sido enviado a su cuenta para restablecer sus credenciales"
 
 #: party.py:535
 msgid "Your account has not been activated yet!"
-msgstr ""
+msgstr "Su cuenta no ha sido activada todavía!"
 
 #: routing.py:97
 msgid "Password"
-msgstr ""
+msgstr "Seña"
 
 #: routing.py:243
 #, python-format
 msgid "You are now logged in. Welcome %(name)s"
-msgstr ""
+msgstr "Ahora está conectado. Bienvenido %(name)s"
 
 #: routing.py:256
 msgid "Invalid login credentials"
-msgstr ""
+msgstr "Credencialesde inicio de sesión inválidas"
 
 #: routing.py:270
 msgid "You have been logged out successfully. Thanks for visiting us"
-msgstr ""
+msgstr "Usted ha cerrado la sesión con éxito. Gracias por visitarnos"
 
 #: routing.py:327
 msgid "The currency has been successfully changed"
-msgstr ""
+msgstr "La moneda ha sido cambiado con éxito"
 
 #: routing.py:383
 msgid "Your language preference have been saved."
-msgstr ""
+msgstr "Su preferencias de idioma se han guardado."
 
 #: routing.py:385
 msgid "Sorry! we do not speak your language yet!"
-msgstr ""
+msgstr "¡Lo siento! no hablamos su idioma todavía!"
 
 #: tests/test_i18n.py:50
 msgid "en_US"
-msgstr ""
+msgstr "es_ES"
 
 #: tests/test_i18n.py:60
 #, python-format
 msgid "Hi %(name)s"
-msgstr ""
+msgstr "Hola %(name)s"
 
-#: tests/test_i18n.py:71 tests/test_i18n.py:74
+#: tests/test_i18n.py:71
+#: tests/test_i18n.py:74
 #, python-format
 msgid "%(num)d apple"
-msgstr ""
+msgstr "%(num)d manzana"
 
