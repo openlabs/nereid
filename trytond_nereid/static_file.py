@@ -1,10 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 '''
     nereid.static_file
 
     Static file
 
+    :copyright: (c) 2011-2012 Openlabs Technologies & Consulting (P) Limited
     :copyright: (c) 2010 by Sharoon Thomas.
     :license: BSD, see LICENSE for more details
 '''
@@ -64,14 +64,14 @@ class NereidStaticFolder(ModelSQL, ModelView):
     comments = fields.Text('Comments')
     files = fields.One2Many('nereid.static.file', 'folder', 'Files')
     folder_path = fields.Function(fields.Char('Folder Path'), 'get_path')
-    
+
     def __init__(self):
         super(NereidStaticFolder, self).__init__()
         self._constraints += [
             ('check_folder_name', 'invalid_folder_name'),
         ]
         self._sql_constraints += [
-            ('unique_folder', 'UNIQUE(folder_name)', 
+            ('unique_folder', 'UNIQUE(folder_name)',
              'Folder name needs to be unique')
         ]
         self._error_messages.update({

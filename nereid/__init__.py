@@ -7,7 +7,7 @@
 
     It replicates the Flask API for most of the system
 
-    :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
     :license: BSD, see LICENSE for more details
 '''
 
@@ -16,11 +16,13 @@
 from werkzeug import abort, redirect
 from jinja2 import Markup, escape
 
-from .globals import current_app, g, request, \
-    session, _request_ctx_stack, transaction
-from .templating import render_template, render_template_string
+from flask.globals import current_app, g, request, \
+    session, _request_ctx_stack
+from flask.templating import render_template_string
+
 from .helpers import flash, get_flashed_messages, jsonify, url_for, \
     login_required
-
-from .application import Nereid, Request, Response, cache
-from .session import Session
+from .application import Nereid, Request, Response
+from .sessions import Session
+from .globals import cache
+from .templating import render_template

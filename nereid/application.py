@@ -4,44 +4,32 @@
 
     A fullstack web framework based on Flask, but powered by Tryton
 
-    :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
     :copyright: (c) 2010 by Armin Ronacher
     :license: BSD, see LICENSE for more details
 '''
 from __future__ import with_statement
 
 import os
-import sys
-from threading import Lock
-from datetime import timedelta
-from itertools import chain
+import warnings
 
-from werkzeug import ImmutableDict
-from werkzeug.exceptions import InternalServerError, HTTPException
+from flask import Flask
+from flask.config import ConfigAttribute
+from flask.globals import _request_ctx_stack
+from flask.helpers import locked_cached_property
+from jinja2 import FileSystemLoader, MemcachedBytecodeCache
+from werkzeug.routing import Map
+from werkzeug import import_string
 
 from .wrappers import Request, Response
-from .config import ConfigAttribute, Config
-from .ctx import RequestContext
-from .globals import request, _request_ctx_stack, transaction
-from .signals import request_started, request_finished, got_request_exception,\
-    request_tearing_down
-
-from .backend import BackendMixin
-from .helpers import _PackageBoundObject
-from .templating import TemplateMixin
-from .routing import RoutingMixin
+from .backend import TransactionManager
 from .session import NereidSessionInterface
-from .cache import Cache, CacheMixin
-
-# a lock used for logger initialization
-_logger_lock = Lock()
-
-# A global Cache
-cache = Cache()
+from .templating import nereid_default_template_ctx_processor, \
+    NEREID_TEMPLATE_FILTERS
+from .helpers import get_website_from_host, url_for
 
 
-class Nereid(BackendMixin, RoutingMixin,
-        TemplateMixin, CacheMixin, _PackageBoundObject):
+class Nereid(Flask):
     """
     ...
 
@@ -62,491 +50,307 @@ class Nereid(BackendMixin, RoutingMixin,
     #: :class:`~nereid.wrappers.Response` for more information.
     response_class = Response
 
-    #: The debug flag.  Set this to `True` to enable debugging of the
-    #: application.  In debug mode the debugger will kick in when an unhandled
-    #: exception ocurrs and the integrated server will automatically reload
-    #: the application if changes in the code are detected.
-    #:
-    #: This attribute can also be configured from the config with the `DEBUG`
-    #: configuration key.  Defaults to `False`.
-    debug = ConfigAttribute('DEBUG')
-
-    #: The testing flag.  Set this to `True` to enable the test mode of
-    #: Flask extensions (and in the future probably also Flask itself).
-    #: For example this might activate unittest helpers that have an
-    #: additional runtime cost which should not be enabled by default.
-    #:
-    #: This attribute can also be configured from the config with the
-    #: `TESTING` configuration key.  Defaults to `False`.
-    testing = ConfigAttribute('TESTING')
-    test_client_class = None
-
-    #: The secure cookie uses this for the name of the session cookie.
-    #: This attribute can also be configured from the config with the
-    #: `SESSION_COOKIE_NAME` configuration key.  Defaults to ``'session'``
-    session_cookie_name = ConfigAttribute('SESSION_COOKIE_NAME')
-
-    #: A :class:`~datetime.timedelta` which is used to set the expiration
-    #: date of a permanent session.  The default is 31 days which makes a
-    #: permanent session survive for roughly one month.
-    #:
-    #: This attribute can also be configured from the config with the
-    #: `PERMANENT_SESSION_LIFETIME` configuration key.  Defaults to
-    #: ``timedelta(days=31)``
-    permanent_session_lifetime = ConfigAttribute('PERMANENT_SESSION_LIFETIME')
-
     #: the session interface to use.  By default an instance of
     #: :class:`~nereid.session.NereidSessionInterface` is used here.
-    #:
-    #: .. versionadded:: 0.2
     session_interface = NereidSessionInterface()
 
-    #: The name of the logger to use.  By default the logger name is the
-    #: package name passed to the constructor.
-    logger_name = ConfigAttribute('LOGGER_NAME')
+    #: An internal attribute to hold the Tryton model pool to avoid being 
+    #: initialised at every request as it is quite expensive to do so.
+    #: To access the pool from modules, use the :meth:`pool`
+    _pool = None
 
-    #: The logging format used for the debug logger.  This is only used when
-    #: the application is in debug mode, otherwise the attached logging
-    #: handler does the formatting.
-    debug_log_format = (
-        '-' * 80 + '\n' +
-        '%(levelname)s in %(module)s [%(pathname)s:%(lineno)d]:\n' +
-        '%(message)s\n' +
-        '-' * 80
-    )
+    #: The attribute holds a connection to the database backend.
+    _database = None
 
-    #: ID of the party.address to be used as a Guest account
-    #: Defaults to None, Not specifying the GUEST USER will
-    #: limit the application from performing certain tasks 
-    #: whcih depend on request.nereid_user as it will return 
-    #: None when the user is not Logged In
-    guest_user = ConfigAttribute('GUEST_USER')
+    #: Configuration file for Tryton. The path to the configuration file
+    #: can be specified and will be loaded when the application is 
+    #: initialised
+    tryton_configfile = ConfigAttribute('TRYTON_CONFIG')
 
-    root_path = ConfigAttribute('ROOT_PATH')
-    site = ConfigAttribute('SITE')
+    #: The location where the translations of the template are stored
+    translations_path = ConfigAttribute('TRANSLATIONS_PATH')
 
-    #: Default configuration parameters.
-    default_config = ImmutableDict({
-        'DEBUG': False,
-        'TESTING': False,
-        'PROPAGATE_EXCEPTIONS': None,
+    #: The name of the database to connect to on initialisation
+    database_name = ConfigAttribute('DATABASE_NAME')
 
-        'SESSION_COOKIE_NAME': 'session',
-        'PERMANENT_SESSION_LIFETIME': timedelta(days=31),
-        'PRESERVE_CONTEXT_ON_EXCEPTION': None,
-        'SESSION_STORE_PATH': '/tmp',
+    #: The default timeout to use if the timeout is not explicitly
+    #: specified in the set or set many argument
+    cache_default_timeout = ConfigAttribute('CACHE_DEFAULT_TIMEOUT')
 
-        'USE_X_SENDFILE': False,
-        'STATIC_FILEROOT': '',
-        'LOGGER_NAME': None,
-        'SERVER_NAME': None,
-        'MAX_CONTENT_LENGTH': None,
-        'ROOT_PATH': os.path.curdir,
-        'SITE': None,
-        'WEBSITE_MODEL': 'nereid.website',
-        'TRYTON_USER': 1,
-        'TRYTON_CONTEXT': {},
-        'TRYTON_CONFIG': None,
-        'GUEST_USER': None,
+    #: the maximum number of items the cache stores before it starts 
+    #: deleting some items.
+    #: Applies for: SimpleCache, FileSystemCache
+    cache_threshold = ConfigAttribute('CACHE_THRESHOLD')
 
-        # Cache Settings
-        'CACHE_TYPE': 'werkzeug.contrib.cache.NullCache',
-        'CACHE_DEFAULT_TIMEOUT': 300,
-        'CACHE_THRESHOLD': 500,
-        'CACHE_INIT_KWARGS': {},
-        'CACHE_KEY_PREFIX': None,
+    #: a prefix that is added before all keys. This makes it possible 
+    #: to use the same memcached server for different applications.
+    #: Applies for: MecachedCache, GAEMemcachedCache
+    #: If key_prefix is none the value of site is used as key
+    cache_key_prefix = ConfigAttribute('CACHE_KEY_PREFIX')
 
-        # Template Settings
-        'TEMPLATE_LOADER_CLASS': 'nereid.templating.TrytonTemplateLoader',
-        # Specify this if you are using the nereid.templating.FileSystemLoader
-        # Argument can be '/path/to/template' or ['path1', 'path2']
-        'TEMPLATE_SEARCH_PATH': '',
-        'TRANSLATIONS_PATH': None,
+    #: a list or tuple of server addresses or alternatively a 
+    #: `memcache.Client` or a compatible client.
+    cache_memcached_servers = ConfigAttribute('CACHE_MEMCACHED_SERVERS')
 
-        'TRAP_BAD_REQUEST_ERRORS': False,
-        'TRAP_HTTP_EXCEPTIONS': False,
-    })
+    #: The directory where cache files are stored if FileSystemCache is used
+    cache_dir = ConfigAttribute('CACHE_DIR')
+
+    #: The type of cache to use. The type must be a full specification of
+    #: the module so that an import can be made. Examples for werkzeug 
+    #: backends are given below
+    #:
+    #:  NullCache - werkzeug.contrib.cache.NullCache (default)
+    #:  SimpleCache - werkzeug.contrib.cache.SimpleCache
+    #:  MemcachedCache - werkzeug.contrib.cache.MemcachedCache
+    #:  GAEMemcachedCache -  werkzeug.contrib.cache.GAEMemcachedCache
+    #:  FileSystemCache - werkzeug.contrib.cache.FileSystemCache
+    cache_type = ConfigAttribute('CACHE_TYPE')
+
+    #: If a custom cache backend unknown to Nereid is used, then
+    #: the arguments that are needed for the initialisation
+    #: of the cache could be passed here as a `dict`
+    cache_init_kwargs = ConfigAttribute('CACHE_INIT_KWARGS')
+
+    #: boolean attribute to indicate if the initialisation of backend 
+    #: connection and other nereid support features are loaded. The
+    #: application can work only after the initialisation is done.
+    #: It is not advisable to set this manually, instead call the 
+    #: :meth:`initialise`
+    initialised = False
 
     def __init__(self, **config):
-        #: Load configuration
-        self.config = Config(self.default_config)
-        self.config.update(config)
+        """
+        The import_name is forced into `Nereid`
+        """
+        super(Nereid, self).__init__('nereid', **config)
 
-        #: Prepare the deferred setup of the logger.
-        self._logger = None
-        self.logger_name = 'NEREID'
+        # Update the defaults for config attributes introduced by nereid
+        self.config.update({
+            'TRYTON_CONFIG': None,
 
-        # support for the now deprecated `error_handlers` attribute.  The
-        # :attr:`error_handler_spec` shall be used now.
-        self._error_handlers = {}
+            'TEMPLATE_SEARCH_PATH': '',
+            'TEMPLATE_LOADER_CLASS': 'nereid.templating.TrytonTemplateLoader',
 
-        #: all the attached blueprints in a directory by name.  Blueprints
-        #: can be attached multiple times so this dictionary does not tell
-        #: you how often they got attached.
+            'CACHE_TYPE': 'werkzeug.contrib.cache.NullCache',
+            'CACHE_DEFAULT_TIMEOUT': 300,
+            'CACHE_THRESHOLD': 500,
+            'CACHE_INIT_KWARGS': {},
+            'CACHE_KEY_PREFIX': '',
+        })
+
+    def initialise(self):
+        """The application needs initialisation to load the database 
+        connection etc. In previous versions this was done with the
+        initialisation of the class in the __init__ method. This is
+        now separated into this function.
+        """
+        #: Load the cache
+        self.load_cache()
+
+        #: A dictionary of the website names to spec of the website in the
+        #: backend. This is loaded by :meth:`load_websites` when the app is
+        #: initialised and all future lookups are made on this dictionary.
+        #: The specs include the following information
         #:
-        #: .. versionadded:: 0.7
-        self.blueprints = {}
+        #:  1. id - ID of the website in the backend
+        #:  2. url_map - The loaded url_map of the website
+        #: 
+        #: .. tip:
+        #:  If a new website is introduced a reload of the application would
+        #:  be necessary for it to reflect here
+        self.websites = {}
 
-        #: A dictionary of all registered error handlers.  The key is `None`
-        #: for error handlers active on the application, otherwise the key is
-        #: the name of the blueprint.  Each key points to another dictionary
-        #: where they key is the status code of the http exception.  The
-        #: special key `None` points to a list of tuples where the first item
-        #: is the class for the instance check and the second the error handler
-        #: function.
-        #:
-        #: To register a error handler, use the :meth:`errorhandler`
-        #: decorator.
-        self.error_handler_spec = {None: self._error_handlers}
+        # Backend initialisation
+        self.load_backend()
+        with self.root_transaction:
+            self.load_websites()
+            self.add_ctx_processors_from_db()
 
-        #: A dictionary with lists of functions that should be called at the
-        #: beginning of the request.  The key of the dictionary is the name of
-        #: the module this function is active for, `None` for all requests.
-        #: This can for example be used to open database connections or
-        #: getting hold of the currently logged in user.  To register a
-        #: function here, use the :meth:`before_request` decorator.
-        self.before_request_funcs = {}
+        # Add the additional template context processors
+        self.template_context_processors[None].append(
+            nereid_default_template_ctx_processor
+        )
 
-        #: A lists of functions that should be called at the beginning of the
-        #: first request to this instance.  To register a function here, use
-        #: the :meth:`before_first_request` decorator.
-        #:
-        #: .. versionadded:: 0.2
-        self.before_first_request_funcs = []
+        # Finally set the initialised attribute
+        self.initialised = True
 
-        #: A dictionary with lists of functions that should be called after
-        #: each request.  The key of the dictionary is the name of the module
-        #: this function is active for, `None` for all requests.  This can for
-        #: example be used to open database connections or getting hold of the
-        #: currently logged in user.  To register a function here, use the
-        #: :meth:`after_request` decorator.
-        self.after_request_funcs = {}
-
-        #: A dictionary with lists of functions that are called after
-        #: each request, even if an exception has occurred. The key of the
-        #: dictionary is the name of the blueprint this function is active for,
-        #: `None` for all requests. These functions are not allowed to modify
-        #: the request, and their return values are ignored. If an exception
-        #: occurred while processing the request, it gets passed to each
-        #: teardown_request function. To register a function here, use the
-        #: :meth:`teardown_request` decorator.
-        #:
-        #: .. versionadded:: 0.2
-        self.teardown_request_funcs = {}
-
-
-        # tracks internally if the application already handled at least one
-        # request.
-        self._got_first_request = False
-        self._before_request_lock = Lock()
-
-        _PackageBoundObject.__init__(self, __name__)
-        BackendMixin.__init__(self, **config)
-        RoutingMixin.__init__(self, **config)
-        CacheMixin.__init__(self, **config)
-        TemplateMixin.__init__(self, **config)
-
-
-        self.add_ctx_processors_from_db()
-        self.add_urls_from_db()
-
-    @property
-    def propagate_exceptions(self):
-        """Returns the value of the `PROPAGATE_EXCEPTIONS` configuration
-        value in case it's set, otherwise a sensible default is returned.
-
-        .. versionadded:: 0.7
+    def load_cache(self):
+        """Load the cache and assign the Cache interface to
         """
-        rv = self.config['PROPAGATE_EXCEPTIONS']
-        if rv is not None:
-            return rv
-        return self.testing or self.debug
+        BackendClass = import_string(self.cache_type)
 
-    @property
-    def preserve_context_on_exception(self):
-        """Returns the value of the `PRESERVE_CONTEXT_ON_EXCEPTION`
-        configuration value in case it's set, otherwise a sensible default
-        is returned.
-
-        .. versionadded:: 0.7
-        """
-        rv = self.config['PRESERVE_CONTEXT_ON_EXCEPTION']
-        if rv is not None:
-            return rv
-        return self.debug
-
-    @property
-    def got_first_request(self):
-        """This attribute is set to `True` if the application started
-        handling the first request.
-
-        .. versionadded:: 0.2
-        """
-        return self._got_first_request
-
-
-    def run(self, host='127.0.0.1', port=5000, **options):
-        """Runs the application on a local development server.  If the
-        :attr:`debug` flag is set the server will automatically reload
-        for code changes and show a debugger in case an exception happened.
-
-        If you want to run the application in debug mode, but disable the
-        code execution on the interactive debugger, you can pass
-        ``use_evalex=False`` as parameter.  This will keep the debugger's
-        traceback screen active, but disable code execution.
-
-        .. admonition:: Keep in Mind
-
-           Nereid will suppress any server error with a generic error page
-           unless it is in debug mode.  As such to enable just the
-           interactive debugger without the code reloading, you have to
-           invoke :meth:`run` with ``debug=True`` and ``use_reloader=False``.
-           Setting ``use_debugger`` to `True` without being in debug mode
-           won't catch any exceptions because there won't be any to
-           catch.
-
-        :param host: the hostname to listen on.  set this to ``'0.0.0.0'``
-                     to have the server available externally as well.
-        :param port: the port of the webserver
-        :param options: the options to be forwarded to the underlying
-                        Werkzeug server.  See :func:`werkzeug.run_simple`
-                        for more information.
-        """
-        from werkzeug import run_simple
-        if 'debug' in options:
-            self.debug = options.pop('debug')
-        options.setdefault('use_reloader', self.debug)
-        options.setdefault('use_debugger', self.debug)
-        return run_simple(host, port, self, **options)
-
-    @property
-    def logger(self):
-        """A :class:`logging.Logger` object for this application.  The
-        default configuration is to log to stderr if the application is
-        in debug mode.  This logger can be used to (surprise) log messages.
-        Here some examples::
-
-            app.logger.debug('A value for debugging')
-            app.logger.warning('A warning ocurred (%d apples)', 42)
-            app.logger.error('An error occoured')
-
-        """
-        if self._logger and self._logger.name == self.logger_name:
-            return self._logger
-        with _logger_lock:
-            if self._logger and self._logger.name == self.logger_name:
-                return self._logger
-            from .logging import create_logger
-            self._logger = result = create_logger(self)
-            return result
-
-    def handle_http_exception(self, e):
-        """Handles an HTTP exception.  By default this will invoke the
-        registered error handlers and fall back to returning the
-        exception as response.
-
-        .. versionadded: 0.3
-        """
-        handlers = self.error_handler_spec.get(request.blueprint)
-        if handlers and e.code in handlers:
-            handler = handlers[e.code]
+        if self.cache_type == 'werkzeug.contrib.cache.NullCache':
+            self.cache = BackendClass(self.cache_default_timeout)
+        elif self.cache_type == 'werkzeug.contrib.cache.SimpleCache':
+            self.cache = BackendClass(
+                self.cache_threshold, self.cache_default_timeout)
+        elif self.cache_type == 'werkzeug.contrib.cache.MemcachedCache':
+            self.cache = BackendClass(
+                self.cache_memcached_servers,
+                self.cache_default_timeout,
+                self.cache_key_prefix)
+        elif self.cache_type == 'werkzeug.contrib.cache.GAEMemcachedCache':
+            self.cache = BackendClass(
+                self.cache_default_timeout,
+                self.cache_key_prefix)
+        elif self.cache_type == 'werkzeug.contrib.cache.FileSystemCache':
+            self.cache = BackendClass(
+                self.cache_dir,
+                self.cache_threshold,
+                self.cache_default_timeout)
         else:
-            handler = self.error_handler_spec[None].get(e.code)
-        if handler is None:
-            return e
-        return handler(e)
+            self.cache = BackendClass(**self.cache_init_kwargs)
 
-    def trap_http_exception(self, e):
-        """Checks if an HTTP exception should be trapped or not.  By default
-        this will return `False` for all exceptions except for a bad request
-        key error if ``TRAP_BAD_REQUEST_ERRORS`` is set to `True`.  It
-        also returns `True` if ``TRAP_HTTP_EXCEPTIONS`` is set to `True`.
-
-        This is called for all HTTP exceptions raised by a view function.
-        If it returns `True` for any exception the error handler for this
-        exception is not called and it shows up as regular exception in the
-        traceback.  This is helpful for debugging implicitly raised HTTP
-        exceptions.
-
-        .. versionadded:: 0.8
+    def load_backend(self):
+        """This method loads the configuration file if specified and
+        also connects to the backend, initialising the pool on the go
         """
-        if self.config['TRAP_HTTP_EXCEPTIONS']:
-            return True
-        if self.config['TRAP_BAD_REQUEST_ERRORS']:
-            return isinstance(e, BadRequest)
-        return False
+        if self.tryton_configfile is not None:
+            from trytond.config import CONFIG
+            CONFIG.configfile = self.tryton_configfile
+            CONFIG.load()
 
-    def handle_user_exception(self, e):
-        """This method is called whenever an exception occurs that should be
-        handled.  A special case are
-        :class:`~werkzeug.exception.HTTPException`\s which are forwarded by
-        this function to the :meth:`handle_http_exception` method.  This
-        function will either return a response value or reraise the
-        exception with the same traceback.
+        from trytond.backend import Database
+        from trytond.modules import register_classes
+        register_classes()
+        from trytond.pool import Pool
 
-        .. versionadded:: 0.7
+        # Load and initialise pool
+        self._database = Database(self.database_name).connect()
+        self._pool = Pool(self.database_name)
+        self._pool.init()
+
+    @property
+    def pool(self):
+        """A proxy to the _pool"""
+        return self._pool
+
+    @property
+    def database(self):
+        "Return connection to Database backend of tryton"
+        return self._database
+
+    def transaction(self, http_host):
+        """Allows the use of the transaction as a context manager.
+        The transaction created loads the user from the known websites
+        which is identified through the http_host
         """
-        exc_type, exc_value, tb = sys.exc_info()
-        assert exc_value is e
+        website_name = get_website_from_host(http_host)
+        try:
+            website = self.websites[website_name]
+        except KeyError:
+            raise RuntimeError(
+                "Error in parsing host name or unknown website\n" +
+                "HTTP_HOST: %s\n" % http_host +
+                "Parsed Website Name: %s" % website_name
+            )
+        else:
+            context = {
+                'company': website['company'],
+                }
+            return TransactionManager(
+                self.database_name, website['application_user'], context
+            )
 
-        # ensure not to trash sys.exc_info() at that point in case someone
-        # wants the traceback preserved in handle_http_exception.  Of course
-        # we cannot prevent users from trashing it themselves in a custom
-        # trap_http_exception method so that's their fault then.
-        if isinstance(e, HTTPException) and not self.trap_http_exception(e):
-            return self.handle_http_exception(e)
+    @property
+    def root_transaction(self):
+        """Allows the use of the transaction as a context manager with the
+        root user.
 
-        blueprint_handlers = ()
-        handlers = self.error_handler_spec.get(request.blueprint)
-        if handlers is not None:
-            blueprint_handlers = handlers.get(None, ())
-        app_handlers = self.error_handler_spec[None].get(None, ())
-        for typecheck, handler in chain(blueprint_handlers, app_handlers):
-            if isinstance(e, typecheck):
-                return handler(e)
-
-        raise exc_type, exc_value, tb
-
-    def handle_exception(self, exception):
-        """Default exception handling that kicks in when an exception
-        occours that is not catched.  In debug mode the exception will
-        be re-raised immediately, otherwise it is logged and the handler
-        for a 500 internal server error is used.  If no such handler
-        exists, a default 500 internal server error message is displayed.
-
+        .. versionadded::0.3
         """
-        got_request_exception.send(self, exception=exception)
-        transaction.cursor.rollback()
-        handler = self.error_handlers.get(500)
-        if self.propagate_exceptions:
-            raise
-        self.logger.exception('Exception on %s [%s]' % (
-            request.path,
-            request.method
-        ))
-        if handler is None:
-            return InternalServerError()
-        return handler(exception)
+        return TransactionManager(self.database_name, 0, None)
 
-    def request_context(self, environ):
-        """Creates a request context from the given environment and binds
-        it to the current context.  This must be used in combination with
-        the `with` statement because the request is only bound to the
-        current context for the duration of the `with` block.
+    def get_method(self, model_method):
+        """Get the object from pool and fetch the method from it
 
-        Example usage::
-
-            with app.request_context(environ):
-                do_something_with(request)
-
-        The object returned can also be used without the `with` statement
-        which is useful for working in the shell.  The example above is
-        doing exactly the same as this code::
-
-            ctx = app.request_context(environ)
-            ctx.push()
-            try:
-                do_something_with(request)
-            finally:
-                ctx.pop()
-
-        The big advantage of this approach is that you can use it without
-        the try/finally statement in a shell for interactive testing:
-
-        >>> ctx = app.test_request_context()
-        >>> ctx.bind()
-        >>> request.path
-        u'/'
-        >>> ctx.unbind()
-
-        :param environ: a WSGI environment
+        model_method is expected to be '<model>.<method>'. The returned
+        function/method object can be stored in the endpoint map for a
+        faster lookup and response rather than looking it up at request
+        time.
         """
-        return RequestContext(self, environ)
+        model_method_split = model_method.split('.')
+        model = '.'.join(model_method_split[:-1])
+        method = model_method_split[-1]
 
-    def test_request_context(self, *args, **kwargs):
-        """Creates a WSGI environment from the given values (see
-        :func:`werkzeug.create_environ` for more information, this
-        function accepts the same arguments).
+        try:
+            return getattr(self.pool.get(model), method)
+        except AttributeError:
+            raise Exception("Method %s not in Model %s" % (method, model))
+
+    def load_websites(self):
+        """Load the websites and build a map of the website names to the ID
+        in database for quick connection to the website
         """
-        from werkzeug import create_environ
-        environ_overrides = kwargs.setdefault('environ_overrides', {})
-        if self.config.get('SERVER_NAME'):
-            server_name = self.config.get('SERVER_NAME')
-            if ':' not in server_name:
-                http_host, http_port = server_name, '80'
+        website_obj = self.pool.get("nereid.website")
+        url_map_obj = self.pool.get('nereid.url_map')
+
+        # Load all url maps first because many websites might reuse the same
+        # URL map and it might be faster to load them just once
+        url_map_ids = url_map_obj.search([])
+        url_maps = dict.fromkeys(url_map_ids)
+
+        for url_map_id in url_map_ids:
+            url_map = Map() # Define a new map
+            # Add the static url
+            url_map.add(
+                self.url_rule_class(
+                    self.static_url_path + '/<path:filename>',
+                    endpoint = 'static'
+                )
+            )
+            url_rules = url_map_obj.get_rules_arguments(url_map_id)
+            for url in url_rules:
+                rule = self.url_rule_class(url.pop('rule'), **url)
+                rule.provide_automatic_options = True
+                url_map.add(rule)   # Add rule to map
+
+                if (not url['build_only']) and not(url['redirect_to']):
+                    # Add the method to the view_functions list if the
+                    # endpoint was not a build_only url
+                    self.view_functions[url['endpoint']] = self.get_method(
+                            url['endpoint']
+                    )
+            url_maps[url_map_id] = url_map
+
+        website_ids = website_obj.search([])
+        for website in website_obj.browse(website_ids):
+            self.websites[website.name] = {
+                'id': website.id,
+                'url_map': url_maps[website.url_map.id],
+                'application_user': website.application_user.id,
+                'guest_user': website.guest_user.id,
+                'company': website.company.id,
+            }
+
+        # Finally add the view_function for static
+        self.view_functions['static'] = self.send_static_file
+
+    def add_ctx_processors_from_db(self):
+        """Adds template context processors registers with the model
+        nereid.template.context_processor"""
+        ctx_processor_obj = self.pool.get('nereid.template.context_processor')
+
+        db_ctx_processors = ctx_processor_obj.get_processors()
+        if None in db_ctx_processors:
+            self.template_context_processors[None].extend(
+                db_ctx_processors.pop(None)
+            )
+        self.template_context_processors.update(db_ctx_processors)
+
+    def transaction_middleware(self, environ, start_response):
+        """Introduce a tryton transaction middleware
+        """
+        if not self.initialised:
+            self.initialise()
+
+        with self.transaction(environ['HTTP_HOST']) as txn:
+            rv = super(Nereid, self).wsgi_app(environ, start_response)
+            if rv.status_code >= 500 and rv.status_code <= 599:
+                txn.cursor.rollback()
             else:
-                http_host, http_port = server_name.split(':', 1)
-
-            environ_overrides.setdefault('SERVER_NAME', server_name)
-            environ_overrides.setdefault('HTTP_HOST', server_name)
-            environ_overrides.setdefault('SERVER_PORT', http_port)
-        return self.request_context(create_environ(*args, **kwargs))
-
-    def inject_url_defaults(self, endpoint, values):
-        """Injects the URL defaults for the given endpoint directly into
-        the values dictionary passed.  This is used internally and
-        automatically called on URL building.
-
-        .. versionadded:: 0.7
-        """
-        funcs = self.url_default_functions.get(None, ())
-        if '.' in endpoint:
-            bp = endpoint.split('.', 1)[0]
-            funcs = chain(funcs, self.url_default_functions.get(bp, ()))
-        for func in funcs:
-            func(endpoint, values)
-
-    def preprocess_request(self):
-        """Called before the actual request dispatching and will
-        call every as :meth:`before_request` decorated function.
-        If any of these function returns a value it's handled as
-        if it was the return value from the view and further
-        request handling is stopped.
-
-        This also triggers the :meth:`url_value_processor` functions before
-        the actualy :meth:`before_request` functions are called.
-        """
-        bp = request.blueprint
-
-        funcs = self.url_value_preprocessors.get(None, ())
-        if bp is not None and bp in self.url_value_preprocessors:
-            funcs = chain(funcs, self.url_value_preprocessors[bp])
-        for func in funcs:
-            func(request.endpoint, request.view_args)
-
-        funcs = self.before_request_funcs.get(None, ())
-        if bp is not None and bp in self.before_request_funcs:
-            funcs = chain(funcs, self.before_request_funcs[bp])
-        for func in funcs:
-            rv = func()
-            if rv is not None:
-                return rv
-
-    def process_response(self, response):
-        """Can be overridden in order to modify the response object
-        before it's sent to the WSGI server.  By default this will
-        call all the :meth:`after_request` decorated functions.
-
-        .. versionchanged:: 0.5
-           As of Flask 0.5 the functions registered for after request
-           execution are called in reverse order of registration.
-
-        :param response: a :attr:`response_class` object.
-        :return: a new response object or the same, has to be an
-                 instance of :attr:`response_class`.
-        """
-        ctx = _request_ctx_stack.top
-        bp = ctx.request.blueprint
-        if not self.session_interface.is_null_session(ctx.session):
-            self.save_session(ctx.session, response)
-        funcs = ()
-        if bp is not None and bp in self.after_request_funcs:
-            funcs = reversed(self.after_request_funcs[bp])
-        if None in self.after_request_funcs:
-            funcs = chain(funcs, reversed(self.after_request_funcs[None]))
-        for handler in funcs:
-            response = handler(response)
-        return response
+                txn.cursor.commit()
+            return rv
 
     def wsgi_app(self, environ, start_response):
         """The actual WSGI application.  This is not implemented in
@@ -562,92 +366,120 @@ class Nereid(BackendMixin, RoutingMixin,
         Then you still have the original application object around and
         can continue to call methods on it.
 
+        In Nereid the transaction is introduced after the request_context
+        is loaded.
+
         :param environ: a WSGI environment
         :param start_response: a callable accepting a status code,
                                a list of headers and an optional
                                exception context to start the response
         """
-        with self.request_context(environ):
-            with self.transaction as transaction:
-                _request_ctx_stack.top.transaction = transaction
+        if not self.initialised:
+            self.initialise()
+
+        with self.transaction(environ['HTTP_HOST']) as txn:
+            with self.request_context(environ):
                 try:
-                    request_started.send(self)
-                    result = self.preprocess_request()
-                    if result is None:
-                        result = self.dispatch_request()
-                        transaction.cursor.commit()
-                except Exception, exception:
-                    result = self.handle_user_exception(exception)
-                
-                response = self.make_response(result)
-                response = self.process_response(response)
-                request_finished.send(self, response=response)
+                    response = self.full_dispatch_request()
+                    #self.logger.debug("Cursor: COMMIT")
+                    txn.cursor.commit()
+                except Exception, e:
+                    response = self.make_response(self.handle_exception(e))
+                    #self.logger.debug("Cursor: ROLLBACK")
+                    txn.cursor.rollback()
                 return response(environ, start_response)
 
-    def __call__(self, environ, start_response):
-        """Shortcut for :attr:`wsgi_app`."""
-        return self.wsgi_app(environ, start_response)
-
-    def test_client(self, use_cookies=True):
-        """Creates a test client for this application.  For information
-        about unit testing head over to :ref:`testing`.
-
-        The test client can be used in a `with` block to defer the closing down
-        of the context until the end of the `with` block.  This is useful if
-        you want to access the context locals for testing::
-
-            with app.test_client() as c:
-                rv = c.get('/?vodka=42')
-                assert request.args['vodka'] == '42'
-
+    def create_url_adapter(self, request):
+        """Return the URL adapter for the website instead of the standard
+        operation of just binding the environ to the url_map
         """
-        cls = self.test_client_class
-        if cls is None:
-            from .testing import NereidClient as cls
-        return cls(self, self.response_class, use_cookies=use_cookies)
+        website = get_website_from_host(request.environ['HTTP_HOST'])
+        if request is not None:
+            return self.websites[website]['url_map'].bind_to_environ(
+                request.environ, server_name=self.config['SERVER_NAME']
+            )
+        if self.config['SERVER_NAME'] is not None:
+            return self.websites[website]['url_map'].bind(
+                self.CONFIG['SERVER_NAME'],
+                script_name=self.config['APPLICATION_ROOT'] or '/',
+                url_SCHEME=self.config['PREFERRED_URL_SCHEME']
+            )
 
-    def do_teardown_request(self):
-        """Called after the actual request dispatching and will
-        call every as :meth:`teardown_request` decorated function.  This is
-        not actually called by the :class:`Flask` object itself but is always
-        triggered when the request context is popped.  That way we have a
-        tighter control over certain resources under testing environments.
+    def dispatch_request(self):
+        """Does the request dispatching.  Matches the URL and returns the
+        return value of the view or error handler.  This does not have to
+        be a response object.
         """
-        funcs = reversed(self.teardown_request_funcs.get(None, ()))
-        bp = request.blueprint
-        if bp is not None and bp in self.teardown_request_funcs:
-            funcs = chain(funcs, reversed(self.teardown_request_funcs[bp]))
-        exc = sys.exc_info()[1]
-        for func in funcs:
-            rv = func(exc)
-            if rv is not None:
-                return rv
-        request_tearing_down.send(self)
+        from trytond.transaction import Transaction
 
-    def open_session(self, request):
-        """Creates or opens a new session. Instead of overriding this method
-        we recommend replacing the :class:`session_interface`.
+        req = _request_ctx_stack.top.request
+        if req.routing_exception is not None:
+            self.raise_routing_exception(req)
 
-        :param request: an instance of :attr:`request_class`.
+        rule = req.url_rule
+        # if we provide automatic options for this URL and the
+        # request came with the OPTIONS method, reply automatically
+        if getattr(rule, 'provide_automatic_options', False) \
+           and req.method == 'OPTIONS':
+            return self.make_default_options_response()
+
+        language = req.view_args.pop(
+            'language', req.nereid_website.default_language.code
+        )
+        with Transaction().set_context(language=language):
+            # otherwise dispatch to the handler for that endpoint
+            return self.view_functions[rule.endpoint](**req.view_args)
+
+    def create_jinja_environment(self):
+        """Extend the default jinja environment that is created. Also
+        the environment returned here should be specific to the current
+        website.
         """
-        return self.session_interface.open_session(self, request)
+        rv = super(Nereid, self).create_jinja_environment()
 
-    def save_session(self, session, response):
-        """Saves the session if it needs updates.  For the default
-        implementation, check :meth:`open_session`.  Instead of overriding this
-        method we recommend replacing the :class:`session_interface`.
+        # Add the custom extensions specific to nereid
+        rv.add_extension('jinja2.ext.i18n')
+        rv.add_extension('nereid.templating.FragmentCacheExtension')
 
-        :param session: the session to be saved (a
-                        :class:`~werkzeug.contrib.securecookie.SecureCookie`
-                        object)
-        :param response: an instance of :attr:`response_class`
+        rv.filters.update(**NEREID_TEMPLATE_FILTERS)
+
+        # add the language sensitive url_for of nereid
+        rv.globals.update(url_for=url_for)
+
+        if self.cache:
+            # Setup the bytecode cache
+            rv.bytecode_cache = MemcachedBytecodeCache(self.cache)
+            # Setup for fragmented caching
+            rv.fragment_cache = self.cache
+            rv.fragment_cache_prefix = self.cache_key_prefix + "-frag-"
+
+        return rv
+
+    @locked_cached_property
+    def jinja_loader(self):
+        """Creates the loader for the Jinja2 Environment
         """
-        return self.session_interface.save_session(self, session, response)
+        req = _request_ctx_stack.top.request
+        return FileSystemLoader(os.path.join([
+            self.config['TEMPLATE_SEARCH_PATH'], req.nereid_website.name
+        ]))
 
-    def make_null_session(self):
-        """Creates a new instance of a missing session.  Instead of overriding
-        this method we recommend replacing the :class:`session_interface`.
-
-        .. versionadded:: 0.2
+    def select_jinja_autoescape(self, filename):
+        """Returns `True` if autoescaping should be active for the given
+        template name.
         """
-        return self.session_interface.make_null_session(self)
+        if filename is None:
+            return False
+        if filename.endswith(('.jinja',)):
+            return True
+        return super(Nereid, self).select_jinja_autoescape(filename)
+
+    @property
+    def guest_user(self):
+        warnings.warn(DeprecationWarning(
+            "guest_user as an attribute will be deprecated.\n"
+            "Use request.nereid_website.guest_user.id instead"
+            )
+        )
+        from .globals import request
+        return request.nereid_website.guest_user.id

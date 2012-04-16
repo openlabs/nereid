@@ -53,7 +53,7 @@ class TestAuth(TestCase):
 
             cls.available_countries = country_obj.search([], limit=5)
             cls.site = testing_proxy.create_site(
-                'testsite.com', 
+                'localhost',
                 countries = [('set', cls.available_countries)],
                 application_user = 1, guest_user = cls.guest_user
             )
@@ -62,28 +62,28 @@ class TestAuth(TestCase):
                 'home.jinja', '{{ get_flashed_messages() }}', cls.site
             )
             testing_proxy.create_template(
-                'login.jinja', 
-                '{{ login_form.errors }} {{ get_flashed_messages() }}', 
+                'login.jinja',
+                '{{ login_form.errors }} {{ get_flashed_messages() }}',
                 cls.site
             )
             testing_proxy.create_template(
-                'registration.jinja', 
-                '{{ form.errors }} {{get_flashed_messages()}}', 
+                'registration.jinja',
+                '{{ form.errors }} {{get_flashed_messages()}}',
                 cls.site
             )
-            
+
             testing_proxy.create_template('reset-password.jinja',
                 '{{get_flashed_messages()}}', cls.site
             )
             testing_proxy.create_template(
                 'change-password.jinja',
-                '''{{ change_password_form.errors }} 
-                {{ get_flashed_messages() }}''', 
+                '''{{ change_password_form.errors }}
+                {{ get_flashed_messages() }}''',
                 cls.site
             )
             testing_proxy.create_template(
                 'address-edit.jinja',
-                '{{ form.errors }}', 
+                '{{ form.errors }}',
                 cls.site
             )
             testing_proxy.create_template('address.jinja', '', cls.site)
@@ -111,7 +111,7 @@ class TestAuth(TestCase):
         with app.test_client() as c:
             response = c.get('/en_US/registration')
             self.assertEqual(response.status_code, 200)
-    
+
         with app.test_client() as c:
             data = {
                 'name': 'New Test Registered User',
@@ -152,9 +152,9 @@ class TestAuth(TestCase):
             txn.cursor.commit()
 
         with app.test_client() as c:
-            response = c.post('/en_US/login', 
+            response = c.post('/en_US/login',
                 data={
-                    'email': u'new.test@example.com', 
+                    'email': u'new.test@example.com',
                     'password': u'password'
                 })
             self.assertEqual(response.status_code, 200)
@@ -169,13 +169,13 @@ class TestAuth(TestCase):
             self.assertEqual(response.status_code, 302)
 
             # try login again
-            response = c.post('/en_US/login', 
+            response = c.post('/en_US/login',
                 data={
-                    'email': u'new.test@example.com', 
+                    'email': u'new.test@example.com',
                     'password': u'password'
                 })
             self.assertEqual(response.status_code, 302)
-        
+
     def test_0030_change_password(self):
         """
         Check if changing own password is possible
@@ -194,11 +194,12 @@ class TestAuth(TestCase):
             self.assertEqual(response.status_code, 302)
 
             # Login now
-            response = c.post('/en_US/login', 
+            response = c.post('/en_US/login',
                 data={
-                    'email': u'new.test@example.com', 
+                    'email': u'new.test@example.com',
                     'password': u'password'
                 })
+            self.assertEqual(response.status_code, 302)
 
             # send wrong password confirm
             response = c.post('/en_US/change-password', data={
@@ -210,6 +211,14 @@ class TestAuth(TestCase):
 
             # send correct password confirm but not old password
             response = c.post('/en_US/change-password', data={
+                'password': 'new-password',
+                'confirm': 'new-password'
+            })
+            self.assertEqual(response.status_code, 200)
+
+            # send correct password confirm but not old password
+            response = c.post('/en_US/change-password', data={
+                'old_password': 'passw',
                 'password': 'new-password',
                 'confirm': 'new-password'
             })
@@ -256,9 +265,9 @@ class TestAuth(TestCase):
             # Try a Login now and the existing activation code for reset should
             # not be there
             response = c.post(
-                '/en_US/login', 
+                '/en_US/login',
                 data={
-                    'email': 'new.test@example.com', 
+                    'email': 'new.test@example.com',
                     'password': 'new-password'
                 }
             )
@@ -277,7 +286,7 @@ class TestAuth(TestCase):
                 'email': 'new.test@example.com',
             })
             self.assertEqual(response.status_code, 302)
-            
+
         with Transaction().start(
                 testing_proxy.db_name, testing_proxy.user, None):
             new_user = self.nereid_user_obj.browse(new_user_id)
@@ -295,20 +304,20 @@ class TestAuth(TestCase):
                 'confirm': 'password'
             })
             self.assertEqual(response.status_code, 302)
-            
+
         with Transaction().start(
                 testing_proxy.db_name, testing_proxy.user, None):
             new_user = self.nereid_user_obj.browse(new_user_id)
             self.assertFalse(new_user.activation_code)
 
         with app.test_client() as c:
-            response = c.post('/en_US/login', 
+            response = c.post('/en_US/login',
                 data={
                     'email': 'new.test@example.com', 'password': 'new-password'
                 }
             )
             self.assertEqual(response.status_code, 200)     # Login rejected
-            response = c.post('/en_US/login', 
+            response = c.post('/en_US/login',
                 data={'email': 'new.test@example.com', 'password': 'password'})
             self.assertEqual(response.status_code, 302)     # Login approved
 
@@ -318,7 +327,7 @@ class TestAuth(TestCase):
         """
         app = self.get_app()
         with app.test_client() as c:
-            response = c.post('/en_US/login?next=/en_US', 
+            response = c.post('/en_US/login?next=/en_US',
                 data={'email': 'new.test@example.com', 'password': 'password'})
             self.assertEqual(response.status_code, 302)     # Login approved 
             self.assertTrue('<a href="/en_US">' in response.data)
@@ -327,7 +336,24 @@ class TestAuth(TestCase):
         """
         Check for logout and consistent behavior
         """
-        self.fail("Test not Implemented")
+        app = self.get_app()
+        with app.test_client() as c:
+            response = c.get("/en_US/account")
+            self.assertEqual(response.status_code, 302)
+
+            # Login and check again
+            response = c.post('/en_US/login',
+                data={'email': 'new.test@example.com', 'password': 'password'})
+            self.assertEqual(response.status_code, 302)
+
+            response = c.get("/en_US/account")
+            self.assertEqual(response.status_code, 200)
+
+            response = c.get("/en_US/logout")
+            self.assertEqual(response.status_code, 302)
+
+            response = c.get("/en_US/account")
+            self.assertEqual(response.status_code, 302)
 
     def test_0100_my_account(self):
         """
@@ -339,7 +365,7 @@ class TestAuth(TestCase):
             self.assertEqual(response.status_code, 302)
 
             # Login and check again
-            response = c.post('/en_US/login', 
+            response = c.post('/en_US/login',
                 data={'email': 'new.test@example.com', 'password': 'password'})
             self.assertEqual(response.status_code, 302)
 

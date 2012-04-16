@@ -4,11 +4,11 @@
 
     Template Management
 
-    :copyright: (c) 2010 by Sharoon Thomas, 
-    :copyright: (c) 2010 by Openlabs Technologies & Consulting (P) Ltd
+    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd
+    :copyright: (c) 2010 by Sharoon Thomas
     :license: GPLv3, see LICENSE for more details
 """
-from nereid import request, cache
+from nereid import request
 
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
@@ -22,7 +22,11 @@ class Template(ModelSQL, ModelView):
     `source`: Source of the template, This should probably be a text field
     `language`: Selection of Language
 
-    The name, language pair has to be unique
+    The name, language pair has to be unique.
+
+    .. tip::
+        The database based template loading is far from appropriate for
+        a production setup. This is mostly used in testing.
     """
     _name = "nereid.template"
     _description = "Nereid Template"
@@ -44,11 +48,18 @@ class Template(ModelSQL, ModelView):
         """
         Wraps _get_template_source for efficient caching
         """
-        return self._get_template_source(
-            name, request.nereid_website.id, 
-            Transaction().context.get('language', 'en_US'))
+        website_obj = self.pool.get('nereid.website')
 
-    @cache.memoize_method('nereid.template', 60 * 60)
+        # Nereid tries to load template from different websites by passing
+        # the name of template like <website>/<template>.
+        website_name, template = name.split('/', 1)
+        website_id, = website_obj.search([('name', '=', website_name)])
+
+        return self._get_template_source(
+            template, website_id,
+            Transaction().context.get('language', 'en_US')
+        )
+
     def _get_template_source(self, name, website, lang):
         """
         Returns the source of the template requested

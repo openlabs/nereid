@@ -1,6 +1,11 @@
 #!/usr/bin/env python
-#This file is part of Tryton.  The COPYRIGHT file at the top level of
-#this repository contains the full copyright notices and license terms.
+"""
+
+    Test the currency
+
+    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
+    :license: GPLv3, see LICENSE for more details.
+"""
 from ast import literal_eval
 import unittest2 as unittest
 
@@ -24,7 +29,7 @@ class TestCurrency(TestCase):
             company = testing_proxy.create_company('Test Company')
             cls.guest_user = testing_proxy.create_guest_user(company=company)
             cls.site = testing_proxy.create_site(
-                'testsite.com',
+                'localhost',
                 application_user = 1, guest_user = cls.guest_user
             )
             testing_proxy.create_template(
@@ -35,7 +40,7 @@ class TestCurrency(TestCase):
 
     def get_app(self):
         return testing_proxy.make_app(
-            SITE='testsite.com', 
+            SITE='localhost', 
             GUEST_USER=self.guest_user)
 
     def setUp(self):

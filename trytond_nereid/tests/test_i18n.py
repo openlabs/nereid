@@ -37,7 +37,7 @@ class TestI18N(TestCase):
 
     def get_app(self, **options):
         options.update({
-            'SITE': 'testsite.com',
+            'SITE': 'localhost',
             'GUEST_USER': self.guest_user,
         })
         return testing_proxy.make_app(**options)

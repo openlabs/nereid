@@ -6,17 +6,20 @@
     Implements test support helpers.  This module is lazily imported
     and usually not used in production environments.
 
-    :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
     :copyright: (c) 2010 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
 import new
 
 import unittest2
+from flask.helpers import locked_cached_property
 from werkzeug import Client, EnvironBuilder
 from nereid import _request_ctx_stack
-from nereid.session import Session
+from nereid.sessions import Session
 from werkzeug.contrib.sessions import FilesystemSessionStore
+
+from .templating import TrytonTemplateLoader
 
 
 class NereidClient(Client):
@@ -45,7 +48,7 @@ class NereidClient(Client):
                 self.application.session_interface.session_store,
                 FilesystemSessionStore):
             self.application.session_interface.session_store = \
-                    FilesystemSessionStore(session_class=Session)
+                    FilesystemSessionStore('/tmp', session_class=Session)
 
         if self.application.config.get('SERVER_NAME'):
             server_name = self.application.config.get('SERVER_NAME')
@@ -170,10 +173,21 @@ class TestingProxy(object):
     def make_app(self, **options):
         """Creates an app with the given options
         """
-        from nereid import Nereid
-        options['DATABASE_NAME'] = self.db_name
-        options['DEBUG'] = True
-        return Nereid(**options)
+        from nereid import Nereid as NereidBase
+        class Nereid(NereidBase):
+            @locked_cached_property
+            def jinja_loader(self):
+                """Creates the loader for the Jinja2 Environment
+                """
+                return TrytonTemplateLoader(app)
+
+        app = Nereid()
+        app.config.update(options)
+        app.config['DATABASE_NAME'] = self.db_name
+        app.config['DEBUG'] = True
+        app.session_interface.session_store = \
+            FilesystemSessionStore('/tmp', session_class=Session)
+        return app
 
 
 # An instance of testing module which can be used inside test cases
@@ -194,7 +208,7 @@ class TestCase(unittest2.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        testing_proxy.drop_database()    
+        testing_proxy.drop_database()
 
 
 @testing_proxy.register()

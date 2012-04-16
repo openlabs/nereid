@@ -4,41 +4,43 @@
 
     Implements the Jinja2 bridge
 
-    :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
     :copyright: (c) 2010 by Armin Ronacher.
     :license: BSD, see LICENSE for more details
 '''
-from itertools import chain
 from decimal import Decimal
 
-from werkzeug import ImmutableDict
-from werkzeug.utils import import_string
-from jinja2 import Environment, BaseLoader, TemplateNotFound, \
-    MemcachedBytecodeCache, FileSystemLoader as _Jinja2FileSystemLoader, \
-    nodes
+from flask.templating import render_template as flask_render_template
+from jinja2 import BaseLoader, TemplateNotFound, nodes
 from jinja2.ext import Extension
-from flask.helpers import _tojson_filter
 
-from .config import ConfigAttribute
-from .globals import _request_ctx_stack
-from .signals import template_rendered
-from .helpers import url_for, get_flashed_messages, _rst_to_html_filter, \
-    make_crumbs, locked_cached_property
+from .globals import request
+from .helpers import _rst_to_html_filter, make_crumbs
 
 
-def _default_template_ctx_processor():
-    """Default template context processor.  Injects `request`,
-    `session` and `g`.
-    """
-    reqctx = _request_ctx_stack.top
+def nereid_default_template_ctx_processor():
+    """Add Decimal and make_crumbs to template context"""
     return dict(
-        config=reqctx.app.config,
-        request=reqctx.request,
-        session=reqctx.session,
-        g=reqctx.g,
         Decimal=Decimal,
         make_crumbs=make_crumbs,
     )
+
+
+NEREID_TEMPLATE_FILTERS = dict(
+    rst = _rst_to_html_filter,
+)
+
+def render_template(template_name, _prefix_website=True, **context):
+    """Renders a template and by default adds the current website
+    name as a prefix to the template name thereby allowing automatic
+    name conversions from nereid base template to application specific
+    templates
+    """
+    if _prefix_website:
+        template_name = '%s/%s' % (
+            request.nereid_website.name, template_name
+        )
+    return flask_render_template(template_name, **context)
 
 
 class TrytonTemplateLoader(BaseLoader):
@@ -82,14 +84,6 @@ class TrytonTemplateLoader(BaseLoader):
             result.append(template.name)
 
         return result
-
-
-class FileSystemLoader(_Jinja2FileSystemLoader):
-    """Loads templates from the file system."""
-
-    def __init__(self, app):
-        super(FileSystemLoader, self).__init__(
-            app.config['TEMPLATE_SEARCH_PATH'])
 
 
 class FragmentCacheExtension(Extension):
@@ -144,154 +138,3 @@ class FragmentCacheExtension(Extension):
         rv = caller()
         self.environment.fragment_cache.add(key, rv, timeout)
         return rv
-
-
-def _render(template, context, app):
-    """Renders the template and fires the signal"""
-    ret_val = template.render(context)
-    template_rendered.send(app, template=template, context=context)
-    return ret_val
-
-
-def render_template(template_name, **context):
-    """Renders a template from the template folder with the given
-    context.
-
-    :param template_name: the name of the template to be rendered
-    :param context: the variables that should be available in the
-                    context of the template.
-    """
-    ctx = _request_ctx_stack.top
-    ctx.app.update_template_context(context)
-    return _render(ctx.app.jinja_env.get_template(template_name),
-                   context, ctx.app)
-
-
-def render_template_string(source, **context):
-    """Renders a template from the given template source string
-    with the given context.
-
-    :param template_name: the sourcecode of the template to be
-                          rendered
-    :param context: the variables that should be available in the
-                    context of the template.
-    """
-    ctx = _request_ctx_stack.top
-    ctx.app.update_template_context(context)
-    return _render(ctx.app.jinja_env.from_string(source),
-                   context, ctx.app)
-
-
-class TemplateMixin(object):
-    """Mixin class with attributes for the main 
-    application to use"""
-
-    #: Options that are passed directly to the Jinja2 environment.
-    jinja_options = ImmutableDict(
-        extensions=['jinja2.ext.autoescape', 'jinja2.ext.with_', 
-            'jinja2.ext.i18n', FragmentCacheExtension],
-        autoescape=True,
-    )
-    template_loader_class = ConfigAttribute('TEMPLATE_LOADER_CLASS')
-    context_proc_model = 'nereid.template.context_processor'
-    translations_path = ConfigAttribute('TRANSLATIONS_PATH')
-
-    def __init__(self, **config):
-        #: A dictionary with list of functions that are called without argument
-        #: to populate the template context.  The key of the dictionary is the
-        #: name of the module this function is active for, `None` for all
-        #: requests.  Each returns a dictionary that the template context is
-        #: updated with.  
-        self.template_context_processors = {
-            None: [_default_template_ctx_processor]
-        }
-
-    @locked_cached_property
-    def jinja_env(self):
-        """The Jinja2 environment used to load templates."""
-        return self.create_jinja_environment()
-
-    def create_jinja_environment(self):
-        """Creates the Jinja2 environment based on :attr:`jinja_options`
-        and :meth:`select_jinja_autoescape`. Since 0.2 this also adds
-        the Jinja2 globals and filters after initialization.  Override
-        this function to customize the behavior.
-        """
-        options = dict(self.jinja_options)
-        if 'autoescape' not in options:
-            options['autoescape'] = self.select_jinja_autoescape
-        if self.cache and \
-                self.cache_type=='werkzeug.contrib.cache.MemcachedCache':
-            options['bytecode_cache'] = MemcachedBytecodeCache(self.cache)
-        loader_class = import_string(self.template_loader_class)
-        rv = Environment(loader=loader_class(self), **options)
-        rv.globals.update(
-            url_for=url_for,
-            get_flashed_messages=get_flashed_messages
-        )
-        rv.filters.update(
-            tojson = _tojson_filter,
-            rst = _rst_to_html_filter,
-        )
-
-        # Setup for fragmented caching
-        rv.fragment_cache = self.cache
-        rv.fragment_cache_prefix = self.cache_key_prefix + "-frag-"
-
-        return rv
-
-    def init_jinja_globals(self):
-        """Called directly after the environment was created to inject
-        some defaults (like `url_for`, `get_flashed_messages` and the
-        `tojson` filter. Since 0.2 this also adds
-        the Jinja2 globals and filters after initialization.  Override
-        this function to customize the behavior.
-        """
-        self.jinja_env.globals.update(
-            url_for=url_for,
-            get_flashed_messages=get_flashed_messages
-        )
-        self.jinja_env.filters['tojson'] = _tojson_filter
-        self.jinja_env.filters['rst'] = _rst_to_html_filter
-
-    def select_jinja_autoescape(self, filename):
-        """Returns `True` if autoescaping should be active for the given
-        template name.
-        """
-        if filename is None:
-            return False
-        return filename.endswith(('.html', '.htm', '.xml', '.xhtml'))
-
-    def add_ctx_processors_from_db(self):
-        """Adds template context processors registers with the model
-        nereid.template.context_processor"""
-        with self.transaction:
-            ctx_processor_obj = self.pool.get(self.context_proc_model)
-            new_context_proc = ctx_processor_obj.get_processors()
-            new_context_proc.setdefault(None, []).append(
-                _default_template_ctx_processor)
-            self.template_context_processors.update(new_context_proc)
-
-    def update_template_context(self, context):
-        """Update the template context with some commonly used variables.
-        This injects request, session, config and g into the template
-        context as well as everything template context processors want
-        to inject.  Note that the original values in the context will 
-        not be overriden if a context processor decides to return a 
-        value with the same key.
-
-        :param context: the context as a dictionary that is updated in place
-                        to add extra variables.
-        """
-        funcs = self.template_context_processors[None]
-        mod = _request_ctx_stack.top.request.blueprint
-        if mod is not None and mod in self.template_context_processors:
-            funcs = chain(funcs, self.template_context_processors[mod])
-        orig_ctx = context.copy()
-        for func in funcs:
-            context.update(func())
-        # make sure the original values win.  This makes it possible to
-        # easier add new variables in context processors without breaking
-        # existing views.
-        context.update(orig_ctx)
-

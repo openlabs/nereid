@@ -3,7 +3,7 @@
 
     Nereid - Tryton as a web framework
 
-    :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
     :license: BSD, see LICENSE for more details
 '''
 import re
@@ -63,7 +63,6 @@ if TRYTON_INSTALLED:
     package_dir.update({
         'trytond.modules.nereid': 'trytond_nereid',
         'trytond.modules.nereid.tests': 'trytond_nereid/tests',
-        'trytond.modules.test_nereid_module': 'tests/test_nereid_module',
         })
     package_data.update({
         'trytond.modules.nereid': trytond_module_info.get('xml', []) \
@@ -73,12 +72,10 @@ if TRYTON_INSTALLED:
     entry_points += """
     [trytond.modules]
     nereid = trytond.modules.nereid
-    test_nereid_module = trytond.modules.test_nereid_module
     """
     packages.extend([
         'trytond.modules.nereid',
         'trytond.modules.nereid.tests',
-        'trytond.modules.test_nereid_module',
         ])
 
 

@@ -4,7 +4,7 @@
 
     Implements the WSGI wrappers
 
-    :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
     :license: BSD, see LICENSE for more details
 '''
 from werkzeug.utils import cached_property
@@ -14,6 +14,14 @@ import ccy
 from .globals import current_app, session
 
 
+def _get_website_name(host):
+    """The host could have the host_name and port number. This will try
+    to get the best possible guess of the website name from the host name
+    """
+    #XXX: Needs improvement
+    return host.split(':')[0]
+
+
 class Request(RequestBase):
     "Request Object"
 
@@ -21,7 +29,9 @@ class Request(RequestBase):
     def nereid_website(self):
         """Fetch the Browse Record of current website."""
         website_obj = current_app.pool.get('nereid.website')
-        website, = website_obj.search([('name', '=', current_app.site)])
+        website, = website_obj.search([
+            ('name', '=', _get_website_name(self.host))]
+        )
         return website_obj.browse(website)
 
     @cached_property
@@ -29,9 +39,7 @@ class Request(RequestBase):
         """Fetch the browse record of current user or None."""
         user_obj = current_app.pool.get('nereid.user')
         if 'user' not in session:
-            if current_app.guest_user:
-                return user_obj.browse(current_app.guest_user)
-            return None
+            return user_obj.browse(self.nereid_website.guest_user.id)
         return user_obj.browse(session['user'])
 
     @cached_property
@@ -57,8 +65,6 @@ class Request(RequestBase):
     @cached_property
     def is_guest_user(self):
         """Return true if the user is guest."""
-        if current_app.guest_user is None:
-            raise RuntimeError("Guest user is not defined for app")
         return ('user' not in session)
 
 
