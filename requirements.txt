@@ -4,7 +4,3 @@
 # The default version of CCY module does not install because of empty
 # white space at the end of setup.py.
 svn+http://ccy.googlecode.com/svn/trunk/#egg=ccy
-
-# The latest version of flask is required because of the way context
-# is built for cache and session to work.
-git+https://github.com/mitsuhiko/flask.git#egg=flask
