@@ -4,8 +4,8 @@
 
     Models to perform tests
 
-    :copyright: © 2011 by Openlabs Technologies & Consulting (P) Limited
-    :license: BSD, see LICENSE for more details.
+    :copyright: (c) 2011 by Openlabs Technologies & Consulting (P) Limited
+    :license: GPLv3, see LICENSE for more details.
 """
 from trytond.model import ModelSQL, fields
 from nereid.backend import ModelPagination

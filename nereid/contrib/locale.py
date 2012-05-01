@@ -5,9 +5,9 @@
     Internationalisation of the application. This is usually useful to
     translate the template files and date and number formatting in templates.
 
-    :copyright: (c) 2011 by Openlabs Technologies & Consulting (P) Limited
+    :copyright: (c) 2011-2012 by Openlabs Technologies & Consulting (P) Limited
     :copyright: (c) 2010 by Armin Ronacher.
-    :license: BSD, see LICENSE for more details.
+    :license: GPLv3, see LICENSE for more details.
 """
 import flaskext.babel
 from flaskext.babel import Babel

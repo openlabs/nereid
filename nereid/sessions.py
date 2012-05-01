@@ -5,7 +5,7 @@
     Implements cookie based sessions
 
     :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
-    :license: BSD, see LICENSE for more details
+    :license: GPLv3, see LICENSE for more details
 '''
 from datetime import datetime
 

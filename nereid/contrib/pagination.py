@@ -5,7 +5,7 @@
     Pagination helpers
 
     :copyright: (c) 2012 by Openlabs Technologies & Consulting (P) LTD
-    :license: BSD, see LICENSE for more details.
+    :license: GPLv3, see LICENSE for more details.
 """
 from math import ceil
 from werkzeug.utils import cached_property

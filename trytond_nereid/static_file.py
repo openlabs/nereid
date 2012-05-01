@@ -6,7 +6,7 @@
 
     :copyright: (c) 2011-2012 Openlabs Technologies & Consulting (P) Limited
     :copyright: (c) 2010 by Sharoon Thomas.
-    :license: BSD, see LICENSE for more details
+    :license: GPLv3, see LICENSE for more details
 '''
 import os
 import base64

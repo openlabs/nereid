@@ -5,9 +5,9 @@
 
     Implements the objects required to keep the context.
 
-    :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
     :copyright: (c) 2010 by Armin Ronacher.
-    :license: BSD, see LICENSE for more details.
+    :license: GPLv3, see LICENSE for more details.
 """
 from flask.ctx import _RequestGlobals, RequestContext as RequestContextBase
 from flask.ctx import has_request_context
