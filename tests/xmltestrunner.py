@@ -10,7 +10,7 @@
 """
 from nereid.contrib.testing import xmlrunner
 
-from .texttestrunner import suite
+from texttestrunner import suite
 
 
 if __name__ == '__main__':

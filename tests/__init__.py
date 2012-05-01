@@ -7,4 +7,4 @@
     :copyright: (c) 2011 by Openlabs Technologies & Consulting (P) Limited
     :license: BSD, see LICENSE for more details.
 """
-from .texttestrunner import suite
+from texttestrunner import suite
