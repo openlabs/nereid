@@ -4,8 +4,8 @@
 
     Currency handling at core level
 
-    :copyright: © 2011 by Openlabs Technologies & Consulting (P) Limited
-    :license: BSD, see LICENSE for more details.
+    :copyright: © 2011-2012 by Openlabs Technologies & Consulting (P) Limited
+    :license: GPLv3, see LICENSE for more details.
 """
 from trytond.model import ModelView, ModelSQL
 from nereid import request

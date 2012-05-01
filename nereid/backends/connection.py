@@ -4,8 +4,8 @@
 
     A sample API Class for Connection and Dispatch Interface
 
-    :copyright: (c) 2010-2011 by Openlabs Technologies & Consulting (P) Ltd.
-    :license: BSD, see LICENSE for more details
+    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
+    :license: GPLv3, see LICENSE for more details
 '''
 from ..threading import local
 from ..exceptions import NotImplementedYet

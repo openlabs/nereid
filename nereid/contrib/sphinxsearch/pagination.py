@@ -5,7 +5,7 @@
     Pagination when using sphinx search 
 
     :copyright: (c) 2012 by Openlabs Technologies & Consulting (P) LTD
-    :license: BSD, see LICENSE for more details.
+    :license: GPLv3, see LICENSE for more details.
 """
 from werkzeug.utils import cached_property
 from nereid.contrib.pagination import BasePagination

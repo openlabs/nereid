@@ -8,7 +8,7 @@
 
     :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
     :copyright: (c) 2010 by Armin Ronacher.
-    :license: BSD, see LICENSE for more details.
+    :license: GPLv3, see LICENSE for more details.
 """
 from flask.globals import (_request_ctx_stack, current_app,
     request, _lookup_object, session, g, LocalProxy)

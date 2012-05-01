@@ -5,7 +5,7 @@
     A regular test runner which outputs results to stdout.
 
     :copyright: (c) 2012 by Openlabs Technologies & Consulting (P) LTD
-    :license: BSD, see LICENSE for more details.
+    :license: GPLv3, see LICENSE for more details.
 """
 import unittest2
 from trytond.config import CONFIG
