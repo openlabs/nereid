@@ -17,6 +17,7 @@ from flask.helpers import locked_cached_property
 from werkzeug import Client, EnvironBuilder
 from nereid import _request_ctx_stack
 from nereid.sessions import Session
+from nereid.contrib.locale import Babel
 from werkzeug.contrib.sessions import FilesystemSessionStore
 
 from .templating import TrytonTemplateLoader
@@ -187,6 +188,12 @@ class TestingProxy(object):
         app.config['DEBUG'] = True
         app.session_interface.session_store = \
             FilesystemSessionStore('/tmp', session_class=Session)
+
+        # Initialise the app now
+        app.initialise()
+
+        # Load babel as its a required extension anyway
+        Babel(app)
         return app
 
 
