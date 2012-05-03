@@ -10,7 +10,6 @@
 '''
 import os
 import base64
-from collections import defaultdict
 
 from nereid.helpers import slugify, send_file
 from werkzeug import abort
@@ -20,50 +19,20 @@ from trytond.config import CONFIG
 from trytond.transaction import Transaction
 
 
-def get_nereid_path():
-    "Returns base path for nereid"
-    cursor = Transaction().cursor
-    return os.path.join(CONFIG['data_path'], cursor.database_name)
-
-
-def make_folder_path(folder_name):
-    "Returns the folder path for given folder"
-    return os.path.join(get_nereid_path(), folder_name)
-
-
-def make_file_path(folder_name, file_name):
-    "Returns the file path for the given folder, file"
-    return os.path.join(make_folder_path(folder_name), file_name)
-
-
-def make_file(file_name, file_binary, folder):
-    """
-    Writes file to the FS
-
-    :param file_name: Name of the file
-    :param file_binary: Binary content to save (Base64 encoded)
-    :param folder: folder name
-    """
-    file_binary = base64.decodestring(file_binary)
-    file_path = make_file_path(folder, file_name)
-    with open(file_path, 'wb') as file_writer:
-        file_writer.write(file_binary)
-    return file_path
-
-
 # pylint: disable-msg=E1101
 
 class NereidStaticFolder(ModelSQL, ModelView):
     "Static folder for Nereid"
     _name = "nereid.static.folder"
     _description = __doc__
+    _rec_name = 'folder_name'
 
-    name = fields.Char('Description', required=True, select=1)
-    folder_name = fields.Char('Folder Name', required=True, select=1,
-        on_change_with=['name', 'folder_name'])
-    comments = fields.Text('Comments')
+    folder_name = fields.Char(
+        'Folder Name', required=True, select=1,
+        on_change_with=['name', 'folder_name']
+    )
+    description = fields.Char('Description', select=1)
     files = fields.One2Many('nereid.static.file', 'folder', 'Files')
-    folder_path = fields.Function(fields.Char('Folder Path'), 'get_path')
 
     def __init__(self):
         super(NereidStaticFolder, self).__init__()
@@ -81,14 +50,6 @@ class NereidStaticFolder(ModelSQL, ModelView):
             'folder_cannot_change': "Folder name cannot be changed"
         })
 
-    def get_path(self, ids, name):
-        """Return the path of the folder
-        """
-        result = { }
-        for folder in self.browse(ids):
-            result[folder.id] = make_folder_path(folder.folder_name)
-        return result
-
     def on_change_with_folder_name(self, vals):
         """
         Fills the name field with a slugified name
@@ -101,7 +62,7 @@ class NereidStaticFolder(ModelSQL, ModelView):
     def check_folder_name(self, ids):
         '''
         Check the validity of folder name
-        Allowing the use of / or . will be risky as that could 
+        Allowing the use of / or . will be risky as that could
         eventually lead to previlege escalation
 
         :param ids: ID of current record.
@@ -111,55 +72,18 @@ class NereidStaticFolder(ModelSQL, ModelView):
             return False
         return True
 
-    def create(self, vals):
-        """
-        Check if the folder exists.
-        If not, create a new one in data path of tryton.
-
-        :param vals: values of the current record
-        """
-        folder_path = make_folder_path(vals.get('folder_name'))
-
-        # Create the nereid folder if it doesnt exist
-        if not os.path.isdir(get_nereid_path()):
-            os.mkdir(get_nereid_path())
-
-        # Create the folder if it doesnt exist
-        if not os.path.isdir(folder_path):
-            os.mkdir(folder_path)
-
-        return super(NereidStaticFolder, self).create(vals)
-
     def write(self, ids, vals):
         """
-        Check if the folder_name has been modified. 
+        Check if the folder_name has been modified.
         If yes, raise an error.
 
         :param vals: values of the current record
         """
         if vals.get('folder_name'):
+            # TODO: Support this feature in future versions
             self.raise_user_error('folder_cannot_change')
         return super(NereidStaticFolder, self).write(ids, vals)
 
-    def scan_files_from_fs(self, folder_ids):
-        """
-        Scans File system for images and syncs them
-
-        :param folder_ids: ID of the System Folder 
-        """
-        file_object = self.pool.get('nereid.static.file')
-
-        for folder in self.browse(folder_ids):
-            existing_filenames = [f.name for f in folder.files]
-
-            folder_path = make_folder_path(folder.folder_name)
-            for content in os.listdir(folder_path):
-                full_path = os.path.join(folder_path, content)
-
-                if (os.path.isfile(full_path)) and \
-                            (content not in existing_filenames):
-                    file_object.create({'name': content, 'folder': folder.id})
-        return True
 
 NereidStaticFolder()
 
@@ -170,11 +94,18 @@ class NereidStaticFile(ModelSQL, ModelView):
     _description = __doc__
 
     name = fields.Char('File Name', select=True, required=True)
-    file_ = fields.Function(fields.Binary('File'), 
-        'get_field_binary', 'set_content')
-    folder = fields.Many2One('nereid.static.folder', 'Folder', required=True)
-    file_path = fields.Function(fields.Char('File Path'), 'get_fields',)
-    relative_path = fields.Function(fields.Char('Relative Path'), 'get_fields')
+    folder = fields.Many2One(
+        'nereid.static.folder', 'Folder', select=True, required=True
+    )
+
+    # This function field returns the field contents. This is useful if the
+    # field is going to be displayed on the clients.
+    file_binary = fields.Function(
+        fields.Binary('File'), 'get_file_binary', 'set_file_binary'
+    )
+
+    # Full path to the file in the filesystem
+    file_path = fields.Function(fields.Char('File Path'), 'get_file_path',)
 
     def __init__(self):
         super(NereidStaticFile, self).__init__()
@@ -191,60 +122,69 @@ class NereidStaticFile(ModelSQL, ModelView):
                 (2) file name contains '/'""",
         })
 
-    def set_content(self, ids, name, value):
+    def get_nereid_base_path(self):
         """
-        Creates the file for the function field
-        """
-        for file_ in self.browse(ids):
-            make_file(file_.name, value, file_.folder.folder_name)
+        Returns base path for nereid, where all the static files would be
+        stored.
 
-    def get_fields(self, ids, names):
+        By Default it is:
+
+        <Tryton Data Path>/<Database Name>/nereid
+        """
+        cursor = Transaction().cursor
+        return os.path.join(
+            CONFIG['data_path'], cursor.database_name, "nereid"
+        )
+
+    def set_file_binary(self, ids, name, value):
+        """
+        Setter for the functional binary field.
+
+        :param ids: List of ids. But usually has just one
+        :param name: Ignored
+        :param value: The base64 encoded value
+        """
+        for f in self.browse(ids):
+            file_binary = base64.decodestring(value)
+            # If the folder does not exist, create it recursively
+            directory = os.path.dirname(f.file_path)
+            if not os.path.isdir(directory):
+                os.makedirs(directory)
+            with open(f.file_path, 'wb') as file_writer:
+                file_writer.write(file_binary)
+
+    def get_file_binary(self, ids, name):
         '''
-        Function to compute function fields for sale ids
+        Getter for the binary_file field. This fetches the file from the
+        file system, encodes it in base64 and returns it.
 
         :param ids: the ids of the sales
-        :param names: the list of field name to compute
-        :return: a dictionary with all field names as key and
-            a dictionary as value with id as key
+        :return: Dictionary with ID as key and base64 encoded data
         '''
-        res = defaultdict(dict)
-        for name in names:
-            res[name] = { }
-
-        for file_ in self.browse(ids):
-            file_path = os.path.join(
-                make_file_path(file_.folder.folder_name, file_.name))
-
-            if 'file_path' in names:
-                res['file_path'][file_.id] = file_path
-
-
-            if 'relative_path' in names:
-                res['relative_path'][file_.id] = '/'.join([
-                    file_.folder.folder_name, 
-                    file_.name])
-
+        res = {}
+        for f in self.browse(ids):
+            with open(f.file_path, 'rb') as file_reader:
+                res[f.id] = base64.encodestring(file_reader.read())
         return res
 
-    def get_field_binary(self, ids, name):
+    def get_file_path(self, ids, name):
         """
-        This could be part of the above function, but this is an 
-        expensive process which must not affect the rest of the processes
+        Returns the full path to the file in the file system
+
+        :param ids: the ids of the sales
+        :return: Dictionary with ID as key and binary
         """
-        result = {}
-        for file_ in self.browse(ids):
-            file_path = os.path.join(
-                make_file_path(file_.folder.folder_name, file_.name))
-            with open(file_path, 'rb') as file_handler:
-                result[file_.id] = base64.encodestring(
-                        file_handler.read()
-                    )
-        return result
+        res = {}
+        for f in self.browse(ids):
+            res[f.id] = os.path.join(
+                self.get_nereid_base_path(), f.folder.folder_name, f.name
+            )
+        return res
 
     def check_file_name(self, ids):
         '''
         Check the validity of folder name
-        Allowing the use of / or . will be risky as that could 
+        Allowing the use of / or . will be risky as that could
         eventually lead to previlege escalation
 
         :param ids: ID of current record.
@@ -255,9 +195,15 @@ class NereidStaticFile(ModelSQL, ModelView):
         return True
 
     def send_static_file(self, folder, name):
-        '''
-        Send the static file
-        '''
+        """
+        Invokes the send_file method in nereid.helpers to send a file as the
+        response to the reuqest. The file is sent in a way which is as 
+        efficient as possible. For example nereid will use the X-Send_file
+        header to make nginx send the file if possible.
+
+        :param folder: folder_name of the folder
+        :param name: name of the file
+        """
         #TODO: Separate this search and find into separate cached method
 
         ids = self.search([

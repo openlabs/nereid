@@ -125,13 +125,6 @@
             <field name="url_map" ref="default_url_map" />
         </record> 
 
-        <record id="url_rule_static_file" model="nereid.url_rule">
-          <field name="rule">/&lt;language&gt;/static-files/&lt;folder&gt;/&lt;name&gt;</field>
-          <field name="endpoint">nereid.static.file.send_static_file</field>
-          <field name="url_map" ref="default_url_map"/>
-          <field name="sequence" eval="10"/>
-        </record>
-
         <record id="static_file_url" model="nereid.url_rule">
           <field name="rule">/&lt;language&gt;/static-file/&lt;folder&gt;/&lt;name&gt;</field>
           <field name="endpoint">nereid.static.file.send_static_file</field>
