@@ -13,35 +13,27 @@
         <field name="arch" type="xml">
             <![CDATA[
             <form string="Static Folder">
-                <label name="name" />
-                <field name="name" />
                 <label name="folder_name" />
                 <field name="folder_name" />
+                <label name="description" />
+                <field name="description" />
                 <newline />
                 <field name="files" colspan="4" >
                     <form string="File">
                         <label name="name" />
                         <field name="name" />
-                        <label name="file_" />
-                        <field name="file_" />
                         <label name="folder" />
                         <field name="folder" />
+                        <label name="file_binary" />
+                        <field name="file_binary" />
                         <label name="file_path" />
                         <field name="file_path" />
                     </form>
                     <tree string="Files">
                         <field name="name" />
-                        <field name="folder" />
                         <field name="file_path" />
                     </tree>
                 </field>
-                <button name="scan_files_from_fs"
-                        string="Create files from folder"
-                        type="object"
-                        colspan="2" />
-                <separator colspan="4" string="Comments" 
-                    id="sepr_comments"/>
-                <field name="comments" colspan="4" />
             </form>
             ]]>
         </field>
@@ -53,7 +45,6 @@
         <field name="arch" type="xml">
             <![CDATA[
             <tree>
-                <field name="name" />
                 <field name="folder_name" />
             </tree>
             ]]>
@@ -92,20 +83,16 @@
         <field name="arch" type="xml">
             <![CDATA[
             <form>
-                <label name="file_" />
-                <field name="file_" />
                 <label name="name" />
                 <field name="name" />
                 <label name="folder" />
                 <field name="folder" />
                 <separator colspan="4" id="paths" string="Paths"/>
-                <label name="relative_path" />
-                <field name="relative_path" />
                 <label name="file_path" />
                 <field name="file_path" />
                 <separator string="Preview" 
                     colspan="4" id="sepr_preview"/>
-                <field name="file_" widget="image" colspan="4"/>
+                <field name="file_binary" widget="image" colspan="4"/>
             </form>
             ]]>
         </field>

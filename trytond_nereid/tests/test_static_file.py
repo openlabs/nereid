@@ -52,6 +52,10 @@ class TestStaticFile(TestCase):
         self.static_folder_obj = testing_proxy.pool.get('nereid.static.folder')
         self.static_file_obj = testing_proxy.pool.get('nereid.static.file')
 
+    def test_000_view(self):
+        from trytond.tests.test_tryton import test_view
+        test_view('nereid')
+
     def test_0010_static_file(self):
         """
         Create a static folder, and a static file
