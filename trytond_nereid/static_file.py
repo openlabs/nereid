@@ -10,6 +10,7 @@
 '''
 import os
 import base64
+import urllib
 
 from nereid.helpers import slugify, send_file, url_for
 from nereid.globals import _request_ctx_stack
@@ -18,6 +19,7 @@ from werkzeug import abort
 from trytond.model import ModelSQL, ModelView, fields
 from trytond.config import CONFIG
 from trytond.transaction import Transaction
+from trytond.pyson import Eval, Not, Equal
 
 
 # pylint: disable-msg=E1101
@@ -104,16 +106,21 @@ class NereidStaticFile(ModelSQL, ModelView):
     ], 'File Type')
 
     #: URL of the remote file if the :attr:`type` is remote
-    remote_path = fields.Char('Remote File', select=True, translate=True)
+    remote_path = fields.Char('Remote File', select=True, translate=True,
+        states = {
+            'required': Equal(Eval('type'), 'remote'),
+            'invisible': Not(Equal(Eval('type'), 'remote'))
+        }
+    )
 
     #: This function field returns the field contents. This is useful if the
     #: field is going to be displayed on the clients.
     file_binary = fields.Function(
-        fields.Binary('File'), 'get_file_binary', 'set_file_binary'
+        fields.Binary('File'), 'get_file_binary', 'set_file_binary',
     )
 
     #: Full path to the file in the filesystem
-    file_path = fields.Function(fields.Char('File Path'), 'get_file_path',)
+    file_path = fields.Function(fields.Char('File Path'), 'get_file_path')
 
     #: URL that can be used to idenfity the resource. Note that the value
     #: of this field is available only when called within a request context.
@@ -179,13 +186,14 @@ class NereidStaticFile(ModelSQL, ModelView):
         :param value: The base64 encoded value
         """
         for f in self.browse(ids):
-            file_binary = base64.decodestring(value)
-            # If the folder does not exist, create it recursively
-            directory = os.path.dirname(f.file_path)
-            if not os.path.isdir(directory):
-                os.makedirs(directory)
-            with open(f.file_path, 'wb') as file_writer:
-                file_writer.write(file_binary)
+            if f.type == 'local':
+                file_binary = base64.decodestring(value)
+                # If the folder does not exist, create it recursively
+                directory = os.path.dirname(f.file_path)
+                if not os.path.isdir(directory):
+                    os.makedirs(directory)
+                with open(f.file_path, 'wb') as file_writer:
+                    file_writer.write(file_binary)
 
     def get_file_binary(self, ids, name):
         '''
@@ -197,7 +205,9 @@ class NereidStaticFile(ModelSQL, ModelView):
         '''
         res = {}
         for f in self.browse(ids):
-            with open(f.file_path, 'rb') as file_reader:
+            location = f.file_path if f.type == 'local' \
+                else urllib.urlretrieve(f.remote_path)[0]
+            with open(location, 'rb') as file_reader:
                 res[f.id] = base64.encodestring(file_reader.read())
         return res
 
@@ -210,9 +220,10 @@ class NereidStaticFile(ModelSQL, ModelView):
         """
         res = {}
         for f in self.browse(ids):
+
             res[f.id] = os.path.join(
                 self.get_nereid_base_path(), f.folder.folder_name, f.name
-            )
+            ) if f.type == 'local' else f.remote_path
         return res
 
     def check_file_name(self, ids):
