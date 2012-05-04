@@ -237,7 +237,7 @@ This will send an email with password to user."
                 <tree string="URL Rules">
                     <field name="rule" />
                     <field name="endpoint" />
-                    <field name="method" />
+                    <field name="methods" />
                     <field name="active" />
                 </tree>
                 ]]>
