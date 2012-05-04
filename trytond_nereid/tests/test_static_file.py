@@ -7,7 +7,9 @@
     :copyright: (c) 2012 by Openlabs Technologies & Consulting (P) LTD
     :license: BSD, see LICENSE for more details.
 """
+import new
 import base64
+import functools
 import unittest2 as unittest
 
 from trytond.config import CONFIG
@@ -16,6 +18,7 @@ CONFIG.options['data_path'] = '/tmp/temp_tryton_data/'
 
 from trytond.modules import register_classes
 register_classes()
+from nereid import render_template
 from nereid.testing import testing_proxy, TestCase
 from trytond.transaction import Transaction
 
@@ -39,6 +42,15 @@ class TestStaticFile(TestCase):
                 application_user = 1, guest_user = cls.guest_user
             )
 
+            # Create a homepage template
+            testing_proxy.create_template(
+                'home.jinja',
+                '''
+                {% set static_file = static_file_obj.browse(static_file_id) %}
+                {{ static_file.url }}
+                ''', cls.site
+            )
+
             txn.cursor.commit()
 
     def get_app(self, **options):
@@ -51,6 +63,7 @@ class TestStaticFile(TestCase):
     def setUp(self):
         self.static_folder_obj = testing_proxy.pool.get('nereid.static.folder')
         self.static_file_obj = testing_proxy.pool.get('nereid.static.file')
+        self.website_obj = testing_proxy.pool.get('nereid.website')
 
     def test_000_view(self):
         from trytond.tests.test_tryton import test_view
@@ -83,6 +96,71 @@ class TestStaticFile(TestCase):
             rv = c.get('/en_US/static-file/test/test.png')
             self.assertEqual(rv.data, 'test-content')
             self.assertEqual(rv.headers['Content-Type'], 'image/png')
+            self.assertEqual(rv.status_code, 200)
+
+    def test_0020_static_file_url(self):
+        with Transaction().start(testing_proxy.db_name, 1, None) as txn:
+            file_id, = self.static_file_obj.search([], limit=1)
+            file = self.static_file_obj.browse(file_id)
+            self.assertFalse(file.url)
+
+        app = self.get_app()
+        with app.test_client() as c:
+            # Patch the home page method
+            def home_func(self, file_id):
+                static_file_obj = self.pool.get('nereid.static.file')
+                return render_template(
+                    'home.jinja', 
+                    static_file_obj=static_file_obj,
+                    static_file_id=file_id,
+                )
+            home_func = functools.partial(home_func, file_id=file_id)
+            c.application.view_functions[
+                'nereid.website.home'] = new.instancemethod(
+                    home_func, self.website_obj
+            )
+            self.website_obj.home = new.instancemethod(
+                home_func, self.website_obj
+            )
+            rv = c.get('/en_US/')
+            self.assertTrue('/en_US/static-file/test/test.png' in rv.data)
+            self.assertEqual(rv.status_code, 200)
+
+    def test_0030_static_file_remote_url(self):
+        with Transaction().start(testing_proxy.db_name, 1, None) as txn:
+            folder_id, = self.static_folder_obj.search([])
+            file_id = self.static_file_obj.create({
+                'name': 'remote.png',
+                'folder': folder_id,
+                'type': 'remote',
+                'remote_path': 'http://openlabs.co.in/logo.png',
+            })
+            file = self.static_file_obj.browse(file_id)
+            self.assertFalse(file.url)
+            txn.cursor.commit()
+
+        app = self.get_app()
+        with app.test_client() as c:
+            # Patch the home page method
+            def home_func(self, file_id):
+                static_file_obj = self.pool.get('nereid.static.file')
+                return render_template(
+                    'home.jinja', 
+                    static_file_obj=static_file_obj,
+                    static_file_id=file_id,
+                )
+            home_func = functools.partial(home_func, file_id=file_id)
+            c.application.view_functions[
+                'nereid.website.home'] = new.instancemethod(
+                    home_func, self.website_obj
+            )
+            self.website_obj.home = new.instancemethod(
+                home_func, self.website_obj
+            )
+            rv = c.get('/en_US/')
+            self.assertTrue(
+                'http://openlabs.co.in/logo.png' in rv.data
+            )
             self.assertEqual(rv.status_code, 200)
 
 

@@ -11,7 +11,8 @@
 import os
 import base64
 
-from nereid.helpers import slugify, send_file
+from nereid.helpers import slugify, send_file, url_for
+from nereid.globals import _request_ctx_stack
 from werkzeug import abort
 
 from trytond.model import ModelSQL, ModelView, fields
@@ -97,15 +98,27 @@ class NereidStaticFile(ModelSQL, ModelView):
     folder = fields.Many2One(
         'nereid.static.folder', 'Folder', select=True, required=True
     )
+    type = fields.Selection([
+        ('local', 'Local File'),
+        ('remote', 'Remote File'),
+    ], 'File Type')
 
-    # This function field returns the field contents. This is useful if the
-    # field is going to be displayed on the clients.
+    #: URL of the remote file if the :attr:`type` is remote
+    remote_path = fields.Char('Remote File', select=True, translate=True)
+
+    #: This function field returns the field contents. This is useful if the
+    #: field is going to be displayed on the clients.
     file_binary = fields.Function(
         fields.Binary('File'), 'get_file_binary', 'set_file_binary'
     )
 
-    # Full path to the file in the filesystem
+    #: Full path to the file in the filesystem
     file_path = fields.Function(fields.Char('File Path'), 'get_file_path',)
+
+    #: URL that can be used to idenfity the resource. Note that the value
+    #: of this field is available only when called within a request context.
+    #: In other words the URL is valid only when called in a nereid request. 
+    url = fields.Function(fields.Char('URL'), 'get_url')
 
     def __init__(self):
         super(NereidStaticFile, self).__init__()
@@ -121,6 +134,27 @@ class NereidStaticFile(ModelSQL, ModelView):
                 (1) '..' in file name (OR)
                 (2) file name contains '/'""",
         })
+
+    def default_type(self):
+        return 'local'
+
+    def get_url(self, ids, name):
+        """Return the url if within an active request context or return
+        False values
+        """
+        res = {}.fromkeys(ids, False)
+        if _request_ctx_stack.top is None:
+            return res
+
+        for f in self.browse(ids):
+            if f.type == 'local':
+                res[f.id] = url_for(
+                    'nereid.static.file.send_static_file',
+                    folder=f.folder.folder_name, name=f.name
+                )
+            elif f.type == 'remote':
+                res[f.id] = f.remote_path
+        return res
 
     def get_nereid_base_path(self):
         """
