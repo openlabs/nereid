@@ -27,7 +27,7 @@ for dep in trytond_module_info.get('depends', []):
 
 setup(
     name='Nereid',
-    version='0.3',
+    version=trytond_module_info.get('version'),
     url='http://openlabs.co.in/nereid',
     license='GPLv3',
     author='Openlabs Technologies & Consulting (P) Limited',
