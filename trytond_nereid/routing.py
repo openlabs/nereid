@@ -19,6 +19,7 @@ from nereid.helpers import login_required, key_from_list, get_flashed_messages
 from nereid.signals import login, failed_login, logout
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
+from trytond.pool import Pool
 
 from .i18n import _
 
@@ -80,7 +81,7 @@ class URLMap(ModelSQL, ModelView):
             URL RULE get_rule_arguments
         """
         rule_args = [ ]
-        rule_obj = self.pool.get('nereid.url_rule')
+        rule_obj = Pool().get('nereid.url_rule')
         url_map = self.browse(map_id)
         for rule in url_map.rules:
             rule_args.append(
@@ -185,7 +186,7 @@ class WebSite(ModelSQL, ModelView):
         if country not in [c.id for c in request.nereid_website.countries]:
             abort(404)
 
-        subdivision_obj = self.pool.get('country.subdivision')
+        subdivision_obj = Pool().get('country.subdivision')
         ids = subdivision_obj.search([('country', '=', country)])
         subdivisions = subdivision_obj.browse(ids)
         return jsonify(
@@ -201,7 +202,7 @@ class WebSite(ModelSQL, ModelView):
         """
         Return complete list of URLs
         """
-        url_map_obj = self.pool.get('nereid.url_map')
+        url_map_obj = Pool().get('nereid.url_map')
         website_id = self.search([('name', '=', name)])
         if not website_id:
             raise RuntimeError("Website with Name %s not found" % name)
@@ -229,7 +230,7 @@ class WebSite(ModelSQL, ModelView):
         login_form = LoginForm(request.form)
 
         if request.method == 'POST' and login_form.validate():
-            user_obj = self.pool.get('nereid.user')
+            user_obj = Pool().get('nereid.user')
             result = user_obj.authenticate(
                 login_form.email.data, login_form.password.data
             )
@@ -342,7 +343,7 @@ class WebSite(ModelSQL, ModelView):
         can be speeded up, by pushing the categories to the central cache
         which cannot be done directly on a browse node.
         """
-        lang_obj = self.pool.get('ir.lang')
+        lang_obj = Pool().get('ir.lang')
 
         cache_key = key_from_list([
             Transaction().cursor.dbname,
@@ -374,7 +375,7 @@ class WebSite(ModelSQL, ModelView):
         language because it makes it more readable in URLs
         """
         raise DeprecationWarning("Set language is deprecated")
-        lang_obj = self.pool.get('ir.lang')
+        lang_obj = Pool().get('ir.lang')
 
         language = request.values.get('language')
         exists = lang_obj.search([('code', '=', language)], limit=1)

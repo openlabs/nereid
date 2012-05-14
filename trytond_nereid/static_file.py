@@ -221,9 +221,11 @@ class NereidStaticFile(ModelSQL, ModelView):
         res = {}
         for f in self.browse(ids):
 
-            res[f.id] = os.path.join(
-                self.get_nereid_base_path(), f.folder.folder_name, f.name
-            ) if f.type == 'local' else f.remote_path
+            res[f.id] = os.path.abspath(
+                os.path.join(
+                    self.get_nereid_base_path(), f.folder.folder_name, f.name
+                )) \
+            if f.type == 'local' else f.remote_path
         return res
 
     def check_file_name(self, ids):

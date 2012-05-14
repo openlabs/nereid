@@ -239,8 +239,9 @@ def send_file(filename_or_fp, mimetype=None, as_attachment=False,
 
     if filename is not None:
         if not os.path.isabs(filename):
+            from trytond.config import CONFIG
             filename = os.path.join(
-                current_app.tryton_config['data_path'], 
+                CONFIG['data_path'], 
                 current_app.database_name,
                 filename)
     if mimetype is None and (filename or attachment_filename):

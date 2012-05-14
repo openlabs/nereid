@@ -315,7 +315,7 @@ class NereidUser(ModelSQL, ModelView):
         user = self.browse(user_id)
         assert user.activation_code == activation_code, \
                     'Invalid Activation Code'
-        return self.write(user.id, {'activation_code': False})
+        return self.write(user.id, {'activation_code': None})
 
     def get_registration_form(self):
         """
@@ -358,6 +358,7 @@ class NereidUser(ModelSQL, ModelView):
                     'name': registration_form.name.data,
                     'email': registration_form.email.data,
                     'password': registration_form.password.data,
+                    'company': request.nereid_website.company.id,
                     })
                 self.create_act_code(user_id)
                 flash(
@@ -555,7 +556,7 @@ class NereidUser(ModelSQL, ModelView):
             # Reset any reset activation code that might be there since its a 
             # successful login with the old password
             if user.activation_code:
-                self.write(user.id, {'activation_code': False})
+                self.write(user.id, {'activation_code': None})
             return user
 
         return None

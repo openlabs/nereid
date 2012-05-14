@@ -9,16 +9,19 @@
         <record model="res.group" id="group_nereid_admin">
             <field name="name">Nereid Administration</field>
         </record>
-        <record model="res.user" id="res.user_admin">
-            <field name="groups" eval="[('add', ref('group_nereid_admin'))]" />
+        <record model="res.user-res.group" id="user_admin_group_nereid_admin">
+            <field name="user" ref="res.user_admin"/>
+            <field name="group" ref="group_nereid_admin"/>
         </record>
 
         <menuitem name="Nereid" id="menu_nereid" />
-        <menuitem name="Configuration"
-                  sequence="10"
-                  id="menu_nereid_configuration"
-                  parent="menu_nereid"
-                  groups="group_nereid_admin" />
+        <record model="ir.ui.menu-res.group" id="menu_group_nereid_admin">
+          <field name="menu" ref="menu_nereid"/>
+          <field name="group" ref="group_nereid_admin"/>
+        </record>
+
+        <menuitem name="Configuration" sequence="10"
+                  id="menu_nereid_configuration" parent="menu_nereid" />
 
 
         <!--Party Address-->
@@ -43,25 +46,7 @@
 This will send an email with password to user." 
                           colspan="3"/>
                         <newline/>
-                        <field name="additional_details" colspan="4">
-                            <form string="Additional Detail">
-                                <label name="type" />
-                                <field name="type" />
-                                <label name="value" />
-                                <field name="value" />
-                                <label name="active" />
-                                <field name="active" />
-                                <label name="sequence"/>
-                                <field name="sequence"/>
-                                <separator string="Comment" id="sepr_comment"/>
-                                <field name="comment" colspan="4"/>
-                            </form>              
-                            <tree string="Additional Details">
-                                <field name="type" />
-                                <field name="value" />
-                                <field name="sequence" />
-                            </tree>              
-                        </field>
+                        <field name="additional_details" colspan="4"/>
                     </xpath>
                 </data>
                 ]]>
@@ -71,8 +56,7 @@ This will send an email with password to user."
 
         <!-- Routing -->
         <menuitem name="Routing" id="menu_nereid_routing"
-            sequence="10" groups="group_nereid_admin" 
-            parent="menu_nereid_configuration" />
+            sequence="10" parent="menu_nereid_configuration" />
         <record model="ir.ui.view" id="website_view_form">
             <field name="model">nereid.website</field>
             <field name="type">form</field>
@@ -286,8 +270,7 @@ This will send an email with password to user."
 
         <!-- Templates -->
         <menuitem name="Templates" id="menu_nereid_template"
-            groups="group_nereid_admin" 
-            parent="menu_nereid_configuration" />
+          parent="menu_nereid_configuration" />
         <record model="ir.ui.view" id="nereid_template_view_form">
             <field name="model">nereid.template</field>
             <field name="type">form</field>

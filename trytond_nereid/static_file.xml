@@ -18,26 +18,7 @@
                 <label name="description" />
                 <field name="description" />
                 <newline />
-                <field name="files" colspan="4" >
-                    <form string="File">
-                        <label name="name" />
-                        <field name="name" />
-                        <label name="folder" />
-                        <field name="folder" />
-                        <label name="type" />
-                        <field name="type" />
-                        <label name="remote_path" />
-                        <field name="remote_path" />
-                        <label name="file_binary" />
-                        <field name="file_binary" />
-                        <label name="file_path" />
-                        <field name="file_path" />
-                    </form>
-                    <tree string="Files">
-                        <field name="name" />
-                        <field name="file_path" />
-                    </tree>
-                </field>
+                <field name="files" colspan="4" />
             </form>
             ]]>
         </field>
@@ -70,16 +51,12 @@
         <field name="act_window" ref="action_nereid_static_folder_view" />
     </record>
     
-    <menuitem id="menu_nereid_static"
-        parent="menu_nereid"
-        name="Static"
-        groups="nereid.group_nereid_admin" />
+    <menuitem id="menu_nereid_static" parent="menu_nereid" name="Static" />
 
     <menuitem name="Static Folders" sequence="20" 
         id="menu_nereid_config_static_folder" 
         action="action_nereid_static_folder_view"
-        parent="menu_nereid_static" 
-        groups="nereid.group_nereid_admin" />        
+        parent="menu_nereid_static" />
 
     <record id="nereid_static_file_form" model="ir.ui.view">
         <field name="model">nereid.static.file</field>

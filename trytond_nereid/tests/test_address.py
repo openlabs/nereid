@@ -122,7 +122,7 @@ class TestAddress(TestCase):
                 ('email', '=', 'new.test@example.com')
             ])
             self.nereid_user_obj.write(
-                nereid_user_id, {'activation_code': False}
+                nereid_user_id, {'activation_code': None}
             ) # Force activate the user
             new_user = self.nereid_user_obj.browse(nereid_user_id)
 

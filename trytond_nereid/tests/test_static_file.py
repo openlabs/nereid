@@ -21,6 +21,7 @@ register_classes()
 from nereid import render_template
 from nereid.testing import testing_proxy, TestCase
 from trytond.transaction import Transaction
+from trytond.pool import Pool
 
 
 class TestStaticFile(TestCase):
@@ -108,7 +109,7 @@ class TestStaticFile(TestCase):
         with app.test_client() as c:
             # Patch the home page method
             def home_func(self, file_id):
-                static_file_obj = self.pool.get('nereid.static.file')
+                static_file_obj = Pool().get('nereid.static.file')
                 return render_template(
                     'home.jinja', 
                     static_file_obj=static_file_obj,
@@ -143,9 +144,9 @@ class TestStaticFile(TestCase):
         with app.test_client() as c:
             # Patch the home page method
             def home_func(self, file_id):
-                static_file_obj = self.pool.get('nereid.static.file')
+                static_file_obj = Pool().get('nereid.static.file')
                 return render_template(
-                    'home.jinja', 
+                    'home.jinja',
                     static_file_obj=static_file_obj,
                     static_file_id=file_id,
                 )

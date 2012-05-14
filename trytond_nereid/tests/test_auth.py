@@ -25,6 +25,7 @@ from trytond.modules import register_classes
 register_classes()
 from nereid.testing import testing_proxy, TestCase
 from trytond.transaction import Transaction
+from trytond.pool import Pool
 
 NEW_USER = 'new@example.com'
 NEW_PASS = 'password'
@@ -40,9 +41,9 @@ class TestAuth(TestCase):
         super(TestAuth, cls).setUpClass()
         # Install module
         testing_proxy.install_module('nereid')
-        country_obj = testing_proxy.pool.get('country.country')
 
         with Transaction().start(testing_proxy.db_name, 1, None) as txn:
+            country_obj = Pool().get('country.country')
             company = testing_proxy.create_company('Test Company')
             testing_proxy.set_company_for_user(1, company)
 

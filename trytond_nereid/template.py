@@ -8,10 +8,9 @@
     :copyright: (c) 2010 by Sharoon Thomas
     :license: GPLv3, see LICENSE for more details
 """
-from nereid import request
-
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
+from trytond.pool import Pool
 
 
 class Template(ModelSQL, ModelView):
@@ -48,7 +47,7 @@ class Template(ModelSQL, ModelView):
         """
         Wraps _get_template_source for efficient caching
         """
-        website_obj = self.pool.get('nereid.website')
+        website_obj = Pool().get('nereid.website')
 
         # Nereid tries to load template from different websites by passing
         # the name of template like <website>/<template>.
@@ -66,7 +65,7 @@ class Template(ModelSQL, ModelView):
 
         If not found it returns None
         """
-        lang_obj = self.pool.get('ir.lang')
+        lang_obj = Pool().get('ir.lang')
         lang_id, = lang_obj.search([('code', '=', lang)])
 
         # Search with full spec
@@ -126,7 +125,7 @@ class ContextProcessors(ModelSQL, ModelView):
         ids = self.search([])
         for ctx_proc in self.browse(ids):
             model, method = ctx_proc.method.rsplit('.', 1)
-            ctx_proc_as_func = getattr(self.pool.get(model), method)
+            ctx_proc_as_func = getattr(Pool().get(model), method)
             result.setdefault(ctx_proc.model or None, []).append(
                 ctx_proc_as_func)
         return result

@@ -121,13 +121,22 @@ class TestingProxy(object):
             from trytond.protocols.dispatcher import create
             create(self.db_name, 'admin', 'en_US', 'admin')
 
-        from trytond.pool import Pool
-        self.pool = Pool(self.db_name)
-        self.pool.init()
 
         self.user = 1
         self.context = None
+
+        from trytond.pool import Pool
+        from trytond.transaction import Transaction
+        with Transaction().start(self.db_name, self.user, self.context) as txn:
+            self.pool = Pool(self.db_name)
+            self.pool.init()
+
+
         self.initialised = True
+
+    def pool(self):
+        from trytond.pool import Pool
+        return Pool(self.db_name)
 
     def drop_database(self):
         """
@@ -142,15 +151,23 @@ class TestingProxy(object):
         if not self.initialised:
             self.init()
         from trytond.transaction import Transaction
+        from trytond.pool import Pool
         with Transaction().start(self.db_name, self.user, self.context) as txn:
-            module_obj = self.pool.get('ir.module.module')
-            module = module_obj.search([('name', '=', module)])
-            module_obj.button_install(module)
+            module_obj = Pool().get('ir.module.module')
+            lang_obj = Pool().get('ir.lang')
 
-            install_wizard = self.pool.get('ir.module.module.install_upgrade', 
-                type="wizard")
-            wiz_id = install_wizard.create()
-            install_wizard.execute(wiz_id, {}, 'start')
+            modules = module_obj.search([('name', '=', module)])
+            module_obj.install(modules)
+
+            # Find modules to install and trigger pool to update them
+            module_ids = module_obj.search([
+                ('state', 'in', ['to upgrade', 'to remove', 'to install']),
+                ])
+            lang_ids = lang_obj.search([
+                ('translatable', '=', True),
+                ])
+            lang = [x.code for x in lang_obj.browse(lang_ids)]
+            Pool().init(update=True, lang=lang)
             txn.cursor.commit()
 
     def register(self, name=None):
