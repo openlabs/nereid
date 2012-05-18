@@ -185,6 +185,8 @@ class NereidStaticFile(ModelSQL, ModelView):
         :param name: Ignored
         :param value: The base64 encoded value
         """
+        if not value:
+            return
         for f in self.browse(ids):
             if f.type == 'local':
                 file_binary = base64.decodestring(value)
@@ -207,6 +209,9 @@ class NereidStaticFile(ModelSQL, ModelView):
         for f in self.browse(ids):
             location = f.file_path if f.type == 'local' \
                 else urllib.urlretrieve(f.remote_path)[0]
+            if f.type == 'local' and not os.path.exists(location):
+                res[f.id] = None
+                continue
             with open(location, 'rb') as file_reader:
                 res[f.id] = base64.encodestring(file_reader.read())
         return res
