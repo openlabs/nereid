@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Nereid by openlabs</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Nereid</h1>
+        <p>Nereid - A web framework for tryton</p>
+        <p class="view"><a href="https://github.com/openlabs/nereid">View the Project on GitHub <small>openlabs/nereid</small></a></p>
+        <ul>
+          <li><a href="https://github.com/openlabs/nereid/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/openlabs/nereid/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/openlabs/nereid">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h3>What is Nereid ?</h3>
+
+<p>Nereid is a web framework built over Flask, with Tryton as a Backend.</p>
+
+<h3>What are the uses of Nereid ?</h3>
+
+<p>Nereid can be used to build web applications, that could use Tryton's ORM as a backend. While, there are no inherent limitations which prevent you from using nereid to build any kind of web application, the design decision that we made while building nereid itself are tailored to build application that extend the functionality of the ERP system, like e-commerce system, EDI systems, Customer/Supplier Portals etc.</p>
+
+<h3>Why Tryton as a backend ?</h3>
+
+<p>Well, why not would be our question to you ? It's scalable, it's flexible and offers the best approach we have seen so far into a declarative coding pattern for model design in any ORM. The unique way Tryton handles inheritance also makes it an excellent choice. In addition to the above, Tryton by default has several modules which make designing business applications faster in comparison to other frameworks.</p>
+
+<p>Let's say that you want to build a customer portal, (which is our example application), all that you need to do from your end is create a module which exposes the information that you want to, and leave other stuff like order management, account management etc to the existing Tryton modules.</p>
+
+<h3>What is the license of Nereid ?</h3>
+
+<p>Nereid follows the same license as that of Tryton which is GPLv3. Have a problem with that ? Contact us and  we will be glad to help you out!</p>
+
+<h3>How do I install nereid ?</h3>
+
+<p>Just clone the module and run the python setup file. It installs all the dependencies too.</p>
+
+<pre><code>$ git clone git://github.com/openlabs/nereid.git
+$ cd nereid
+$ python setup.py install
+</code></pre>
+
+<h3>Is nereid modular ?</h3>
+
+<p>Depends on what you think <code>modular</code> is. For us we think Nereid is modular because you could separate logically different functionality into a separate Tryton module and then the functionality would be available to you depending on what modules are installed in the database that you are accessing.</p>
+
+<h3>A little history</h3>
+
+<p>The initial goal was to build an e-commerce system over OpenERP called Callisto, and we did! It worked, but never scaled on OpenERP. The license sucked (surprise)! and then we saw that most issues we saw with OpenERP don't exist in Tryton. And, we were right.</p>
+
+<p>If you want to know more about why we made these design decisions, feel free to drop us a mail</p>
+
+<h3>Authors and Contributors</h3>
+
+<p>Nereid was built at <a href="http://openlabs.co.in">Openlabs</a>.
+It's now opensource, feel free to fork and contribute! Hate us! Just fork
+You can get hold of <a href="https://github.com/sharoonthomas" class="user-mention">@sharoonthomas</a> or <a href="https://github.com/shalabhaggarwal" class="user-mention">@shalabhaggarwal</a> if you have some techy questions to drill with.</p>
+
+<h3>Support or Contact</h3>
+
+<p>Having trouble with Nereid? Check out the documentation at TODO or contact <a href="mailto:sales@openlabs.co.in">sales@openlabs.co.in</a> and we’ll help you sort it out.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/openlabs">openlabs</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
