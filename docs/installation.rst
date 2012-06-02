@@ -132,6 +132,26 @@ quite easy.  Read the section on `pip and distribute on Windows`_ on the
 Flask documentation for a better understanding.
 
 
+.. _cloning_for_dev:
+
+Cloning for Development
+-----------------------
+
+If you are cloning the repository for development or updating the
+documentation, you also need to initialise the git submodules for the
+theme used in the documentation
+
+.. code-block:: sh
+    :emphasize-lines: 4,6 
+
+    $ git clone http://github.com/openlabs/nereid.git
+    Initialized empty Git repository in ~/dev/nereid/.git/
+    $ cd nereid
+    $ git submodule init
+    Submodule 'docs/_themes' (git://github.com/openlabs/flask-sphinx-themes.git) registered for path 'docs/_themes'
+    $ git submodule update
+    Submodule path 'docs/_themes': checked out 'revision #'
+
 
 .. _pip and distribute on Windows: http://flask.pocoo.org/docs/installation/#pip-and-distribute-on-windows
 .. _virtualenvs: http://www.virtualenv.org/en/latest/index.html
