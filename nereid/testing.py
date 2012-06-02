@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
     nereid.testing
-    ~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~
 
     Implements test support helpers.  This module is lazily imported
     and usually not used in production environments.
@@ -174,9 +174,9 @@ class TestingProxy(object):
         """A decorator that is used to register functions for being attached
         as helper method for testing
 
-        Eg:
+        .. code-block:: python
 
-            @testing_proxy.regsiter()
+            @testing_proxy.register()
             def create_something(obj, arg):
                 pass
 
@@ -274,7 +274,7 @@ def create_guest_user(obj, name='Guest', email='guest@example.com',
     """Create guest user
 
     .. note::
-        This is a wrapper around :function:`create_user_party`
+        This is a wrapper around :py:func:`~create_user_party`
 
     :param obj: The instance of :class:TestingProxy. This value need not be
                 passed as the decorator automatically assigns this value

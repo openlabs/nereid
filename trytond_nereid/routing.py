@@ -100,9 +100,6 @@ class LoginForm(Form):
 
 class WebSite(ModelSQL, ModelView):
     """
-    Web Site
-    ~~~~~~~~
-
     One of the most powerful features of Nereid is the ability to 
     manage multiple websites from one back-end. A web site in nereid 
     represents a collection or URLs, settings.
@@ -339,9 +336,10 @@ class WebSite(ModelSQL, ModelView):
     def get_languages(self):
         """Returns available languages for current site
 
-        .. note:: A special method is required so that the fetch
-        can be speeded up, by pushing the categories to the central cache
-        which cannot be done directly on a browse node.
+        .. note:: 
+            A special method is required so that the fetch
+            can be speeded up, by pushing the categories to the central cache
+            which cannot be done directly on a browse node.
         """
         lang_obj = Pool().get('ir.lang')
 

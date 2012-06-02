@@ -207,8 +207,7 @@ class Nereid(Flask):
         """
         if self.tryton_configfile is not None:
             from trytond.config import CONFIG
-            CONFIG.configfile = self.tryton_configfile
-            CONFIG.load()
+            CONFIG.update_etc(self.tryton_configfile)
 
         from trytond.backend import Database
         from trytond.modules import register_classes
