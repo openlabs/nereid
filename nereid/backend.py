@@ -16,7 +16,10 @@ class TransactionManager(object):
 
     def __enter__(self):
         from trytond.transaction import Transaction
-        Transaction().start(self.database_name, self.user, self.context.copy())
+        Transaction().start(
+            self.database_name, self.user,
+            readonly=False, context=self.context.copy()
+        )
         return Transaction()
 
     def __exit__(self, type, value, traceback):
