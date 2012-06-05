@@ -1,0 +1,14 @@
+include INSTALL
+include README
+include TODO
+include COPYRIGHT
+include CHANGELOG
+include MIGRATION
+include LICENSE
+include Makefile
+include trytond_nereid/*.xml
+include *.odt
+include *.txt
+include locale/*.po
+include docs/*
+include icons/*
