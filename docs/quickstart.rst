@@ -25,7 +25,7 @@ Creating a new website
 ``````````````````````
 
 Once the nereid module is installed in a Tryton database, open the
-`Websites` menu under `Nereid/Configuration/Routing`, and create a new
+`Websites` menu under `Nereid/Configuration`, and create a new
 website with the following settings. 
 
     +-----------+-------------------------------+

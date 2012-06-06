@@ -115,8 +115,8 @@ This will send an email with password to user."
             <field name="view" ref="website_view_form" />
             <field name="act_window" ref="act_website_form" />
         </record>
-        <menuitem parent="menu_nereid_routing" action="act_website_form"
-            id="menu_website_form" />
+        <menuitem parent="menu_nereid_configuration" action="act_website_form"
+            id="menu_website_form" sequence="5"/>
 
         <!--  URL Map  -->
         <record model="ir.ui.view" id="url_map_view_form">
