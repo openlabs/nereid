@@ -226,6 +226,9 @@ class WebSite(ModelSQL, ModelView):
         """
         login_form = LoginForm(request.form)
 
+        if not request.is_guest_user and request.args.get('next'):
+            return redirect(request.args['next'])
+
         if request.method == 'POST' and login_form.validate():
             user_obj = Pool().get('nereid.user')
             result = user_obj.authenticate(
