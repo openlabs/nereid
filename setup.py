@@ -92,5 +92,4 @@ setup(
         'unittest2',
         'minimock',
     ],
-    test_suite = "nereid_tests.test_runner.suite"
 )
