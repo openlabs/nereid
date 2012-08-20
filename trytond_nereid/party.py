@@ -46,8 +46,8 @@ class RegistrationForm(Form):
 
     if 're_captcha_public' in CONFIG.options:
         captcha = RecaptchaField(
-            public_key=CONFIG.options['re_captcha_public'], 
-            private_key=CONFIG.options['re_captcha_private'], 
+            public_key=CONFIG.options['re_captcha_public'],
+            private_key=CONFIG.options['re_captcha_private'],
             secure=True
         )
 
@@ -113,26 +113,26 @@ class AdditionalDetails(ModelSQL, ModelView):
     _name = "address.additional_details"
     _description = __doc__
     _rec_name = 'value'
-    
+
     def get_types(self):
         """
-        Wrapper to convert _get_types dictionary 
+        Wrapper to convert _get_types dictionary
         into a `list of tuple` for the use of Type Selection field
-        
+
         This hook will scan all methods which start with _type_address_extend
-        
+
         Your hook extension should look like:
-                
+
         def _type_address_extend_<name>(self, cursor, user, context=None):
             return {
                         '<name>': '<value>'
             }
-        
+
         An example from ups:
-        
+
         return {'type': 'value'
             }
-        
+
         :return: the list of tuple for Selection field
         """
         type_dict = {}
@@ -153,13 +153,13 @@ class AdditionalDetails(ModelSQL, ModelView):
 
     def default_active(self):
         return True
-        
+
     def _type_address_extend_default(self):
         return {
             'dob': 'Date of Birth',
             'other': 'Other',
         }
-    
+
 AdditionalDetails()
 
 
@@ -176,7 +176,7 @@ class Address(ModelSQL, ModelView):
     #: This field is retained only for legacy purposes.
     #: Additional details is now directly stored on the user object
     additional_details = fields.One2Many(
-        'address.additional_details', 
+        'address.additional_details',
         'address', 'Additional Details', states=STATES
     )
     email = fields.Char('Email')
@@ -255,7 +255,7 @@ Address()
 class NereidUser(ModelSQL, ModelView):
     """
     Nereid Users
-    
+
     The Users were address records in versions before 0.3
 
     .. versionadded:: 0.3
@@ -394,7 +394,7 @@ class NereidUser(ModelSQL, ModelView):
 
             if password_sha == user.password:
                 self.write(
-                    request.nereid_user.id, 
+                    request.nereid_user.id,
                     {'password': form.password.data}
                 )
                 flash(
@@ -405,7 +405,7 @@ class NereidUser(ModelSQL, ModelView):
                 return redirect(url_for('nereid.website.login'))
             else:
                 flash(_("The current password you entered is invalid"))
-        
+
         return render_template(
             'change-password.jinja', change_password_form=form
         )
@@ -413,13 +413,13 @@ class NereidUser(ModelSQL, ModelView):
     @login_required
     def new_password(self):
         """Create a new password
-        
+
         .. tip::
 
-            Unlike change password this does not demand the old password. 
-            And hence this method will check in the session for a parameter 
-            called allow_new_password which has to be True. This acts as a 
-            security against attempts to POST to this method and changing 
+            Unlike change password this does not demand the old password.
+            And hence this method will check in the session for a parameter
+            called allow_new_password which has to be True. This acts as a
+            security against attempts to POST to this method and changing
             password.
 
             The allow_new_password flag is popped on successful saving
@@ -434,7 +434,7 @@ class NereidUser(ModelSQL, ModelView):
                 abort(403)
 
             self.write(
-                request.nereid_user.id, 
+                request.nereid_user.id,
                 {'password': form.password.data}
             )
             session.pop('allow_new_password')
@@ -473,10 +473,10 @@ class NereidUser(ModelSQL, ModelView):
 
     def create_act_code(self, user_id, code_type="new"):
         """Create activation code
-            
-        A 12 character activation code indicates reset while 16 
+
+        A 12 character activation code indicates reset while 16
         character activation code indicates a new registration
-        
+
         :param user_id: ID of the User
         :param code_type:   "new" for new activation code
                             "reset" for resetting existing account
@@ -491,7 +491,7 @@ class NereidUser(ModelSQL, ModelView):
 
     def reset_account(self):
         """
-        Reset the password for the user. 
+        Reset the password for the user.
 
         .. tip::
             This does NOT reset the password, but just creates an activation
