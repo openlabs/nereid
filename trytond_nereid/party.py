@@ -252,6 +252,15 @@ class Address(ModelSQL, ModelView):
 Address()
 
 
+class Party(ModelSQL, ModelView):
+    "Party"
+    _name = 'party.party'
+
+    nereid_users = fields.One2Many('nereid.user', 'party', 'Nereid Users')
+
+Party()
+
+
 class NereidUser(ModelSQL, ModelView):
     """
     Nereid Users

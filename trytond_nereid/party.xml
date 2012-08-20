@@ -7,6 +7,23 @@
 <tryton>
   <data>
 
+    <record model="ir.ui.view" id="bsure_party_view_form">
+        <field name="model">party.party</field>
+        <field name="inherit" ref="party.party_view_form"/>
+        <field name="arch" type="xml">
+            <![CDATA[
+              <data>
+                <xpath expr="/form/notebook" position="inside">
+                  <page string="Nereid" id="nereid">
+                    <separator string="Nereid Users" colspan="4" id="users"/>
+                      <field name="nereid_users"/>
+                  </page>
+                </xpath>
+              </data>
+            ]]>
+        </field>
+    </record>
+
     <record id="nereid_user_form" model="ir.ui.view">
         <field name="model">nereid.user</field>
         <field name="type">form</field>
