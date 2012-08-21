@@ -91,7 +91,7 @@
             <field name="rule">/&lt;language&gt;/save-new-address</field>
             <field name="endpoint">party.address.edit_address</field>
             <field name="sequence" eval="90" />
-            <field name="methods">("POST",)</field>
+            <field name="methods">("GET", "POST")</field>
             <field name="url_map" ref="default_url_map" />
         </record>
 
