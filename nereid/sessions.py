@@ -91,11 +91,8 @@ class NereidSessionInterface(SessionInterface):
         """
         if session.should_save:
             self.session_store.save(session)
-            expires = domain = None
-            if session.permanent:
-                expires = datetime.utcnow() + app.permanent_session_lifetime
-            if app.config['SERVER_NAME'] is not None:
-                domain = '.' + app.config['SERVER_NAME']
+            expires = self.get_expiration_time(app, session)
+            domain = self.get_cookie_domain(app)
 
             from nereid.globals import request
             sid = request.cookies.get(app.session_cookie_name, None)
