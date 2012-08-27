@@ -155,5 +155,21 @@
             <field name="url_map" ref="nereid.default_url_map" />
         </record>
 
+        <record id="add_contact_mechanism" model="nereid.url_rule">
+            <field name="rule">/&lt;language&gt;/contact-mechanisms/add</field>
+            <field name="endpoint">party.contact_mechanism.add</field>
+            <field name="sequence" eval="140" />
+            <field name="methods">("POST",)</field>
+            <field name="url_map" ref="nereid.default_url_map" />
+        </record>
+
+        <record id="remove_contact_mechanism" model="nereid.url_rule">
+            <field name="rule">/&lt;language&gt;/contact-mechanisms/remove</field>
+            <field name="endpoint">party.contact_mechanism.remove</field>
+            <field name="sequence" eval="140" />
+            <field name="methods">("POST",)</field>
+            <field name="url_map" ref="nereid.default_url_map" />
+        </record>
+
     </data>
 </tryton>

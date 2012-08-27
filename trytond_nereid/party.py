@@ -18,7 +18,8 @@ from wtforms import Form, TextField, IntegerField, SelectField, validators, \
 from wtfrecaptcha.fields import RecaptchaField
 from werkzeug import redirect, abort
 
-from nereid import request, url_for, render_template, login_required, flash
+from nereid import request, url_for, render_template, login_required, flash, \
+    jsonify
 from nereid.globals import session, current_app
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval, Bool, Not
@@ -648,3 +649,73 @@ class EmailTemplate(ModelSQL, ModelView):
         return context
 
 EmailTemplate()
+
+
+class ContactMechanismForm(Form):
+    type = SelectField('Type', [validators.Required()])
+    value = TextField('Value', [validators.Required()])
+    comment = TextField('Comment')
+
+
+class ContactMechanism(ModelSQL, ModelView):
+    """
+    Allow modification of contact mechanisms
+    """
+    _name = "party.contact_mechanism"
+
+    def get_form(self):
+        """
+        Returns the contact mechanism form
+        """
+        from trytond.modules.party import contact_mechanism
+        form = ContactMechanismForm(request.form)
+        form.type.choices = contact_mechanism._TYPES
+        return form
+
+    @login_required
+    def add(self):
+        """
+        Adds a contact mechanism to the party's contact mechanisms
+        """
+        form = self.get_form()
+        if form.validate():
+            self.create({
+                'party': request.nereid_user.party.id,
+                'type': form.type.data,
+                'value': form.value.data,
+                'comment': form.comment.data,
+            })
+            if request.is_xhr:
+                return jsonify({'success': True})
+            return redirect(request.referrer)
+
+        if request.is_xhr:
+            return jsonify({'success': False})
+        else:
+            for field, messages in form.errors:
+                flash("<br>".join(messages), "Field %s" % field)
+            return redirect(request.referrer)
+
+    @login_required
+    def remove(self):
+        """
+        :param record_id: Delete the contat mechanism with the given ID
+        """
+        record_id = request.form.get('record_id', type=int)
+        if not record_id:
+            abort(404)
+
+        record = self.browse(record_id)
+        if not record:
+            abort(404)
+        if record.party == request.nereid_user.party:
+            self.delete(record_id)
+        else:
+            abort(403)
+        if request.is_xhr:
+            return jsonify({
+                'success': True
+            })
+        return redirect(request.referrer)
+
+ContactMechanism()
