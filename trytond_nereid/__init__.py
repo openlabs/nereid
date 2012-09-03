@@ -15,3 +15,4 @@ from .routing import *
 from .template import Template
 from .static_file import NereidStaticFolder, NereidStaticFile
 from .currency import Currency
+from .attachment import *
