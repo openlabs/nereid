@@ -1,3 +1,10 @@
+Version 2.4.0.5
+===============
+
+  * Add display_name function field which can be used in both a b2c and b2b
+    context to display the name of the current user
+  * Add the name of the user who uploaded the attachment to ir.attachment
+
 Version 0.3
 ===========
 

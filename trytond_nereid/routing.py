@@ -409,7 +409,7 @@ class WebSite(ModelSQL, ModelView):
         else:
             rv.update({
                 'logged_in': True,
-                'name': request.nereid_user.name
+                'name': request.nereid_user.display_name
                 })
         return rv
 

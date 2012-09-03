@@ -277,6 +277,28 @@ class NereidUser(ModelSQL, ModelView):
     party = fields.Many2One('party.party', 'Party', required=True,
             ondelete='CASCADE', select=1)
 
+    #: It is recommended to use this field to display the name of the user, as
+    #: the behaviour of how the name of the user will be displayed depends on 
+    #: the context (b2b or b2c)
+    #:
+    #: In a b2c context, the nereid_user is the same as party, so the name
+    #: field from nereid_user (inherited from party) will do the job of being
+    #: both the name of the user and of the party (in the context of Tryton)
+    #:
+    #: In a b2b context the party becomes the entity with which Tryton does
+    #: business with and that party could have multiple users. Though the
+    #: data model allows this, the name of the user will be confusing without
+    #: a display name as the default name of the user in the case will be that
+    #: of the company.
+    #:
+    #: The default implementation of display_name uses it for a b2c context
+    #: and is a proxy for the name of the party
+    display_name = fields.Function(
+        fields.Char('Display Name'),
+        'get_display_name', setter='set_display_name',
+        searcher='search_display_name'
+    )
+
     #: The email of the user is also the login name/username of the user
     email = fields.Char("e-Mail", select=1)
 
@@ -328,6 +350,37 @@ class NereidUser(ModelSQL, ModelView):
                     'Invalid Activation Code'
         return self.write(user.id, {'activation_code': None})
 
+    def get_display_name(self, ids, name):
+        """
+        Returns the name of the party as the name of the user
+
+        :param ids: List of ids
+        :param name: Name of the field
+        """
+        res = {}
+        for user in self.browse(ids):
+            res[user.id] = user.party.name
+        return res
+
+    def set_display_name(self, ids, name, value):
+        """
+        Do nothing for now as the name field and the display name are the same
+
+        :param ids: List of ids
+        :param name: Name of the field
+        :param value: The value of the field
+        """
+        return True
+
+    def search_display_name(self, name, clause):
+        """
+        Alter the display_name search pattern to search in the name field
+
+        :param name: Name of the field for which the search is being done
+        :param clause: The search clause from the domain expression
+        """
+        return [('name') + clause[1:]]
+
     def get_registration_form(self):
         """
         Returns a registration form for use in the site
@@ -367,6 +420,7 @@ class NereidUser(ModelSQL, ModelView):
             else:
                 user_id = self.create({
                     'name': registration_form.name.data,
+                    'display_name': registration_form.name.data,
                     'email': registration_form.email.data,
                     'password': registration_form.password.data,
                     'company': request.nereid_website.company.id,
