@@ -21,7 +21,7 @@ from hashlib import md5
 
 from flask.helpers import _assert_have_json, json, jsonify, \
     _PackageBoundObject, locked_cached_property
-from werkzeug import Headers, wrap_file, redirect
+from werkzeug import Headers, wrap_file, redirect, abort
 from werkzeug.exceptions import NotFound
 
 from .globals import session, _request_ctx_stack, current_app, request
@@ -96,6 +96,24 @@ def login_required(function):
             return redirect(url_for('nereid.website.login', next=request.url))
         return function(*args, **kwargs)
     return decorated_function
+
+
+class permissions_required(object):
+    """
+    Decorator helper to check if the specified permissions
+    rest with the user
+    """
+    def __init__(self, permissions):
+        self.permissions = frozenset(permissions)
+
+    def __call__(self, function):
+        @wraps(function)
+        def wrapper(*args, **kwargs):
+            if request.nereid_user.has_permissions(
+                    request.nereid_user, self.permissions):
+                return function(*args, **kwargs)
+            abort(403)
+        return wrapper
 
 
 def flash(message, category='message'):

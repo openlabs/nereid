@@ -21,7 +21,7 @@ from flask.globals import current_app, g, request, \
 from flask.templating import render_template_string
 
 from .helpers import flash, get_flashed_messages, jsonify, url_for, \
-    login_required
+    login_required, permissions_required
 from .application import Nereid, Request, Response
 from .sessions import Session
 from .globals import cache

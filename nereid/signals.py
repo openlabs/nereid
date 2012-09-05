@@ -22,3 +22,7 @@ failed_login = _signals.signal('failed-login')
 #: Logout
 #: Triggered when a logout occurs
 logout = _signals.signal('logout')
+
+#: Registration
+#: Triggered when a user registers
+registration = _signals.signal('registration')

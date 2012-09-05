@@ -26,6 +26,8 @@ register_classes()
 from nereid.testing import testing_proxy, TestCase
 from trytond.transaction import Transaction
 from trytond.pool import Pool
+from werkzeug.exceptions import Forbidden
+from nereid import permissions_required
 
 NEW_USER = 'new@example.com'
 NEW_PASS = 'password'
@@ -101,6 +103,12 @@ class TestAuth(TestCase):
 
     def setUp(self):
         self.nereid_user_obj = testing_proxy.pool.get('nereid.user')
+        self.nereid_permission_obj = testing_proxy.pool.get(
+            'nereid.permission'
+        )
+        self.permission_user_obj = testing_proxy.pool.get(
+            'nereid.permission-nereid.user'
+        )
 
     def test_0010_register(self):
         """
@@ -373,6 +381,55 @@ class TestAuth(TestCase):
             response = c.get("/en_US/account")
             self.assertEqual(response.status_code, 200)
 
+    def test_0110_has_perm(self):
+        """Test the has_perm decorator
+        """
+        app = self.get_app()
+
+        with Transaction().start(testing_proxy.db_name, 1, None) as txn:
+
+            with app.test_request_context():
+                @permissions_required(['admin'])
+                def test_permission():
+                    return True
+
+                with app.test_client() as c:
+                    self.assertRaises(Exception, test_permission)
+
+                perm_id_1 = self.nereid_permission_obj.create({
+                    'name': 'Admin',
+                    'value': 'admin',
+                })
+                perm_id_2 = self.nereid_permission_obj.create({
+                    'name': 'Nereid Admin',
+                    'value': 'nereid_admin',
+                })
+
+                self.permission_user_obj.create({
+                    'permission': perm_id_1,
+                    'nereid_user': self.guest_user
+                })
+                self.permission_user_obj.create({
+                    'permission': perm_id_2,
+                    'nereid_user': self.guest_user
+                })
+
+                txn.cursor.commit()
+
+            with app.test_request_context():
+                @permissions_required(['admin'])
+                def test_permission():
+                    return True
+
+                with app.test_client() as c:
+                    self.assertTrue(test_permission())
+
+                @permissions_required(['admin', 'nereid_admin'])
+                def test_permission():
+                    return True
+
+                with app.test_client() as c:
+                    self.assertTrue(test_permission())
 
 def suite():
     "Nereid test suite"

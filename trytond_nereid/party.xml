@@ -63,6 +63,11 @@
                   <field name="email"/>
                   <label name="password"/>
                   <field name="password"/>
+                  <notebook colspan="4">
+                    <page string="Permissions" id="permissions">
+                      <field name="permissions" colspan="4"/>
+                    </page>
+                  </notebook>
               </form>
               ]]>
         </field>

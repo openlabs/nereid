@@ -21,6 +21,7 @@ from werkzeug import redirect, abort
 from nereid import request, url_for, render_template, login_required, flash, \
     jsonify
 from nereid.globals import session, current_app
+from nereid.signals import registration
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval, Bool, Not
 from trytond.transaction import Transaction
@@ -323,6 +324,32 @@ class NereidUser(ModelSQL, ModelView):
     #     Company is mandatory
     company = fields.Many2One('company.company', 'Company', required=True)
 
+    permissions = fields.Many2Many('nereid.permission-nereid.user',
+        'nereid_user', 'permission', 'Permissions')
+
+    def get_permissions(self, user):
+        """
+        Returns all the permissions as a list of names
+
+        :param user: Browse Record of the user
+        """
+        # TODO: Cache this value for each user to avoid hitting the database
+        # everytime.
+        return frozenset([p.value for p in user.permissions])
+
+    def has_permissions(self, nereid_user, permissions):
+        """Check if the user has required permissions for access
+
+        :param permissions: A set/frozenset of permission values/keywords
+
+        :return: True/False
+        """
+        current_user_permissions = self.get_permissions(nereid_user)
+
+        if permissions.issubset(current_user_permissions):
+            return True
+        return False
+
     def default_company(self):
         return Transaction().context.get('company') or False
 
@@ -426,6 +453,7 @@ class NereidUser(ModelSQL, ModelView):
                     'company': request.nereid_website.company.id,
                     })
                 self.create_act_code(user_id)
+                registration.send(user_id)
                 flash(
                     _('Registration Complete. Check your email for activation')
                 )
@@ -773,3 +801,30 @@ class ContactMechanism(ModelSQL, ModelView):
         return redirect(request.referrer)
 
 ContactMechanism()
+
+
+class Permission(ModelSQL, ModelView):
+    "Nereid Permissions"
+    _name = 'nereid.permission'
+    _description = __doc__
+
+    name = fields.Char('Name', required=True, select=True)
+    value  = fields.Char('Value', required=True, select=True)
+    nereid_users = fields.Many2Many('nereid.permission-nereid.user',
+        'permission', 'nereid_user', 'Nereid Users'
+    )
+
+Permission()
+
+
+class UserPermission(ModelSQL):
+    "Nereid User Permissions"
+    _name = 'nereid.permission-nereid.user'
+    _description = __doc__
+
+    permission = fields.Many2One('nereid.permission', 'Permission',
+        ondelete='CASCADE', select=True, required=True)
+    nereid_user = fields.Many2One('nereid.user', 'User',
+        ondelete='CASCADE', select=True, required=True)
+
+UserPermission()
