@@ -25,4 +25,4 @@ from .helpers import flash, get_flashed_messages, jsonify, url_for, \
 from .application import Nereid, Request, Response
 from .sessions import Session
 from .globals import cache
-from .templating import render_template
+from .templating import render_template, render_email
