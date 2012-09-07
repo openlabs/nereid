@@ -13,6 +13,8 @@ from decimal import Decimal
 from flask.templating import render_template as flask_render_template
 from jinja2 import BaseLoader, TemplateNotFound, nodes
 from jinja2.ext import Extension
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 from .globals import request
 from .helpers import _rst_to_html_filter, make_crumbs
@@ -138,3 +140,57 @@ class FragmentCacheExtension(Extension):
         rv = caller()
         self.environment.fragment_cache.add(key, rv, timeout)
         return rv
+
+
+def render_email(**kwargs):
+    """Read the templates for email messages, format them, construct
+    the email from them and return the multipart email instance
+
+    :param **kwargs:
+        :param text_template: <Text email template path>
+        :param html_template: <HTML email template path>
+        :param subject: Email subject
+        :param from_email: Email From
+        :param to: Email IDs of direct recepients
+        :param cc: Email IDs of Cc recepients
+        :param bcc: Email IDs of Bcc recepients
+        :param context: Context to be sent to templates
+
+    :return: Email multipart instance
+    """
+    # Create the body of the message (a plain-text and an HTML version).
+    # text is your plain-text email
+    # html is your html version of the email
+    # if the reciever is able to view html emails then only the html
+    # email will be displayed
+    if kwargs.get('text_template'):
+        text = render_template(
+            kwargs['text_template'], context=kwargs.get('context')
+        )
+        part1 = MIMEText(text, 'plain')
+    if kwargs.get('html_template'):
+        html = render_template(
+            kwargs['html_template'], context=kwargs.get('context')
+        )
+        part2 = MIMEText(html, 'html')
+
+    if kwargs.get('text_template') and kwargs.get('html_template'):
+        msg = MIMEMultipart('alternative')
+    elif kwargs.get('text_template') and not kwargs.get('html_template'):
+        msg = part1
+    elif kwargs.get('text_template') and not kwargs.get('html_template'):
+        msg = part2
+    else:
+        # Email not found
+        current_app.logger.warning(
+            "Email context not available. "
+            "User will not be notified via email",
+        )
+        return False
+
+    msg['Subject'] = kwargs.get('subject', '')
+    msg['From'] = kwargs.get('from_email')
+    msg['To'] = kwargs.get('to')
+    msg['Cc'] = kwargs.get('cc', '')
+
+    return msg
