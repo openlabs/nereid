@@ -392,6 +392,11 @@ class Nereid(Flask):
         """Return the URL adapter for the website instead of the standard
         operation of just binding the environ to the url_map
         """
+        if request is None:
+            # When the application context is prepared the value of request is
+            # None
+            return
+
         website = get_website_from_host(request.environ['HTTP_HOST'])
         if request is not None:
             return self.websites[website]['url_map'].bind_to_environ(
