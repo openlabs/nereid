@@ -815,6 +815,13 @@ class Permission(ModelSQL, ModelView):
         'permission', 'nereid_user', 'Nereid Users'
     )
 
+    def __init__(self):
+        super(Permission, self).__init__()
+        self._sql_constraints += [
+            ('unique_value', 'UNIQUE(value)',
+                'Permissions must be unique by value'),
+            ]
+
 Permission()
 
 
