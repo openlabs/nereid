@@ -344,8 +344,9 @@ class NereidUser(ModelSQL, ModelView):
 
         :return: True/False
         """
+        if not isinstance(permissions, (set, frozenset)):
+            permissions = frozenset(permissions)
         current_user_permissions = self.get_permissions(nereid_user)
-
         if permissions.issubset(current_user_permissions):
             return True
         return False
