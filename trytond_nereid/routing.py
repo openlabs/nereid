@@ -10,6 +10,7 @@
 """
 from ast import literal_eval
 
+import pytz
 from werkzeug import abort, redirect
 from wtforms import Form, TextField, PasswordField, validators
 
@@ -155,6 +156,13 @@ class WebSite(ModelSQL, ModelView):
     guest_user = fields.Many2One(
         'nereid.user', 'Guest user', required=True
     )
+
+    timezone = fields.Selection(
+        [(x, x) for x in pytz.common_timezones], 'Timezone', translate=False
+    )
+
+    def default_timezone(self):
+        return 'UTC'
 
     def default_active(self):
         return True

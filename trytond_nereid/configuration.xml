@@ -77,6 +77,8 @@ This will send an email with password to user."
                     <field name="application_user"/>
                     <label name="guest_user"/>
                     <field name="guest_user"/>
+                    <label name="timezone"/>
+                    <field name="timezone"/>
                     <notebook colspan="4">
                       <page id="Countries" string="Countries">
                         <field name="countries"/>

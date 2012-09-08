@@ -13,6 +13,7 @@ import string
 import hashlib
 import urllib
 
+import pytz
 from wtforms import Form, TextField, IntegerField, SelectField, validators, \
     PasswordField
 from wtfrecaptcha.fields import RecaptchaField
@@ -324,6 +325,10 @@ class NereidUser(ModelSQL, ModelView):
     #     Company is mandatory
     company = fields.Many2One('company.company', 'Company', required=True)
 
+    timezone = fields.Selection(
+        [(x, x) for x in pytz.common_timezones], 'Timezone', translate=False
+    )
+
     permissions = fields.Many2Many('nereid.permission-nereid.user',
         'nereid_user', 'permission', 'Permissions')
 
@@ -350,6 +355,9 @@ class NereidUser(ModelSQL, ModelView):
         if permissions.issubset(current_user_permissions):
             return True
         return False
+
+    def default_timezone(self):
+        return "UTC"
 
     def default_company(self):
         return Transaction().context.get('company') or False
@@ -718,6 +726,31 @@ class NereidUser(ModelSQL, ModelView):
             params.append(('s', str(size)))
 
         return url + urllib.urlencode(params)
+
+    def aslocaltime(self, naive_date, user=None):
+        """
+        Returns a localized time using `pytz.astimezone` method.
+
+        :param naive_date: a naive datetime (datetime with no timezone
+                           information), which is assumed to be the UTC time.
+        :param user: If a user is provided, the timezone of the user is taken
+                     to build the offset or the user from nereid context is
+                     used. The value if provided must be a browse record.
+        :return: A datetime object with local time
+        """
+        if user is None:
+            user = request.nereid_user
+
+        utc_date = pytz.utc.localize(naive_date)
+
+        if not user.timezone:
+            return utc_date
+
+        user_tz = pytz.timezone(user.timezone)
+        if user_tz == pytz.utc:
+            return utc_date
+
+        return utc_date.astimezone(user_tz)
 
 NereidUser()
 

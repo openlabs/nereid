@@ -12,6 +12,7 @@
 import flaskext.babel
 from flaskext.babel import Babel
 from babel import support, Locale
+from pytz import timezone
 from nereid.globals import _request_ctx_stack
 
 
@@ -61,3 +62,31 @@ def get_locale():
     return locale
 
 flaskext.babel.get_locale = get_locale
+
+
+def get_timezone():
+    """Returns the timezone that should be used for this request as
+    `pytz.timezone` object.  This returns `None` if used outside of
+    a request.
+    """
+    ctx = _request_ctx_stack.top
+    tzinfo = getattr(ctx, 'babel_tzinfo', None)
+    if tzinfo is None:
+        babel = ctx.app.extensions['babel']
+        if babel.timezone_selector_func is None:
+            tzinfo = ctx.request.nereid_website.timezone
+            if ctx.request.nereid_user.timezone:
+                tzinfo = timezone(ctx.request.nereid_user.timezone)
+        else:
+            rv = babel.timezone_selector_func()
+            if rv is None:
+                tzinfo = babel.default_timezone
+            else:
+                if isinstance(rv, basestring):
+                    tzinfo = timezone(rv)
+                else:
+                    tzinfo = rv
+        ctx.babel_tzinfo = tzinfo
+    return tzinfo
+
+flaskext.babel.get_timezone = get_timezone
