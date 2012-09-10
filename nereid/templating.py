@@ -176,6 +176,9 @@ def render_email(**kwargs):
 
     if kwargs.get('text_template') and kwargs.get('html_template'):
         msg = MIMEMultipart('alternative')
+        msg.attach(part1)
+        msg.attach(part2)
+
     elif kwargs.get('text_template') and not kwargs.get('html_template'):
         msg = part1
     elif kwargs.get('text_template') and not kwargs.get('html_template'):
