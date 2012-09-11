@@ -142,58 +142,48 @@ class FragmentCacheExtension(Extension):
         return rv
 
 
-def render_email(**kwargs):
+def render_email(from_email, to, subject,
+        text_template=None, html_template=None, cc=None, **context):
     """Read the templates for email messages, format them, construct
-    the email from them and return the multipart email instance
+    the email from them and return the corresponding email message
+    object.
 
-    :param **kwargs:
-        :param text_template: <Text email template path>
-        :param html_template: <HTML email template path>
-        :param subject: Email subject
-        :param from_email: Email From
-        :param to: Email IDs of direct recepients
-        :param cc: Email IDs of Cc recepients
-        :param bcc: Email IDs of Bcc recepients
-        :param context: Context to be sent to templates
+    :param from_email: Email From
+    :param to: Email IDs of direct recepients
+    :param subject: Email subject
+    :param text_template: <Text email template path>
+    :param html_template: <HTML email template path>
+    :param cc: Email IDs of Cc recepients
+    :param context: Context to be sent to template rendering
 
-    :return: Email multipart instance
+    :return: Email multipart instance or Text/HTML part
     """
+    if not (text_template or email_template):
+        raise Exception("Atleast HTML or TEXT template is required")
+        
     # Create the body of the message (a plain-text and an HTML version).
     # text is your plain-text email
     # html is your html version of the email
     # if the reciever is able to view html emails then only the html
     # email will be displayed
-    if kwargs.get('text_template'):
-        text = render_template(
-            kwargs['text_template'], context=kwargs.get('context')
-        )
-        part1 = MIMEText(text, 'plain')
-    if kwargs.get('html_template'):
-        html = render_template(
-            kwargs['html_template'], context=kwargs.get('context')
-        )
-        part2 = MIMEText(html, 'html')
+    msg = MIMEMultipart('alternative')
+    if text_template:
+        text = render_template(text_template, **context)
+        text_part = MIMEText(text, 'plain')
+        msg.attach(text_part)
+    if html_template:
+        html = render_template(html_template, **kwargs)
+        html_part = MIMEText(html, 'html')
+        msg.attach(html_part)
+        
+    if text_template and not html_template:
+        msg = text_part
+    elif html_template and not text_template:
+        msg = html_part
 
-    if kwargs.get('text_template') and kwargs.get('html_template'):
-        msg = MIMEMultipart('alternative')
-        msg.attach(part1)
-        msg.attach(part2)
-
-    elif kwargs.get('text_template') and not kwargs.get('html_template'):
-        msg = part1
-    elif kwargs.get('text_template') and not kwargs.get('html_template'):
-        msg = part2
-    else:
-        # Email not found
-        current_app.logger.warning(
-            "Email context not available. "
-            "User will not be notified via email",
-        )
-        return False
-
-    msg['Subject'] = kwargs.get('subject', '')
-    msg['From'] = kwargs.get('from_email')
-    msg['To'] = kwargs.get('to')
-    msg['Cc'] = kwargs.get('cc', '')
+    msg['Subject'] = subject
+    msg['From'] = from_email
+    msg['To'] = to
+    msg['Cc'] = cc or ''
 
     return msg
