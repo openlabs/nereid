@@ -172,7 +172,7 @@ def render_email(from_email, to, subject,
         text_part = MIMEText(text, 'plain')
         msg.attach(text_part)
     if html_template:
-        html = render_template(html_template, **kwargs)
+        html = render_template(html_template, **context)
         html_part = MIMEText(html, 'html')
         msg.attach(html_part)
         
