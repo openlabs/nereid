@@ -158,7 +158,7 @@ def render_email(from_email, to, subject,
 
     :return: Email multipart instance or Text/HTML part
     """
-    if not (text_template or email_template):
+    if not (text_template or html_template):
         raise Exception("Atleast HTML or TEXT template is required")
         
     # Create the body of the message (a plain-text and an HTML version).
