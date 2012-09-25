@@ -169,11 +169,11 @@ def render_email(from_email, to, subject,
     msg = MIMEMultipart('alternative')
     if text_template:
         text = render_template(text_template, **context)
-        text_part = MIMEText(text, 'plain')
+        text_part = MIMEText(text.encode("utf-8"), 'plain', _charset="UTF-8")
         msg.attach(text_part)
     if html_template:
         html = render_template(html_template, **context)
-        html_part = MIMEText(html, 'html')
+        html_part = MIMEText(html.encode("utf-8"), 'html', _charset="UTF-8")
         msg.attach(html_part)
         
     if text_template and not html_template:
