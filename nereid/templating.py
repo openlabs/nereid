@@ -16,6 +16,7 @@ from jinja2.ext import Extension
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from .contrib import gravatar
 from .globals import request
 from .helpers import _rst_to_html_filter, make_crumbs
 
@@ -30,6 +31,7 @@ def nereid_default_template_ctx_processor():
 
 NEREID_TEMPLATE_FILTERS = dict(
     rst = _rst_to_html_filter,
+    gravatar = gravatar.url,
 )
 
 def render_template(template_name, _prefix_website=True, **context):

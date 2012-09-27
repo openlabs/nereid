@@ -11,7 +11,6 @@
 import random
 import string
 import hashlib
-import urllib
 
 import pytz
 from wtforms import Form, TextField, IntegerField, SelectField, validators, \
@@ -21,6 +20,7 @@ from werkzeug import redirect, abort
 
 from nereid import request, url_for, render_template, login_required, flash, \
     jsonify
+from nereid.contrib import gravatar
 from nereid.globals import session, current_app
 from nereid.signals import registration
 from trytond.model import ModelView, ModelSQL, fields
@@ -710,22 +710,7 @@ class NereidUser(ModelSQL, ModelView):
                         For example a unisex avatar
         :param size: The size for the image
         """
-        if kwargs.get('https', request.scheme == 'https'):
-            url = 'https://secure.gravatar.com/avatar/%s?'
-        else:
-            url = 'http://www.gravatar.com/avatar/%s?'
-        url = url % hashlib.md5(user.email.lower()).hexdigest()
-
-        params = []
-        default = kwargs.get('default', None)
-        if default:
-            params.append(('d', default))
-
-        size = kwargs.get('size', None)
-        if size:
-            params.append(('s', str(size)))
-
-        return url + urllib.urlencode(params)
+        return gravatar.url(user.email, **kwargs)
 
     def aslocaltime(self, naive_date, user=None):
         """
