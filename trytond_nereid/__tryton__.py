@@ -15,7 +15,6 @@
         'ir',
         'res',
         'company',
-        'electronic_mail_template',
     ],
     'xml': [
        'defaults.xml',

@@ -20,13 +20,13 @@ CONFIG['smtp_user'] = 'test@xyz.com'
 CONFIG['smtp_password'] = 'testpassword'
 CONFIG['smtp_port'] = 587
 CONFIG['smtp_tls'] = True
+CONFIG['smtp_from'] = 'from@xyz.com'
 
 from trytond.modules import register_classes
 register_classes()
 from nereid.testing import testing_proxy, TestCase
 from trytond.transaction import Transaction
 from trytond.pool import Pool
-from werkzeug.exceptions import Forbidden
 from nereid import permissions_required
 
 NEW_USER = 'new@example.com'
@@ -83,6 +83,19 @@ class TestAuth(TestCase):
                 '''{{ change_password_form.errors }}
                 {{ get_flashed_messages() }}''',
                 cls.site
+            )
+            # Create templates for activation emails
+            testing_proxy.create_template(
+                'emails/activation-text.jinja', '', cls.site
+            )
+            testing_proxy.create_template(
+                'emails/activation-html.jinja', '', cls.site
+            )
+            testing_proxy.create_template(
+                'emails/reset-text.jinja', '', cls.site
+            )
+            testing_proxy.create_template(
+                'emails/reset-html.jinja', '', cls.site
             )
             testing_proxy.create_template(
                 'address-edit.jinja',
@@ -143,7 +156,6 @@ class TestAuth(TestCase):
             }
             response = c.post('/en_US/registration', data=data)
             self.assertEqual(response.status_code, 200)
-
 
     def test_0020_activation(self):
         """

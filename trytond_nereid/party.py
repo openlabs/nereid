@@ -23,10 +23,12 @@ from nereid import request, url_for, render_template, login_required, flash, \
 from nereid.contrib import gravatar
 from nereid.globals import session, current_app
 from nereid.signals import registration
+from nereid.templating import render_email
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.pyson import Eval, Bool, Not
 from trytond.transaction import Transaction
 from trytond.config import CONFIG
+from trytond.tools import get_smtp_server
 
 from .i18n import _, get_translations
 
@@ -463,6 +465,8 @@ class NereidUser(ModelSQL, ModelView):
                     })
                 self.create_act_code(user_id)
                 registration.send(user_id)
+                user = self.browse(user_id)
+                self.send_activation_email(user)
                 flash(
                     _('Registration Complete. Check your email for activation')
                 )
@@ -471,6 +475,24 @@ class NereidUser(ModelSQL, ModelView):
                 )
 
         return render_template('registration.jinja', form=registration_form)
+
+    def send_activation_email(self, nereid_user):
+        """
+        Send an activation email to the user
+
+        :param nereid_user: The browse record of the user
+        """
+        email_message = render_email(
+            CONFIG['smtp_from'], nereid_user.email, _('Account Activation'),
+            text_template = 'emails/activation-text.jinja',
+            html_template = 'emails/activation-html.jinja',
+            nereid_user = nereid_user
+        )
+        server = get_smtp_server()
+        server.sendmail(
+            CONFIG['smtp_from'], [nereid_user.email], email_message.as_string()
+        )
+        server.quit()
 
     @login_required
     def change_password(self):
@@ -610,11 +632,31 @@ class NereidUser(ModelSQL, ModelView):
                 return render_template('reset-password.jinja')
 
             self.create_act_code(user_ids[0], "reset")
+            user = self.browse(user_ids[0])
+            self.send_reset_email(user)
             flash(_('An email has been sent to your account for resetting'
                 ' your credentials'))
             return redirect(url_for('nereid.website.login'))
 
         return render_template('reset-password.jinja')
+
+    def send_reset_email(self, nereid_user):
+        """
+        Send an account reset email to the user
+
+        :param nereid_user: The browse record of the user
+        """
+        email_message = render_email(
+            CONFIG['smtp_from'], nereid_user.email, _('Account Password Reset'),
+            text_template = 'emails/reset-text.jinja',
+            html_template = 'emails/reset-html.jinja',
+            nereid_user = nereid_user
+        )
+        server = get_smtp_server()
+        server.sendmail(
+            CONFIG['smtp_from'], [nereid_user.email], email_message.as_string()
+        )
+        server.quit()
 
     def authenticate(self, email, password):
         """Assert credentials and if correct return the
@@ -738,18 +780,6 @@ class NereidUser(ModelSQL, ModelView):
         return utc_date.astimezone(user_tz)
 
 NereidUser()
-
-
-class EmailTemplate(ModelSQL, ModelView):
-    'add `url_for` to the template context'
-    _name = 'electronic_mail.template'
-
-    def template_context(self, record):
-        context = super(EmailTemplate, self).template_context(record)
-        context['url_for'] = url_for
-        return context
-
-EmailTemplate()
 
 
 class ContactMechanismForm(Form):

@@ -22,6 +22,7 @@ CONFIG['smtp_user'] = 'test@xyz.com'
 CONFIG['smtp_password'] = 'testpassword'
 CONFIG['smtp_port'] = 587
 CONFIG['smtp_tls'] = True
+CONFIG['smtp_from'] = 'from@xyz.com' 
 from trytond.modules import register_classes
 register_classes()
 
@@ -80,7 +81,19 @@ class TestAddress(TestCase):
                 'address.jinja', '', cls.site)
             testing_proxy.create_template(
                 'account.jinja', '', cls.site)
-
+            # Create templates for activation emails
+            testing_proxy.create_template(
+                'emails/activation-text.jinja', '', cls.site
+            )
+            testing_proxy.create_template(
+                'emails/activation-html.jinja', '', cls.site
+            )
+            testing_proxy.create_template(
+                'emails/reset-text.jinja', '', cls.site
+            )
+            testing_proxy.create_template(
+                'emails/reset-html.jinja', '', cls.site
+            )
             txn.cursor.commit()
 
     def get_app(self, **options):
