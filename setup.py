@@ -8,7 +8,19 @@
 '''
 import re
 
-from setuptools import setup
+from setuptools import setup, Command
+
+
+class PyTest(Command):
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+    def run(self):
+        import sys,subprocess
+        errno = subprocess.call([sys.executable, 'tests/texttestrunner.py'])
+        raise SystemExit(errno)
 
 
 trytond_module_info = eval(open('trytond_nereid/__tryton__.py').read())
@@ -87,9 +99,10 @@ setup(
     [trytond.modules]
     nereid = trytond.modules.nereid
     """,
-
     tests_require=[
         'unittest2',
         'minimock',
     ],
+    test_suite = 'tests.suite',
+    cmdclass = {'test': PyTest},
 )
