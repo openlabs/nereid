@@ -75,9 +75,12 @@
                 <field name="remote_path" />
                 <label name="file_path" />
                 <field name="file_path" />
+                <!-- FIXME -->
+                <!--
                 <separator string="Preview" 
                     colspan="4" id="sepr_preview"/>
                 <field name="file_binary" widget="image" colspan="4"/>
+                -->
             </form>
             ]]>
         </field>
