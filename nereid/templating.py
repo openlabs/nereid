@@ -15,6 +15,8 @@ from jinja2 import BaseLoader, TemplateNotFound, nodes
 from jinja2.ext import Extension
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.MIMEBase import MIMEBase
+from email import Encoders
 
 from .contrib import gravatar
 from .globals import request
@@ -145,7 +147,8 @@ class FragmentCacheExtension(Extension):
 
 
 def render_email(from_email, to, subject,
-        text_template=None, html_template=None, cc=None, **context):
+        text_template=None, html_template=None, cc=None, attachments=None,
+        **context):
     """Read the templates for email messages, format them, construct
     the email from them and return the corresponding email message
     object.
@@ -156,6 +159,8 @@ def render_email(from_email, to, subject,
     :param text_template: <Text email template path>
     :param html_template: <HTML email template path>
     :param cc: Email IDs of Cc recepients
+    :param attachments: A dict of filename:string as key value pair
+        [preferable file buffer streams]
     :param context: Context to be sent to template rendering
 
     :return: Email multipart instance or Text/HTML part
@@ -178,10 +183,21 @@ def render_email(from_email, to, subject,
         html_part = MIMEText(html.encode("utf-8"), 'html', _charset="UTF-8")
         msg.attach(html_part)
         
-    if text_template and not html_template:
+    if text_template and not (html_template or attachments):
         msg = text_part
-    elif html_template and not text_template:
+    elif html_template and not (text_template or attachments):
         msg = html_part
+
+    for filename, content in attachments.items():
+        part = MIMEBase('application', "octet-stream")
+        part.set_payload(content)
+        Encoders.encode_base64(part)
+        #XXX: Filename might have to be encoded with utf-8,
+        # i.e., part's encoding or with email's encoding
+        part.add_header(
+            'Content-Disposition', 'attachment; filename="%s"' % filename
+        )
+        msg.attach(part)
 
     msg['Subject'] = subject
     msg['From'] = from_email
