@@ -173,7 +173,10 @@ def render_email(from_email, to, subject,
     # html is your html version of the email
     # if the reciever is able to view html emails then only the html
     # email will be displayed
-    msg = MIMEMultipart('alternative')
+    if attachments:
+        msg = MIMEMultipart('mixed')
+    else:
+        msg = MIMEMultipart('alternative')
     if text_template:
         text = render_template(text_template, **context)
         text_part = MIMEText(text.encode("utf-8"), 'plain', _charset="UTF-8")
@@ -188,16 +191,17 @@ def render_email(from_email, to, subject,
     elif html_template and not (text_template or attachments):
         msg = html_part
 
-    for filename, content in attachments.items():
-        part = MIMEBase('application', "octet-stream")
-        part.set_payload(content)
-        Encoders.encode_base64(part)
-        #XXX: Filename might have to be encoded with utf-8,
-        # i.e., part's encoding or with email's encoding
-        part.add_header(
-            'Content-Disposition', 'attachment; filename="%s"' % filename
-        )
-        msg.attach(part)
+    if attachments:
+        for filename, content in attachments.items():
+            part = MIMEBase('application', "octet-stream")
+            part.set_payload(content)
+            Encoders.encode_base64(part)
+            #XXX: Filename might have to be encoded with utf-8,
+            # i.e., part's encoding or with email's encoding
+            part.add_header(
+                'Content-Disposition', 'attachment; filename="%s"' % filename
+            )
+            msg.attach(part)
 
     msg['Subject'] = subject
     msg['From'] = from_email
