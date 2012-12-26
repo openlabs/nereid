@@ -9,7 +9,6 @@
     :license: GPLv3, see LICENSE for more details
 '''
 import os
-import base64
 import urllib
 
 from nereid.helpers import slugify, send_file, url_for
@@ -183,11 +182,11 @@ class NereidStaticFile(ModelSQL, ModelView):
 
         :param ids: List of ids. But usually has just one
         :param name: Ignored
-        :param value: The base64 encoded value
+        :param value: The file buffer
         """
         for f in self.browse(ids):
             if f.type == 'local':
-                file_binary = base64.decodestring(value)
+                file_binary = buffer(value)
                 # If the folder does not exist, create it recursively
                 directory = os.path.dirname(f.file_path)
                 if not os.path.isdir(directory):
@@ -198,17 +197,17 @@ class NereidStaticFile(ModelSQL, ModelView):
     def get_file_binary(self, ids, name):
         '''
         Getter for the binary_file field. This fetches the file from the
-        file system, encodes it in base64 and returns it.
+        file system, coverts it to buffer and returns it.
 
         :param ids: the ids of the sales
-        :return: Dictionary with ID as key and base64 encoded data
+        :return: Dictionary with ID as key and file buffer as value
         '''
         res = {}
         for f in self.browse(ids):
             location = f.file_path if f.type == 'local' \
                 else urllib.urlretrieve(f.remote_path)[0]
             with open(location, 'rb') as file_reader:
-                res[f.id] = base64.encodestring(file_reader.read())
+                res[f.id] = buffer(file_reader.read())
         return res
 
     def get_file_path(self, ids, name):
