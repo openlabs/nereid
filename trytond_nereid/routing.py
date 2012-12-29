@@ -19,6 +19,7 @@ from nereid.globals import session, request
 from nereid.helpers import login_required, key_from_list, get_flashed_messages
 from nereid.signals import login, failed_login, logout
 from trytond.model import ModelView, ModelSQL, fields
+from trytond.backend import TableHandler
 from trytond.transaction import Transaction
 from trytond.pool import Pool
 
@@ -481,13 +482,33 @@ class URLRule(ModelSQL, ModelView):
     endpoint = fields.Char('Endpoint', select=True,)
     active = fields.Boolean('Active')
     defaults = fields.One2Many('nereid.url_rule_defaults', 'rule', 'Defaults')
-    methods = fields.Selection(
+
+    #: This field will be deprecated from version 2.6.0.1. Set or Unset the
+    #: boolean fields for HTTP methods instead of using this.
+    methods = fields.Function(
+        fields.Selection(
+            [
+                ('("POST",)', 'POST'),
+                ('("GET",)', 'GET'),
+                ('("GET", "POST")', 'GET/POST')
+            ], 'Methods'
+        ), 'get_methods', setter='set_methods'
+    )
+    #: This field is retained for migration, but will be removed in 2.6.0.1
+    old_methods = fields.Selection(
         [
             ('("POST",)', 'POST'),
             ('("GET",)', 'GET'),
             ('("GET", "POST")', 'GET/POST')
-        ],
-        'Methods', required=True)
+        ], 'Methods (Deprecated)'
+    )
+    # Supported HTTP methods
+    http_method_get = fields.Boolean('GET')
+    http_method_post = fields.Boolean('POST')
+    http_method_patch = fields.Boolean('PATCH')
+    http_method_put = fields.Boolean('PUT')
+    http_method_delete = fields.Boolean('DELETE')
+
     only_for_genaration = fields.Boolean('Only for Generation')
     redirect_to = fields.Char('Redirect To')
     sequence = fields.Integer('Sequence', required=True,)
@@ -497,11 +518,98 @@ class URLRule(ModelSQL, ModelView):
         super(URLRule, self).__init__()
         self._order.insert(0, ('sequence', 'ASC'))
 
+    def init(self, module_name):
+        """Migrations
+
+        :param module_name: Module Name (Automatically passed by caller)
+        """
+        cursor = Transaction().cursor
+        table = TableHandler(cursor, self, module_name)
+
+        # Drop the required index on methods
+        table.not_null_action('methods', action="remove")
+
+        # Rename methods to old_methods
+        table.column_rename('methods', 'old_methods')
+
+        # Check if the new boolean fields exist
+        http_method_fields_exists = table.column_exist('http_method_get')
+
+        super(URLRule, self).init(module_name)
+
+        if not http_method_fields_exists:
+            # if the http method fields did not exist before this method
+            # should transition old_methods to the boolean fields
+            rule_ids = self.search([])
+            for rule in self.browse(rule_ids):
+                self.set_methods([rule.id], 'methods', rule.old_methods)
+
+
     def default_active(self):
         return True
 
     def default_methods(self):
         return '("GET",)'
+
+    def get_methods(self, ids, name):
+        """
+        The methods field will be deprecated in 2.6.0.1. Till then display the
+        field value based on the boolean fields which replaces the selection
+        field.
+
+        Note that this only handles GET and POST methods as they were the only
+        ones handled before v2.4.0.6.
+
+        :param ids: List of ids
+        :param name: Name of the function field
+        """
+        res = {}
+        for rule in self.browse(ids):
+            if rule.http_method_get and rule.http_method_post:
+                res[rule.id] = '("GET", "POST")'
+            elif rule.http_method_post and not rule.http_method_get:
+                res[rule.id] = '("POST",)'
+            else:
+                res[rule.id] = '("GET",)'
+        return res
+
+    def set_methods(self, ids, name, value):
+        """
+        Set the values of http_* boolean fields based on the value of methods
+
+        :param ids: List of ids to update
+        :param name: Name of function field
+        :param value: The string value of tuple used in methods selection
+        """
+        methods, write_vals = literal_eval(value), {}
+        if 'GET' in methods:
+            write_vals['http_method_get'] = True
+        if 'POST' in methods:
+            write_vals['http_method_post'] = True
+        if write_vals:
+            self.write(ids, write_vals)
+        return
+
+    def get_http_methods(self, rule):
+        """
+        Returns an iterable of HTTP methods that the URL has to support.
+
+        .. versionadded: 2.4.0.6
+
+        :param rule: Browse record of the rule
+        """
+        methods = []
+        if rule.http_method_get:
+            methods.append('GET')
+        if rule.http_method_post:
+            methods.append('POST')
+        if rule.http_method_put:
+            methods.append('PUT')
+        if rule.http_method_delete:
+            methods.append('DELETE')
+        if rule.http_method_patch:
+            methods.append('PATCH')
+        return methods
 
     def get_rule_arguments(self, rule_id):
         """
@@ -514,7 +622,7 @@ class URLRule(ModelSQL, ModelView):
         return {
                 'rule': rule.rule,
                 'endpoint': rule.endpoint,
-                'methods': rule.methods and literal_eval(rule.methods) or None,
+                'methods': self.get_http_methods(rule),
                 'build_only': rule.only_for_genaration,
                 'defaults': defaults,
                 'redirect_to': rule.redirect_to or None,

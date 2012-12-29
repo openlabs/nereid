@@ -194,21 +194,31 @@ This will send an email with password to user."
                     <field name="endpoint" />
                     <label name="active" />
                     <field name="active" />
+                    <label name="url_map" />
+                    <field name="url_map" />
                     <notebook colspan="4">
                         <page string="Defaults" id="defaults">
                             <field name="defaults" colspan="4"/>
                         </page>
                         <page string="Advanced" id="advanced">
-                            <label name="methods" />
-                            <field name="methods" />
+                            <group col="10" colspan="4" id="methods">
+                                <label name="http_method_get" />
+                                <field name="http_method_get" />
+                                <label name="http_method_post" />
+                                <field name="http_method_post" />
+                                <label name="http_method_patch" />
+                                <field name="http_method_patch" />
+                                <label name="http_method_put" />
+                                <field name="http_method_put" />
+                                <label name="http_method_delete" />
+                                <field name="http_method_delete" />
+                            </group>
                             <label name="only_for_genaration" />
                             <field name="only_for_genaration" />
                             <label name="redirect_to" />
                             <field name="redirect_to" />
                             <label name="sequence" />
                             <field name="sequence" />
-                            <label name="url_map" />
-                            <field name="url_map" />
                         </page>
                     </notebook>
                 </form>
@@ -223,8 +233,12 @@ This will send an email with password to user."
                 <tree string="URL Rules">
                     <field name="rule" />
                     <field name="endpoint" />
-                    <field name="methods" />
                     <field name="active" />
+                    <field name="http_method_get" />
+                    <field name="http_method_post" />
+                    <field name="http_method_patch" />
+                    <field name="http_method_put" />
+                    <field name="http_method_delete" />
                 </tree>
                 ]]>
             </field>
