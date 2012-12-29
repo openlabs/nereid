@@ -8,7 +8,6 @@
     :license: BSD, see LICENSE for more details.
 """
 import new
-import base64
 import functools
 import unittest2 as unittest
 
@@ -80,14 +79,15 @@ class TestStaticFile(TestCase):
                 'folder_name': 'test',
                 'description': 'Test Folder'
             })
-            encoded_data = base64.encodestring('test-content')
+
+            file_buffer = buffer('test-content')
             file_id = self.static_file_obj.create({
                 'name': 'test.png',
                 'folder': folder_id,
-                'file_binary': encoded_data
+                'file_binary': file_buffer
             })
             static_file = self.static_file_obj.browse(file_id)
-            self.assertEqual(static_file.file_binary, encoded_data)
+            self.assertEqual(static_file.file_binary, file_buffer)
 
             txn.cursor.commit()
 
