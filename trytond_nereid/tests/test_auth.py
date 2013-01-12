@@ -1,455 +1,479 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 
     Test the Auth layer
 
-    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2013 by Openlabs Technologies & Consulting (P) Ltd.
     :license: GPLv3, see LICENSE for more details.
 """
-import unittest2 as unittest
-from minimock import Mock
-import smtplib
-smtplib.SMTP = Mock('smtplib.SMTP')
-smtplib.SMTP.mock_returns = Mock('smtp_connection')
+import unittest
 
+from mock import patch
+import trytond.tests.test_tryton
+from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
+from trytond.transaction import Transaction
+from trytond.tools import get_smtp_server
 from trytond.config import CONFIG
-CONFIG.options['db_type'] = 'sqlite'
-CONFIG.options['data_path'] = '/tmp/temp_tryton_data/'
-CONFIG['smtp_server'] = 'smtp.gmail.com'
-CONFIG['smtp_user'] = 'test@xyz.com'
-CONFIG['smtp_password'] = 'testpassword'
-CONFIG['smtp_port'] = 587
-CONFIG['smtp_tls'] = True
+from nereid.testing import NereidTestCase
+from nereid import permissions_required
+from werkzeug.exceptions import Forbidden
+
 CONFIG['smtp_from'] = 'from@xyz.com'
 
-from trytond.modules import register_classes
-register_classes()
-from nereid.testing import testing_proxy, TestCase
-from trytond.transaction import Transaction
-from trytond.pool import Pool
-from nereid import permissions_required
 
-NEW_USER = 'new@example.com'
-NEW_PASS = 'password'
-
-
-class TestAuth(TestCase):
+class TestAuth(NereidTestCase):
     """
-    Test Auth Layer
+    Test Authentication Layer
     """
-
-    @classmethod
-    def setUpClass(cls):
-        super(TestAuth, cls).setUpClass()
-        # Install module
-        testing_proxy.install_module('nereid')
-
-        with Transaction().start(testing_proxy.db_name, 1, None) as txn:
-            country_obj = Pool().get('country.country')
-            company = testing_proxy.create_company('Test Company')
-            testing_proxy.set_company_for_user(1, company)
-
-            cls.guest_user = testing_proxy.create_guest_user(company=company)
-            cls.regd_user_id = testing_proxy.create_user_party(
-                'Registered User', 'email@example.com', 'password', company
-            )
-
-            cls.available_countries = country_obj.search([], limit=5)
-            cls.site = testing_proxy.create_site(
-                'localhost',
-                countries = [('set', cls.available_countries)],
-                application_user = 1, guest_user = cls.guest_user
-            )
-
-            testing_proxy.create_template(
-                'home.jinja', '{{ get_flashed_messages() }}', cls.site
-            )
-            testing_proxy.create_template(
-                'login.jinja',
-                '{{ login_form.errors }} {{ get_flashed_messages() }}',
-                cls.site
-            )
-            testing_proxy.create_template(
-                'registration.jinja',
-                '{{ form.errors }} {{get_flashed_messages()}}',
-                cls.site
-            )
-
-            testing_proxy.create_template('reset-password.jinja',
-                '{{get_flashed_messages()}}', cls.site
-            )
-            testing_proxy.create_template(
-                'change-password.jinja',
-                '''{{ change_password_form.errors }}
-                {{ get_flashed_messages() }}''',
-                cls.site
-            )
-            # Create templates for activation emails
-            testing_proxy.create_template(
-                'emails/activation-text.jinja', '', cls.site
-            )
-            testing_proxy.create_template(
-                'emails/activation-html.jinja', '', cls.site
-            )
-            testing_proxy.create_template(
-                'emails/reset-text.jinja', '', cls.site
-            )
-            testing_proxy.create_template(
-                'emails/reset-html.jinja', '', cls.site
-            )
-            testing_proxy.create_template(
-                'address-edit.jinja',
-                '{{ form.errors }}',
-                cls.site
-            )
-            testing_proxy.create_template('address.jinja', '', cls.site)
-            testing_proxy.create_template('account.jinja', '', cls.site)
-
-            txn.cursor.commit()
-
-    def get_app(self, **options):
-        options.update({
-            'SITE': 'testsite.com',
-            'GUEST_USER': self.guest_user,
-        })
-        return testing_proxy.make_app(**options)
 
     def setUp(self):
-        self.nereid_user_obj = testing_proxy.pool.get('nereid.user')
-        self.nereid_permission_obj = testing_proxy.pool.get(
-            'nereid.permission'
-        )
-        self.permission_user_obj = testing_proxy.pool.get(
-            'nereid.permission-nereid.user'
-        )
+        trytond.tests.test_tryton.install_module('nereid')
+
+        self.nereid_website_obj = POOL.get('nereid.website')
+        self.nereid_permission_obj = POOL.get('nereid.permission')
+        self.nereid_user_obj = POOL.get('nereid.user')
+        self.url_map_obj = POOL.get('nereid.url_map')
+        self.company_obj = POOL.get('company.company')
+        self.currency_obj = POOL.get('currency.currency')
+        self.language_obj = POOL.get('ir.lang')
+        self.party_obj = POOL.get('party.party')
+
+        # Patch SMTP Lib
+        self.smtplib_patcher = patch('smtplib.SMTP', autospec=True)
+        self.PatchedSMTP = self.smtplib_patcher.start()
+        self.mocked_smtp_instance = self.PatchedSMTP.return_value
+
+    def tearDown(self):
+        # Unpatch SMTP Lib
+        self.smtplib_patcher.stop()
+
+    def setup_defaults(self):
+        """
+        Setup the defaults
+        """
+        usd = self.currency_obj.create({
+            'name': 'US Dollar',
+            'code': 'USD',
+            'symbol': '$',
+        })
+        self.company_id = self.company_obj.create({
+            'name': 'Openlabs',
+            'currency': usd
+        })
+        self.guest_user_id = self.nereid_user_obj.create({
+            'name': 'Guest User',
+            'display_name': 'Guest User',
+            'email': 'guest@openlabs.co.in',
+            'password': 'password',
+            'company': self.company_id,
+        })
+
+        url_map_id, = self.url_map_obj.search([], limit=1)
+        en_us, = self.language_obj.search([('code', '=', 'en_US')])
+        self.nereid_website_obj.create({
+            'name': 'localhost',
+            'url_map': url_map_id,
+            'company': self.company_id,
+            'application_user': USER,
+            'default_language': en_us,
+            'guest_user': self.guest_user_id,
+        })
+
+    def get_template_source(self, name):
+        """
+        Return templates
+        """
+        templates = {
+            'localhost/home.jinja': '{{get_flashed_messages()}}',
+            'localhost/login.jinja':
+                    '{{ login_form.errors }} {{get_flashed_messages()}}',
+            'localhost/registration.jinja':
+                    '{{ form.errors }} {{get_flashed_messages()}}',
+            'localhost/reset-password.jinja': '',
+            'localhost/change-password.jinja':
+                    '''{{ change_password_form.errors }}
+                    {{get_flashed_messages()}}''',
+            'localhost/address-edit.jinja': 'Address Edit {{ form.errors }}',
+            'localhost/address.jinja': '',
+            'localhost/account.jinja': '',
+            'localhost/emails/activation-text.jinja': 'activation-email-text',
+            'localhost/emails/activation-html.jinja': 'activation-email-html',
+            'localhost/emails/reset-text.jinja': 'reset-email-text',
+            'localhost/emails/reset-html.jinja': 'reset-email-html',
+        }
+        return templates.get(name)
+
+    def test_0005_mock_setup(self):
+        assert get_smtp_server() is self.PatchedSMTP.return_value
 
     def test_0010_register(self):
         """
         Registration must create a new party
         """
-        app = self.get_app()
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
 
-        # Test if the registration form gets rendered without issues
-        with app.test_client() as c:
-            response = c.get('/en_US/registration')
-            self.assertEqual(response.status_code, 200)
+            with app.test_client() as c:
+                response = c.get('/en_US/registration')
+                self.assertEqual(response.status_code, 200) # GET Request
 
-        with app.test_client() as c:
-            data = {
-                'name': 'New Test Registered User',
-                'email': 'new.test@example.com',
-                'password': 'password'
-            }
-            response = c.post('/en_US/registration', data=data)
-            self.assertEqual(response.status_code, 200)
+                data = {
+                    'name': 'Registered User',
+                    'email': 'regd_user@openlabs.co.in',
+                    'password': 'password'
+                }
+                # Post with missing password
+                response = c.post('/en_US/registration', data=data)
+                self.assertEqual(response.status_code, 200) # Form rejected
 
-            data['confirm'] = 'password'
-            response = c.post('/en_US/registration', data=data)
-            self.assertEqual(response.status_code, 302)
+                data['confirm'] = 'password'
+                response = c.post('/en_US/registration', data=data)
+                self.assertEqual(response.status_code, 302)
 
-        with app.test_client() as c:
-            data = {
-                'name': 'New Test Registered User',
-                'email': 'new.test@example.com',
-                'password': 'password',
-                'confirm': 'password',
-            }
-            response = c.post('/en_US/registration', data=data)
-            self.assertEqual(response.status_code, 200)
+                self.assertEqual(
+                    self.mocked_smtp_instance.sendmail.call_count, 1
+                )
+                self.assertEqual(
+                    self.mocked_smtp_instance.sendmail.call_args[0][0],
+                    CONFIG['smtp_from']
+                )
+                self.assertEqual(
+                    self.mocked_smtp_instance.sendmail.call_args[0][1],
+                    [data['email']]
+                )
+
+            self.assertEqual(
+                self.party_obj.search(
+                    [('name', '=', data['name'])], count=True
+                ), 1
+            )
+            self.assertEqual(
+                self.nereid_user_obj.search(
+                    [('email', '=', data['email'])], count=True
+                ), 1
+            )
 
     def test_0020_activation(self):
         """
-        Check if activation workflow is fine
+        Activation must happen before login is possible
         """
-        app = self.get_app()
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
 
-        with Transaction().start(testing_proxy.db_name, 1, None) as txn:
-            new_user_id, = self.nereid_user_obj.search(
-                [('email', '=', 'new.test@example.com')]
-            )
-            new_user = self.nereid_user_obj.browse(new_user_id)
-            self.assertTrue(new_user.activation_code != False)
+            with app.test_client() as c:
+                data = {
+                    'name': 'Registered User',
+                    'email': 'regd_user@openlabs.co.in',
+                    'password': 'password',
+                    'confirm': 'password',
+                }
+                data['confirm'] = 'password'
+                response = c.post('/en_US/registration', data=data)
+                self.assertEqual(response.status_code, 302)
 
-            txn.cursor.commit()
-
-        with app.test_client() as c:
-            response = c.post('/en_US/login',
-                data={
-                    'email': u'new.test@example.com',
-                    'password': u'password'
-                })
-            self.assertEqual(response.status_code, 200)
-            self.assertTrue(
-                "Your account has not been activated yet" in response.data
-            )
-
-            response = c.get('/en_US/activate-account/%s/%s' % (
-                new_user_id, new_user.activation_code
+                regd_user_id, = self.nereid_user_obj.search(
+                    [('email', '=', data['email'])]
                 )
-            )
-            self.assertEqual(response.status_code, 302)
+                registered_user = self.nereid_user_obj.browse(regd_user_id)
+                self.assertTrue(registered_user.activation_code)
 
-            # try login again
-            response = c.post('/en_US/login',
-                data={
-                    'email': u'new.test@example.com',
-                    'password': u'password'
-                })
-            self.assertEqual(response.status_code, 302)
+                # Login should fail since there is activation code
+                response = c.post(
+                    '/en_US/login',
+                    data={
+                        'email': data['email'],
+                        'password': data['password'],
+                    }
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(
+                    "Your account has not been activated yet" in response.data
+                )
+
+                # Activate the account
+                response = c.get('/en_US/activate-account/%s/%s' % (
+                    registered_user.id, registered_user.activation_code
+                    )
+                )
+                self.assertEqual(response.status_code, 302)
+                registered_user = self.nereid_user_obj.browse(regd_user_id)
+
+                # Activation code must be cleared
+                self.assertFalse(registered_user.activation_code)
+
+                # Login should work
+                response = c.post(
+                    '/en_US/login',
+                    data={
+                        'email': data['email'],
+                        'password': data['password'],
+                    }
+                )
+                self.assertEqual(response.status_code, 302)
 
     def test_0030_change_password(self):
         """
-        Check if changing own password is possible
+        Check password changing functionality
         """
-        app = self.get_app()
-        with app.test_client() as c:
-            # try the page without login
-            response = c.get('/en_US/change-password')
-            self.assertEqual(response.status_code, 302)
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
 
-            # try the post without login
-            response = c.post('/en_US/change-password', data={
-                'password': 'new-password',
-                'confirm': 'password'
-            })
-            self.assertEqual(response.status_code, 302)
+            data = {
+                'name': 'Registered User',
+                'display_name': 'Registered User',
+                'email': 'email@example.com',
+                'password': 'password',
+                'company': self.company_id,
+            }
+            self.nereid_user_obj.create(data.copy())
 
-            # Login now
-            response = c.post('/en_US/login',
-                data={
-                    'email': u'new.test@example.com',
-                    'password': u'password'
+            with app.test_client() as c:
+                # try the page without login
+                response = c.get('/en_US/change-password')
+                self.assertEqual(response.status_code, 302)
+
+                # try the post without login
+                response = c.post('/en_US/change-password', data={
+                    'password': data['password'],
+                    'confirm': data['password']
                 })
-            self.assertEqual(response.status_code, 302)
+                self.assertEqual(response.status_code, 302)
 
-            # send wrong password confirm
-            response = c.post('/en_US/change-password', data={
-                'password': 'new-password',
-                'confirm': 'password'
-            })
-            self.assertEqual(response.status_code, 200)
-            self.assertTrue("Passwords must match" in response.data)
+                # Login now
+                response = c.post(
+                    '/en_US/login',
+                    data={
+                        'email': data['email'],
+                        'password': data['password']
+                    })
+                self.assertEqual(response.status_code, 302)
 
-            # send correct password confirm but not old password
-            response = c.post('/en_US/change-password', data={
-                'password': 'new-password',
-                'confirm': 'new-password'
-            })
-            self.assertEqual(response.status_code, 200)
+                # send wrong password confirm
+                response = c.post('/en_US/change-password', data={
+                    'password': 'new-password',
+                    'confirm': 'password'
+                })
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue("Passwords must match" in response.data)
 
-            # send correct password confirm but not old password
-            response = c.post('/en_US/change-password', data={
-                'old_password': 'passw',
-                'password': 'new-password',
-                'confirm': 'new-password'
-            })
-            self.assertEqual(response.status_code, 200)
-            self.assertTrue(
-                "The current password you entered is invalid" in response.data
-            )
+                # send correct password confirm but not old password
+                response = c.post('/en_US/change-password', data={
+                    'password': 'new-password',
+                    'confirm': 'new-password'
+                })
+                self.assertEqual(response.status_code, 200)
 
-            response = c.post('/en_US/change-password', data={
-                'old_password': 'password',
-                'password': 'new-password',
-                'confirm': 'new-password'
-            })
-            self.assertEqual(response.status_code, 302)
-            response = c.get('/en_US')
+                # send correct password confirm but not old password
+                response = c.post('/en_US/change-password', data={
+                    'old_password': 'passw',
+                    'password': 'new-password',
+                    'confirm': 'new-password'
+                })
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(
+                    "The current password you entered is invalid" in response.data
+                )
+
+                response = c.post('/en_US/change-password', data={
+                    'old_password': data['password'],
+                    'password': 'new-password',
+                    'confirm': 'new-password'
+                })
+                self.assertEqual(response.status_code, 302)
+                response = c.get('/en_US')
+
+                # Login now using new password
+                response = c.post('/en_US/login',
+                    data={
+                        'email': data['email'],
+                        'password': 'new-password'
+                    })
+                self.assertEqual(response.status_code, 302)
 
     def test_0040_reset_account(self):
         """
         Allow resetting password of the user
         """
-        with Transaction().start(
-                    testing_proxy.db_name, testing_proxy.user, None):
-            new_user_id, = self.nereid_user_obj.search(
-                    [('email', '=', 'new.test@example.com')]
-            )
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
 
-        app = self.get_app()
-        with app.test_client() as c:
-
-            # Try reset without login
-            response = c.get('/en_US/reset-account')
-            self.assertEqual(response.status_code, 200)
-            response = c.post('/en_US/reset-account', data={
-                'email': 'new.test@example.com',
-            })
-            self.assertEqual(response.status_code, 302)
-
-        with Transaction().start(
-                testing_proxy.db_name, testing_proxy.user, None):
-            new_user = self.nereid_user_obj.browse(new_user_id)
-            self.assertTrue(new_user.activation_code)
-
-        with app.test_client() as c:
-            # Try a Login now and the existing activation code for reset should
-            # not be there
-            response = c.post(
-                '/en_US/login',
-                data={
-                    'email': 'new.test@example.com',
-                    'password': 'new-password'
-                }
-            )
-            self.assertEqual(response.status_code, 302)
-
-        with Transaction().start(
-                testing_proxy.db_name, testing_proxy.user, None):
-            new_user = self.nereid_user_obj.browse(new_user_id)
-            self.assertFalse(new_user.activation_code)
-
-        with app.test_client() as c:
-            # Try to reset again
-            response = c.get('/en_US/reset-account')
-            self.assertEqual(response.status_code, 200)
-            response = c.post('/en_US/reset-account', data={
-                'email': 'new.test@example.com',
-            })
-            self.assertEqual(response.status_code, 302)
-
-        with Transaction().start(
-                testing_proxy.db_name, testing_proxy.user, None):
-            new_user = self.nereid_user_obj.browse(new_user_id)
-            self.assertTrue(new_user.activation_code != False)
-            activation_code = new_user.activation_code
-
-        with app.test_client() as c:
-            response = c.get(
-                '/en_US/activate-account/%d/%s' % (new_user_id, activation_code)
-            )
-            self.assertEqual(response.status_code, 302)
-
-            response = c.post('/en_US/new-password', data={
+            data = {
+                'name': 'Registered User',
+                'display_name': 'Registered User',
+                'email': 'email@example.com',
                 'password': 'password',
-                'confirm': 'password'
-            })
-            self.assertEqual(response.status_code, 302)
+                'company': self.company_id,
+            }
+            registered_user_id = self.nereid_user_obj.create(data.copy())
 
-        with Transaction().start(
-                testing_proxy.db_name, testing_proxy.user, None):
-            new_user = self.nereid_user_obj.browse(new_user_id)
-            self.assertFalse(new_user.activation_code)
+            with app.test_client() as c:
 
-        with app.test_client() as c:
-            response = c.post('/en_US/login',
-                data={
-                    'email': 'new.test@example.com', 'password': 'new-password'
-                }
-            )
-            self.assertEqual(response.status_code, 200)     # Login rejected
-            response = c.post('/en_US/login',
-                data={'email': 'new.test@example.com', 'password': 'password'})
-            self.assertEqual(response.status_code, 302)     # Login approved
+                # Try reset without login and page should render
+                response = c.get('/en_US/reset-account')
+                self.assertEqual(response.status_code, 200)
 
-    def test_0080_login(self):
+                # Try resetting password through email
+                response = c.post('/en_US/reset-account', data={
+                    'email': data['email'],
+                })
+                self.assertEqual(response.status_code, 302)
+
+                regd_user = self.nereid_user_obj.browse(registered_user_id)
+                self.assertTrue(regd_user.activation_code)
+
+                # A successful login after requesting activation code should
+                # just clear the activation code.
+                response = c.post(
+                    '/en_US/login',
+                    data={
+                        'email': data['email'],
+                        'password': data['password'],
+                    }
+                )
+                self.assertEqual(response.status_code, 302)
+                regd_user = self.nereid_user_obj.browse(registered_user_id)
+                self.assertFalse(regd_user.activation_code)
+
+            with app.test_client() as c:
+                # Try to reset again - with good intentions
+                response = c.post('/en_US/reset-account', data={
+                    'email': data['email'],
+                })
+                self.assertEqual(response.status_code, 302)
+
+                regd_user = self.nereid_user_obj.browse(registered_user_id)
+                self.assertTrue(regd_user.activation_code)
+
+                response = c.get(
+                    '/en_US/activate-account/%d/%s' % (
+                        regd_user.id, regd_user.activation_code
+                    )
+                )
+                self.assertEqual(response.status_code, 302)
+                self.assertTrue('/en_US/new-password' in response.data)
+
+                response = c.post('/en_US/new-password', data={
+                    'password': 'reset-password',
+                    'confirm': 'reset-password'
+                })
+                self.assertEqual(response.status_code, 302)
+
+                regd_user = self.nereid_user_obj.browse(registered_user_id)
+                self.assertFalse(regd_user.activation_code)
+
+                response = c.post('/en_US/login',
+                    data={
+                        'email': data['email'],
+                        'password': 'wrong-password'
+                    }
+                )
+                self.assertEqual(response.status_code, 200)     # Login rejected
+
+                response = c.post('/en_US/login',
+                    data={
+                        'email': data['email'],
+                        'password': 'reset-password'
+                    }
+                )
+                self.assertEqual(response.status_code, 302)     # Login approved
+
+    def test_0050_logout(self):
         """
-        Check for login with the next argument
+        Check for logout
         """
-        app = self.get_app()
-        with app.test_client() as c:
-            response = c.post('/en_US/login?next=/en_US',
-                data={'email': 'new.test@example.com', 'password': 'password'})
-            self.assertEqual(response.status_code, 302)     # Login approved 
-            self.assertTrue('<a href="/en_US">' in response.data)
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
 
-    def test_0090_logout(self):
-        """
-        Check for logout and consistent behavior
-        """
-        app = self.get_app()
-        with app.test_client() as c:
-            response = c.get("/en_US/account")
-            self.assertEqual(response.status_code, 302)
+            data = {
+                'name': 'Registered User',
+                'display_name': 'Registered User',
+                'email': 'email@example.com',
+                'password': 'password',
+                'company': self.company_id,
+            }
+            self.nereid_user_obj.create(data.copy())
 
-            # Login and check again
-            response = c.post('/en_US/login',
-                data={'email': 'new.test@example.com', 'password': 'password'})
-            self.assertEqual(response.status_code, 302)
+            with app.test_client() as c:
+                response = c.get("/en_US/account")
+                self.assertEqual(response.status_code, 302)
 
-            response = c.get("/en_US/account")
-            self.assertEqual(response.status_code, 200)
+                # Login and check again
+                response = c.post(
+                    '/en_US/login',
+                    data={'email': data['email'], 'password': data['password']}
+                )
+                self.assertEqual(response.status_code, 302)
 
-            response = c.get("/en_US/logout")
-            self.assertEqual(response.status_code, 302)
+                response = c.get("/en_US/account")
+                self.assertEqual(response.status_code, 200)
 
-            response = c.get("/en_US/account")
-            self.assertEqual(response.status_code, 302)
+                response = c.get("/en_US/logout")
+                self.assertEqual(response.status_code, 302)
 
-    def test_0100_my_account(self):
-        """
-        Check if my account page can only be accessed while logged in
-        """
-        app = self.get_app()
-        with app.test_client() as c:
-            response = c.get("/en_US/account")
-            self.assertEqual(response.status_code, 302)
+                response = c.get("/en_US/account")
+                self.assertEqual(response.status_code, 302)
 
-            # Login and check again
-            response = c.post('/en_US/login',
-                data={'email': 'new.test@example.com', 'password': 'password'})
-            self.assertEqual(response.status_code, 302)
-
-            response = c.get("/en_US/account")
-            self.assertEqual(response.status_code, 200)
-
-    def test_0110_has_perm(self):
+    def test_0060_has_perm(self):
         """Test the has_perm decorator
         """
-        app = self.get_app()
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
 
-        with Transaction().start(testing_proxy.db_name, 1, None) as txn:
-
-            with app.test_request_context():
-                @permissions_required(['admin'])
-                def test_permission():
-                    return True
-
-                with app.test_client() as c:
-                    self.assertRaises(Exception, test_permission)
-
-                perm_id_1 = self.nereid_permission_obj.create({
-                    'name': 'Admin',
-                    'value': 'admin',
-                })
-                perm_id_2 = self.nereid_permission_obj.create({
-                    'name': 'Nereid Admin',
-                    'value': 'nereid_admin',
-                })
-
-                self.permission_user_obj.create({
-                    'permission': perm_id_1,
-                    'nereid_user': self.guest_user
-                })
-                self.permission_user_obj.create({
-                    'permission': perm_id_2,
-                    'nereid_user': self.guest_user
-                })
-
-                txn.cursor.commit()
+            @permissions_required(['admin'])
+            def test_permission_1():
+                return True
 
             with app.test_request_context():
-                @permissions_required(['admin'])
-                def test_permission():
-                    return True
+                self.assertRaises(Forbidden, test_permission_1)
 
-                with app.test_client() as c:
-                    self.assertTrue(test_permission())
+            perm_admin = self.nereid_permission_obj.create({
+                'name': 'Admin',
+                'value': 'admin',
+            })
+            perm_nereid_admin = self.nereid_permission_obj.create({
+                'name': 'Nereid Admin',
+                'value': 'nereid_admin',
+            })
 
-                @permissions_required(['admin', 'nereid_admin'])
-                def test_permission():
-                    return True
+            self.nereid_user_obj.write(
+                self.guest_user_id, {'permissions': [('set', [perm_admin])]}
+            )
+            @permissions_required(['admin'])
+            def test_permission_2():
+                return True
 
-                with app.test_client() as c:
-                    self.assertTrue(test_permission())
+            with app.test_request_context():
+                self.assertTrue(test_permission_2())
+
+            @permissions_required(['admin', 'nereid_admin'])
+            def test_permission_3():
+                return True
+
+            with app.test_request_context():
+                self.assertRaises(Forbidden, test_permission_3)
+
+            self.nereid_user_obj.write(
+                self.guest_user_id,
+                {'permissions': [('set', [perm_admin, perm_nereid_admin])]}
+            )
+            with app.test_request_context():
+                self.assertTrue(test_permission_3())
+
 
 def suite():
     "Nereid test suite"
-    suite = unittest.TestSuite()
-    suite.addTests(
+    test_suite = unittest.TestSuite()
+    test_suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestAuth)
         )
-    return suite
+    return test_suite
 
 
 if __name__ == '__main__':

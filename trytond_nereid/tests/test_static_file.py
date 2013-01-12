@@ -1,135 +1,183 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
     test_static_file
 
     Test the static file feature of nereid  
 
-    :copyright: (c) 2012 by Openlabs Technologies & Consulting (P) LTD
-    :license: BSD, see LICENSE for more details.
+    :copyright: (c) 2012-2013 by Openlabs Technologies & Consulting (P) LTD
+    :license: GPLv3, see LICENSE for more details.
 """
 import new
+import unittest
 import functools
-import unittest2 as unittest
 
+import trytond.tests.test_tryton
+from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
+from trytond.transaction import Transaction
 from trytond.config import CONFIG
-CONFIG.options['db_type'] = 'sqlite'
+from nereid.testing import NereidTestCase
+from nereid import render_template
+
+CONFIG['smtp_server'] = 'smtpserver'
+CONFIG['smtp_user'] = 'test@xyz.com'
+CONFIG['smtp_password'] = 'testpassword'
+CONFIG['smtp_port'] = 587
+CONFIG['smtp_tls'] = True
+CONFIG['smtp_from'] = 'from@xyz.com'
 CONFIG.options['data_path'] = '/tmp/temp_tryton_data/'
 
-from trytond.modules import register_classes
-register_classes()
-from nereid import render_template
-from nereid.testing import testing_proxy, TestCase
-from trytond.transaction import Transaction
-from trytond.pool import Pool
 
+class TestStaticFile(NereidTestCase):
 
-class TestStaticFile(TestCase):
+    def setUp(self):
+        trytond.tests.test_tryton.install_module('nereid')
 
-    @classmethod
-    def setUpClass(cls):
-        super(TestStaticFile, cls).setUpClass()
+        self.nereid_website_obj = POOL.get('nereid.website')
+        self.nereid_user_obj = POOL.get('nereid.user')
+        self.url_map_obj = POOL.get('nereid.url_map')
+        self.company_obj = POOL.get('company.company')
+        self.currency_obj = POOL.get('currency.currency')
+        self.language_obj = POOL.get('ir.lang')
+        self.country_obj = POOL.get('country.country')
+        self.subdivision_obj = POOL.get('country.subdivision')
+        self.party_obj = POOL.get('party.party')
+        self.address_obj = POOL.get('party.address')
+        self.contact_mech_obj = POOL.get('party.contact_mechanism')
+        self.static_file_obj = POOL.get('nereid.static.file')
+        self.static_folder_obj = POOL.get('nereid.static.folder')
 
-        testing_proxy.install_module('nereid')  # Install module
+    def setup_defaults(self):
+        """
+        Setup the defaults
+        """
+        usd = self.currency_obj.create({
+            'name': 'US Dollar',
+            'code': 'USD',
+            'symbol': '$',
+        })
+        company_id = self.company_obj.create({
+            'name': 'Openlabs',
+            'currency': usd
+        })
+        guest_user = self.nereid_user_obj.create({
+            'name': 'Guest User',
+            'display_name': 'Guest User',
+            'email': 'guest@openlabs.co.in',
+            'password': 'password',
+            'company': company_id,
+        })
+        self.registered_user_id = self.nereid_user_obj.create({
+            'name': 'Registered User',
+            'display_name': 'Registered User',
+            'email': 'email@example.com',
+            'password': 'password',
+            'company': company_id,
+        })
 
-        with Transaction().start(testing_proxy.db_name, 1, None) as txn:
-            company = testing_proxy.create_company('Test Company')
-            testing_proxy.set_company_for_user(1, company)
+        url_map_id, = self.url_map_obj.search([], limit=1)
+        en_us, = self.language_obj.search([('code', '=', 'en_US')])
+        self.nereid_website_obj.create({
+            'name': 'localhost',
+            'url_map': url_map_id,
+            'company': company_id,
+            'application_user': USER,
+            'default_language': en_us,
+            'guest_user': guest_user,
+        })
 
-            cls.guest_user = testing_proxy.create_guest_user(company=company)
-
-            cls.site = testing_proxy.create_site(
-                'localhost',
-                application_user = 1, guest_user = cls.guest_user
-            )
-
-            # Create a homepage template
-            testing_proxy.create_template(
-                'home.jinja',
+    def get_template_source(self, name):
+        """
+        Return templates
+        """
+        templates = {
+            'localhost/home.jinja':
                 '''
                 {% set static_file = static_file_obj.browse(static_file_id) %}
                 {{ static_file.url }}
-                ''', cls.site
-            )
+                ''',
 
-            txn.cursor.commit()
+        }
+        return templates.get(name)
 
-    def get_app(self, **options):
-        options.update({
-            'SITE': 'testsite.com',
-            'GUEST_USER': self.guest_user,
+    def create_static_file(self, file_buffer):
+        """
+        Creates the static file for testing
+        """
+        folder_id = self.static_folder_obj.create({
+            'folder_name': 'test',
+            'description': 'Test Folder'
         })
-        return testing_proxy.make_app(**options)
 
-    def setUp(self):
-        self.static_folder_obj = testing_proxy.pool.get('nereid.static.folder')
-        self.static_file_obj = testing_proxy.pool.get('nereid.static.file')
-        self.website_obj = testing_proxy.pool.get('nereid.website')
-
-    def test_000_view(self):
-        from trytond.tests.test_tryton import test_view
-        test_view('nereid')
+        return self.static_file_obj.create({
+            'name': 'test.png',
+            'folder': folder_id,
+            'file_binary': file_buffer,
+        })
 
     def test_0010_static_file(self):
         """
         Create a static folder, and a static file
         And check if it can be fetched
         """
-        with Transaction().start(testing_proxy.db_name, 1, None) as txn:
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+
+            file_buffer = buffer('test-content')
+            file_id = self.create_static_file(file_buffer)
+            static_file = self.static_file_obj.browse(file_id)
+            self.assertEqual(static_file.file_binary, file_buffer)
+
+            app = self.get_app()
+
+            with app.test_client() as c:
+                rv = c.get('/en_US/static-file/test/test.png')
+                self.assertEqual(rv.data, 'test-content')
+                self.assertEqual(rv.headers['Content-Type'], 'image/png')
+                self.assertEqual(rv.status_code, 200)
+
+    def test_0020_static_file_url(self):
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+
+            file_buffer = buffer('test-content')
+            file_id = self.create_static_file(file_buffer)
+            file = self.static_file_obj.browse(file_id)
+            self.assertFalse(file.url)
+
+            app = self.get_app()
+            static_file_obj = self.static_file_obj
+            with app.test_client() as c:
+                # Patch the home page method
+                def home_func(self, file_id):
+                    return render_template(
+                        'home.jinja',
+                        static_file_obj=static_file_obj,
+                        static_file_id=file_id,
+                    )
+                home_func = functools.partial(home_func, file_id=file_id)
+                c.application.view_functions[
+                    'nereid.website.home'] = new.instancemethod(
+                        home_func, self.nereid_website_obj
+                )
+                self.nereid_website_obj.home = new.instancemethod(
+                    home_func, self.nereid_website_obj
+                )
+                rv = c.get('/en_US/')
+                self.assertTrue('/en_US/static-file/test/test.png' in rv.data)
+                self.assertEqual(rv.status_code, 200)
+
+    def test_0030_static_file_remote_url(self):
+        """
+        Test a static file with remote type
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+
             folder_id = self.static_folder_obj.create({
                 'folder_name': 'test',
                 'description': 'Test Folder'
             })
-
-            file_buffer = buffer('test-content')
-            file_id = self.static_file_obj.create({
-                'name': 'test.png',
-                'folder': folder_id,
-                'file_binary': file_buffer
-            })
-            static_file = self.static_file_obj.browse(file_id)
-            self.assertEqual(static_file.file_binary, file_buffer)
-
-            txn.cursor.commit()
-
-        app = self.get_app()
-
-        with app.test_client() as c:
-            rv = c.get('/en_US/static-file/test/test.png')
-            self.assertEqual(rv.data, 'test-content')
-            self.assertEqual(rv.headers['Content-Type'], 'image/png')
-            self.assertEqual(rv.status_code, 200)
-
-    def test_0020_static_file_url(self):
-        with Transaction().start(testing_proxy.db_name, 1, None) as txn:
-            file_id, = self.static_file_obj.search([], limit=1)
-            file = self.static_file_obj.browse(file_id)
-            self.assertFalse(file.url)
-
-        app = self.get_app()
-        with app.test_client() as c:
-            # Patch the home page method
-            def home_func(self, file_id):
-                static_file_obj = Pool().get('nereid.static.file')
-                return render_template(
-                    'home.jinja', 
-                    static_file_obj=static_file_obj,
-                    static_file_id=file_id,
-                )
-            home_func = functools.partial(home_func, file_id=file_id)
-            c.application.view_functions[
-                'nereid.website.home'] = new.instancemethod(
-                    home_func, self.website_obj
-            )
-            self.website_obj.home = new.instancemethod(
-                home_func, self.website_obj
-            )
-            rv = c.get('/en_US/')
-            self.assertTrue('/en_US/static-file/test/test.png' in rv.data)
-            self.assertEqual(rv.status_code, 200)
-
-    def test_0030_static_file_remote_url(self):
-        with Transaction().start(testing_proxy.db_name, 1, None) as txn:
-            folder_id, = self.static_folder_obj.search([])
             file_id = self.static_file_obj.create({
                 'name': 'remote.png',
                 'folder': folder_id,
@@ -138,40 +186,39 @@ class TestStaticFile(TestCase):
             })
             file = self.static_file_obj.browse(file_id)
             self.assertFalse(file.url)
-            txn.cursor.commit()
 
-        app = self.get_app()
-        with app.test_client() as c:
-            # Patch the home page method
-            def home_func(self, file_id):
-                static_file_obj = Pool().get('nereid.static.file')
-                return render_template(
-                    'home.jinja',
-                    static_file_obj=static_file_obj,
-                    static_file_id=file_id,
+            app = self.get_app()
+            static_file_obj = POOL.get('nereid.static.file')
+            with app.test_client() as c:
+                # Patch the home page method
+                def home_func(self, file_id):
+                    return render_template(
+                        'home.jinja',
+                        static_file_obj=static_file_obj,
+                        static_file_id=file_id,
+                    )
+                home_func = functools.partial(home_func, file_id=file_id)
+                c.application.view_functions[
+                    'nereid.website.home'] = new.instancemethod(
+                        home_func, self.nereid_website_obj
                 )
-            home_func = functools.partial(home_func, file_id=file_id)
-            c.application.view_functions[
-                'nereid.website.home'] = new.instancemethod(
-                    home_func, self.website_obj
-            )
-            self.website_obj.home = new.instancemethod(
-                home_func, self.website_obj
-            )
-            rv = c.get('/en_US/')
-            self.assertTrue(
-                'http://openlabs.co.in/logo.png' in rv.data
-            )
-            self.assertEqual(rv.status_code, 200)
+                self.nereid_website_obj.home = new.instancemethod(
+                    home_func, self.nereid_website_obj
+                )
+                rv = c.get('/en_US/')
+                self.assertTrue(
+                    'http://openlabs.co.in/logo.png' in rv.data
+                )
+                self.assertEqual(rv.status_code, 200)
 
 
 def suite():
     "Nereid test suite"
-    suite = unittest.TestSuite()
-    suite.addTests(
+    test_suite = unittest.TestSuite()
+    test_suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestStaticFile)
         )
-    return suite
+    return test_suite
 
 
 if __name__ == '__main__':

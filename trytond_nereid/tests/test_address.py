@@ -1,333 +1,326 @@
 # -*- coding: utf-8 -*-
 """
-    nereid.test
 
     Test the configuration features for nereid
 
-    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2013 by Openlabs Technologies & Consulting (P) Ltd.
     :license: GPLv3, see LICENSE for more details.
 """
-import unittest2 as unittest
+import json
+import unittest
 
-from minimock import Mock
-import smtplib
-smtplib.SMTP = Mock('smtplib.SMTP')
-smtplib.SMTP.mock_returns = Mock('smtp_connection')
-
+import pycountry
+from mock import patch
+import trytond.tests.test_tryton
+from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
+from trytond.transaction import Transaction
 from trytond.config import CONFIG
-CONFIG.options['db_type'] = 'sqlite'
-CONFIG.options['data_path'] = '/tmp/temp_tryton_data/'
-CONFIG['smtp_server'] = 'smtp.gmail.com'
+from nereid.testing import NereidTestCase
+
+CONFIG['smtp_server'] = 'smtpserver'
 CONFIG['smtp_user'] = 'test@xyz.com'
 CONFIG['smtp_password'] = 'testpassword'
 CONFIG['smtp_port'] = 587
 CONFIG['smtp_tls'] = True
-CONFIG['smtp_from'] = 'from@xyz.com' 
-from trytond.modules import register_classes
-register_classes()
+CONFIG['smtp_from'] = 'from@xyz.com'
 
-from nereid.testing import testing_proxy, TestCase
-from trytond.transaction import Transaction
 
-GUEST_EMAIL = 'guest@example.com'
-NEW_USER = 'new.test@example.com'
-NEW_PASS = 'password'
-
-class TestAddress(TestCase):
+class TestAddress(NereidTestCase):
     'Test Address'
 
-    @classmethod
-    def setUpClass(cls):
-        super(TestAddress, cls).setUpClass()
-        testing_proxy.install_module('nereid')
-
-        country_obj = testing_proxy.pool.get('country.country')
-
-        with Transaction().start(testing_proxy.db_name, 1, None) as txn:
-            company = testing_proxy.create_company('Test Company')
-            testing_proxy.set_company_for_user(1, company)
-
-            cls.guest_user = testing_proxy.create_guest_user(company=company)
-            cls.regd_user_id = testing_proxy.create_user_party(
-                'Registered User', 'email@example.com', 'password', company
-            )
-
-            cls.available_countries = country_obj.search([], limit=5)
-            cls.site = testing_proxy.create_site(
-                'localhost',
-                countries = [('set', cls.available_countries)],
-                application_user = 1, guest_user = cls.guest_user
-                )
-
-            testing_proxy.create_template(
-                'home.jinja',
-                '{{get_flashed_messages()}}', cls.site)
-            testing_proxy.create_template(
-                'login.jinja',
-                '{{ login_form.errors }} {{get_flashed_messages()}}', cls.site)
-            testing_proxy.create_template(
-                'registration.jinja',
-                '{{ form.errors }} {{get_flashed_messages()}}', cls.site)
-
-            testing_proxy.create_template(
-                'reset-password.jinja', '', cls.site)
-            testing_proxy.create_template(
-                'change-password.jinja',
-                '{{ change_password_form.errors }}', cls.site)
-            testing_proxy.create_template(
-                'address-edit.jinja',
-                'Address Edit {{ form.errors }}', cls.site)
-            testing_proxy.create_template(
-                'address.jinja', '', cls.site)
-            testing_proxy.create_template(
-                'account.jinja', '', cls.site)
-            # Create templates for activation emails
-            testing_proxy.create_template(
-                'emails/activation-text.jinja', '', cls.site
-            )
-            testing_proxy.create_template(
-                'emails/activation-html.jinja', '', cls.site
-            )
-            testing_proxy.create_template(
-                'emails/reset-text.jinja', '', cls.site
-            )
-            testing_proxy.create_template(
-                'emails/reset-html.jinja', '', cls.site
-            )
-            txn.cursor.commit()
-
-    def get_app(self, **options):
-        options.update({
-            'SITE': 'testsite.com',
-            })
-        return testing_proxy.make_app(**options)
-
     def setUp(self):
-        self.nereid_user_obj = testing_proxy.pool.get('nereid.user')
-        self.address_obj = testing_proxy.pool.get('party.address')
-        self.country_obj = testing_proxy.pool.get('country.country')
-        self.subdivision_obj = testing_proxy.pool.get('country.subdivision')
-        self.website_obj = testing_proxy.pool.get('nereid.website')
-        self.contact_mech_obj = testing_proxy.pool.get(
-            'party.contact_mechanism'
-        )
+        trytond.tests.test_tryton.install_module('nereid')
+
+        self.nereid_website_obj = POOL.get('nereid.website')
+        self.nereid_user_obj = POOL.get('nereid.user')
+        self.url_map_obj = POOL.get('nereid.url_map')
+        self.company_obj = POOL.get('company.company')
+        self.currency_obj = POOL.get('currency.currency')
+        self.language_obj = POOL.get('ir.lang')
+        self.country_obj = POOL.get('country.country')
+        self.subdivision_obj = POOL.get('country.subdivision')
+        self.party_obj = POOL.get('party.party')
+        self.address_obj = POOL.get('party.address')
+        self.contact_mech_obj = POOL.get('party.contact_mechanism')
+
+        # Patch SMTP Lib
+        self.smtplib_patcher = patch('smtplib.SMTP')
+        self.PatchedSMTP = self.smtplib_patcher.start()
+
+    def tearDown(self):
+        # Unpatch SMTP Lib
+        self.smtplib_patcher.stop()
+
+    def create_countries(self, count=5):
+        """
+        Create some sample countries and subdivisions
+        """
+        for country in list(pycountry.countries)[0:count]:
+            country_id = self.country_obj.create({
+                'name': country.name,
+                'code': country.alpha2,
+            })
+            try:
+                divisions = pycountry.subdivisions.get(
+                    country_code=country.alpha2
+                )
+            except KeyError:
+                pass
+            else:
+                for subdivision in list(divisions)[0:count]:
+                    self.subdivision_obj.create({
+                        'country': country_id,
+                        'name': subdivision.name,
+                        'code': subdivision.code,
+                        'type': subdivision.type.lower(),
+                    })
+
+    def setup_defaults(self):
+        """
+        Setup the defaults
+        """
+        usd = self.currency_obj.create({
+            'name': 'US Dollar',
+            'code': 'USD',
+            'symbol': '$',
+        })
+        company_id = self.company_obj.create({
+            'name': 'Openlabs',
+            'currency': usd
+        })
+        guest_user = self.nereid_user_obj.create({
+            'name': 'Guest User',
+            'display_name': 'Guest User',
+            'email': 'guest@openlabs.co.in',
+            'password': 'password',
+            'company': company_id,
+        })
+        self.registered_user_id = self.nereid_user_obj.create({
+            'name': 'Registered User',
+            'display_name': 'Registered User',
+            'email': 'email@example.com',
+            'password': 'password',
+            'company': company_id,
+        })
+
+        self.create_countries()
+        self.available_countries = self.country_obj.search([], limit=5)
+
+        url_map_id, = self.url_map_obj.search([], limit=1)
+        en_us, = self.language_obj.search([('code', '=', 'en_US')])
+        self.nereid_website_obj.create({
+            'name': 'localhost',
+            'url_map': url_map_id,
+            'company': company_id,
+            'application_user': USER,
+            'default_language': en_us,
+            'guest_user': guest_user,
+            'countries': [('set', self.available_countries)],
+        })
+
+    def get_template_source(self, name):
+        """
+        Return templates
+        """
+        templates = {
+            'localhost/home.jinja': '{{get_flashed_messages()}}',
+            'localhost/login.jinja':
+                    '{{ login_form.errors }} {{get_flashed_messages()}}',
+            'localhost/registration.jinja':
+                    '{{ form.errors }} {{get_flashed_messages()}}',
+            'localhost/reset-password.jinja': '',
+            'localhost/change-password.jinja':
+                    '{{ change_password_form.errors }}',
+            'localhost/address-edit.jinja': 'Address Edit {{ form.errors }}',
+            'localhost/address.jinja': '',
+            'localhost/account.jinja': '',
+            'localhost/emails/activation-text.jinja': 'activation-email-text',
+            'localhost/emails/activation-html.jinja': 'activation-email-html',
+            'localhost/emails/reset-text.jinja': 'reset-email-text',
+            'localhost/emails/reset-html.jinja': 'reset-email-html',
+        }
+        return templates.get(name)
 
     def test_0010_add_address(self):
         """
         Add an address for the user
         """
-        app = self.get_app()
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
 
-        with app.test_client() as c:
-            # Without login, redirect to login
-            data = {
-                'name': 'New Test Registered User',
-                'email': 'new.test@example.com',
-                'password': 'password',
-                'confirm': 'password',
-            }
-            response = c.post('/en_US/registration', data=data)
-            self.assertEqual(response.status_code, 302)
-
-        with Transaction().start(
-                testing_proxy.db_name, testing_proxy.user, None) as txn:
-            nereid_user_id, = self.nereid_user_obj.search([
-                ('email', '=', 'new.test@example.com')
-            ])
-            self.nereid_user_obj.write(
-                nereid_user_id, {'activation_code': None}
-            ) # Force activate the user
-            new_user = self.nereid_user_obj.browse(nereid_user_id)
-
-            # When a party is created an address record is also created
-            address_id, = self.address_obj.search(
-                [('party', '=', new_user.party.id)]
+            registered_user = self.nereid_user_obj.browse(
+                self.registered_user_id
             )
-
-            # Create a new address data that could be sent to server
-            country = self.available_countries[0]
-            subdivision = self.country_obj.browse(country).subdivisions[0].id
             address_data = {
                 'name': 'Name',
                 'street': 'Street',
                 'streetbis': 'StreetBis',
                 'zip': 'zip',
                 'city': 'City',
-                'country': country,
-                'subdivision': subdivision,
-                }
-            txn.cursor.commit()
+                'country': self.available_countries[0],
+                'subdivision': self.country_obj.browse(
+                        self.available_countries[0]).subdivisions[0].id,
+            }
 
-        with app.test_client() as c:
-            # Login and list addresses
-            response = c.post('/en_US/login', 
-                data={'email': 'new.test@example.com', 'password': 'password'}
-            )
-
-            self.assertEqual(response.status_code, 302)
-            response = c.get('/en_US/edit-address/%d' % address_id)
-            self.assertEqual(response.status_code, 200)
-
-            # POST and a new address must be created
-            response = c.post(
-                '/en_US/edit-address/%d' % address_id,
-                data=address_data
-            )
-            self.assertEqual(response.status_code, 302)
-
-        with Transaction().start(
-                testing_proxy.db_name, testing_proxy.user, None):
-            new_user = self.nereid_user_obj.browse(nereid_user_id)
-            for address in new_user.party.addresses:
-                address_from_db = self.address_obj.read(
-                    address.id, address_data.keys()
+            with app.test_client() as c:
+                response = c.post(
+                    '/en_US/login',
+                    data={
+                        'email': 'email@example.com',
+                        'password': 'password',
+                    }
                 )
-                address_from_db.pop('id')
-                if address_from_db == address_data:
-                    break
-            else:
-                self.fail("Address record data mismatch")
+                self.assertEqual(response.status_code, 302) # Login success
 
-    def test_0060_edit_address(self):
-        "Edit the address of a user"
-        app = self.get_app()
+                # Assert that the user has only 1 address, which gets created
+                # automatically with the party
+                self.assertEqual(len(registered_user.party.addresses), 1)
+                existing_address, = registered_user.party.addresses
 
-        with Transaction().start(
-                testing_proxy.db_name, testing_proxy.user, None):
-            new_user_id, = self.nereid_user_obj.search(
-                [('email', '=', 'new.test@example.com')]
+                # POST and a new address must be created
+                response = c.post('/en_US/save-new-address', data=address_data)
+                self.assertEqual(response.status_code, 302)
+
+                # Re browse the record
+                registered_user = self.nereid_user_obj.browse(
+                    self.registered_user_id
+                )
+                # Check if the user has two addresses now
+                self.assertEqual(len(registered_user.party.addresses), 2)
+                for address in registered_user.party.addresses:
+                    if address != existing_address:
+                        break
+                else:
+                    self.fail("New address not found")
+
+                self.assertEqual(address.name, address_data['name'])
+                self.assertEqual(address.street, address_data['street'])
+                self.assertEqual(address.streetbis, address_data['streetbis'])
+                self.assertEqual(address.zip, address_data['zip'])
+                self.assertEqual(address.city, address_data['city'])
+                self.assertEqual(address.country.id, address_data['country'])
+                self.assertEqual(
+                    address.subdivision.id, address_data['subdivision']
+                )
+
+    def test_0020_edit_address(self):
+        """
+        Edit an address for the user
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            registered_user = self.nereid_user_obj.browse(
+                self.registered_user_id
             )
-            new_user = self.nereid_user_obj.browse(new_user_id)
-            address_id, = self.address_obj.search(
-                [('party', '=', new_user.party.id)], limit=1
-            )
-
-        with app.test_client() as c:
-            c.post('/en_US/login', 
-                data={'email': 'new.test@example.com', 'password': 'password'})
-
-            # On submitting an empty form the page should load back
-            response = c.get('/en_US/edit-address/%d' % address_id)
-            self.assertEqual(response.status_code, 200)
-
-        with Transaction().start(
-                testing_proxy.db_name, testing_proxy.user, None):
-            website_id = self.website_obj.search([])[0]
-            website = self.website_obj.browse(website_id)
-            country = website.countries[1]
-            subdivision = country.subdivisions[2]
             address_data = {
-                'name': 'New test User 2',
-                'street': 'New Street 2',
-                'streetbis': 'New Street2 2',
-                'zip': '678GHB',
-                'city': 'Test City 2',
-                'country': country.id,
-                'subdivision': subdivision.id,
-                }
+                'name': 'Name',
+                'street': 'Street',
+                'streetbis': 'StreetBis',
+                'zip': 'zip',
+                'city': 'City',
+                'country': self.available_countries[0],
+                'subdivision': self.country_obj.browse(
+                        self.available_countries[0]).subdivisions[0].id,
+            }
 
-        with app.test_client() as c:
-            c.post('/en_US/login', 
-                data={'email': 'new.test@example.com', 'password': 'password'})
-            response = c.post(
-                '/en_US/edit-address/%d' % address_id,
-                data=address_data
-            )
-            self.assertEqual(response.status_code, 302)
+            with app.test_client() as c:
+                response = c.post(
+                    '/en_US/login',
+                    data={
+                        'email': 'email@example.com',
+                        'password': 'password',
+                    }
+                )
+                self.assertEqual(response.status_code, 302) # Login success
 
-            response = c.post('/en_US/edit-address/%d' % 0, data=address_data)
-            self.assertEqual(response.status_code, 302)
+                # Assert that the user has only 1 address, which gets created
+                # automatically with the party
+                self.assertEqual(len(registered_user.party.addresses), 1)
+                existing_address, = registered_user.party.addresses
 
-        with Transaction().start(
-                testing_proxy.db_name, testing_proxy.user, None):
-            address = self.address_obj.read(address_id, address_data.keys())
-            address.pop('id')
-            self.assertEqual(address, address_data)
+                # POST to the existing address must updatethe existing address
+                response = c.post(
+                    '/en_US/edit-address/%d' % existing_address.id,
+                    data=address_data
+                )
+                self.assertEqual(response.status_code, 302)
 
-    def test_0070_view_address(self):
-        app = self.get_app()
-        with app.test_client() as c:
-            c.post('/en_US/login', 
-                data={'email': 'new.test@example.com', 'password': 'password'})
-            response = c.get('/en_US/view-address')
-            self.assertEqual(response.status_code, 200)
+                # Assert that the user has only 1 address, which gets created
+                # automatically with the party
+                self.assertEqual(len(registered_user.party.addresses), 1)
 
-    def test_0080_login(self):
-        "Check whether a registered user can login"
-        app = self.get_app()
-        with app.test_client() as c:
+                address = self.address_obj.browse(existing_address.id)
+                self.assertEqual(address.name, address_data['name'])
+                self.assertEqual(address.street, address_data['street'])
+                self.assertEqual(address.streetbis, address_data['streetbis'])
+                self.assertEqual(address.zip, address_data['zip'])
+                self.assertEqual(address.city, address_data['city'])
+                self.assertEqual(address.country.id, address_data['country'])
+                self.assertEqual(
+                    address.subdivision.id, address_data['subdivision']
+                )
 
-            # Correct entries will redirect to home or some other page
-            response = c.post('/en_US/login', 
-                data={'email': 'new.test@example.com', 'password': 'password'})
-            self.assertEqual(response.status_code, 302)
+    def test_0030_view_addresses(self):
+        """
+        Display a list of all addresses
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
 
-            # Wrong entries will render the login page again
-            response = c.post('/en_US/login', 
-                data={
-                    'email': 'new.test@example.com', 
-                    'password': 'wrong-password'})
-            self.assertEqual(response.status_code, 200)
+            with app.test_client() as c:
+                response = c.post(
+                    '/en_US/login',
+                    data={
+                        'email': 'email@example.com',
+                        'password': 'password',
+                    }
+                )
+                self.assertEqual(response.status_code, 302) # Login success
 
-    def test_0090_logout(self):
-        "Check whether a logged in user can logout"
-        app = self.get_app()
-        with app.test_client() as c:
-            c.post('/en_US/login', 
-                data={'email': 'new.test@example.com', 'password': 'password'})
+            with app.test_client() as c:
+                response = c.get('/en_US/view-address')
+                self.assertEqual(response.status_code, 302) # Redir to login
 
-            response = c.get('/en_US/logout')
-            self.assertEqual(response.status_code, 302)
+    def test_0040_country_list(self):
+        """
+        Check if the website countries are there in country list
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+            with app.test_client() as c:
+                response = c.get('/en_US/countries')
+                self.assertEqual(len(json.loads(response.data)['result']), 5)
 
-    def test_0100_account(self):
-        "Check the display the account details of a user"
-        app = self.get_app()
-        with app.test_client() as c:
-            c.post('/en_US/login', 
-                data={'email': 'new.test@example.com', 'password': 'password'})
+    def test_0050_subdivision_list(self):
+        """
+        Check if a country's subdivisions are returned
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
 
-            response = c.get('/en_US/account')
-            self.assertEqual(response.status_code, 200)
+            # Set in :meth:`setup_defaults`
+            country = self.available_countries[1]
 
-    def test_0110_country_list(self):
-        "Check if the website countries are there in country list"
-        app = self.get_app()
-        with app.test_client() as c:
-            response = c.get('/en_US/countries')
-            self.assertEqual(len(eval(response.data)['result']), 5)
+            with app.test_client() as c:
+                response = c.get('/en_US/subdivisions?country=%d' % country)
+                self.assertNotEqual(
+                    len(json.loads(response.data)['result']), 0
+                )
 
-    def test_0120_subdivision_list(self):
-        "Check if a country has states"
-        with Transaction().start(testing_proxy.db_name, testing_proxy.user, None):
-            website_id = self.website_obj.search([])[0]
-            website = self.website_obj.browse(website_id)
-            country = website.countries[1]
-        app = self.get_app()
-        with app.test_client() as c:
-            response = c.get('/en_US/subdivisions?country=%d' % country)
-            self.assertEqual(not(len(eval(response.data)['result'])), 0)
-            
-    def test_0130_addtional_details(self):
-        "Test whether the additional details work"
-        address_additional = testing_proxy.pool.get('address.additional_details')
-        with Transaction().start(testing_proxy.db_name, testing_proxy.user, None):
-            any_user_id = self.address_obj.search([])[0]
-            address_additional.create({
-                'type': 'dob',
-                'value': '1/1/2000',
-                'sequence': 10,
-                'address': any_user_id})
-            any_user = self.address_obj.browse(any_user_id)
-            self.assertEqual(any_user.additional_details[0].value, '1/1/2000')
-            
 
 def suite():
     "Nereid test suite"
-    suite = unittest.TestSuite()
-    suite.addTests(
+    test_suite = unittest.TestSuite()
+    test_suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestAddress)
         )
-    return suite
+    return test_suite
 
 
 if __name__ == '__main__':
