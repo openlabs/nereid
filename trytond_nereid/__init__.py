@@ -6,13 +6,12 @@
 Tryton module to support Nereid
 
 :copyright: (c) 2010 by Sharoon Thomas.
-:copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Limited.
+:copyright: (c) 2010-2013 by Openlabs Technologies & Consulting (P) Limited.
 :license: GPLv3, see LICENSE for more details
 '''
-
-from .party import Address, NereidUser
-from .routing import *
-from .template import Template
-from .static_file import NereidStaticFolder, NereidStaticFile
-from .currency import Currency
-from .attachment import *
+import party
+import routing
+import static_file
+import currency
+import attachment
+import template
