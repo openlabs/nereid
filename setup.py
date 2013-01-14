@@ -65,7 +65,7 @@ setup(
     install_requires=[
         'distribute',
         'trytond>=2.4,<2.5',
-        'flask>=0.8,<0.9',
+        'flask',
         'wtforms',
         'wtforms-recaptcha',
         'ccy',
