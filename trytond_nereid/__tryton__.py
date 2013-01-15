@@ -21,6 +21,7 @@
        'static_file.xml',
        'urls.xml',
        'party.xml',
+       'lang.xml',
     ],
     'translation': [
     ],

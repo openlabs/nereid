@@ -68,7 +68,6 @@ setup(
         'flask',
         'wtforms',
         'wtforms-recaptcha',
-        'ccy',
         'babel',
         'speaklater',
         'Flask-Babel',

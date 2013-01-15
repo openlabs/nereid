@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+        This file is part of Tryton & Nereid. The COPYRIGHT file at the
+        top level of this repository contains the full copyright notices
+        and license terms.
+    -->
+<tryton>
+    <data>
+        <record model="ir.ui.view" id="lang_view_tree">
+            <field name="model">ir.lang</field>
+            <field name="type">tree</field>
+            <field name="inherit" ref="ir.lang_view_tree"/>
+            <field name="arch" type="xml">
+                <![CDATA[
+                  <data>
+                    <xpath expr="/tree/field[@name='active']" position="after">
+                        <field name="default_currency"/>
+                    </xpath>
+                  </data>
+                ]]>
+            </field>
+        </record>
+    </data>
+</tryton>

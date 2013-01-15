@@ -44,6 +44,7 @@ class TestCurrency(NereidTestCase):
             'name': 'Openlabs',
             'currency': usd
         })
+        self.company = self.company_obj.browse(self.company_id)
         self.guest_user_id = self.nereid_user_obj.create({
             'name': 'Guest User',
             'display_name': 'Guest User',
@@ -61,7 +62,7 @@ class TestCurrency(NereidTestCase):
             'symbol': 'C2',
             'name': 'Currency 2',
         })
-        self.currency_obj.create({
+        self.lang_currency = self.currency_obj.create({
             'code': 'C3',
             'symbol': 'C3',
             'name': 'Currency 3',
@@ -73,13 +74,13 @@ class TestCurrency(NereidTestCase):
         })
         self.website_currency_ids = [c1, c2]
         url_map_id, = self.url_map_obj.search([], limit=1)
-        en_us, = self.language_obj.search([('code', '=', 'en_US')])
+        self.en_us_id, = self.language_obj.search([('code', '=', 'en_US')])
         self.nereid_website_obj.create({
             'name': 'localhost',
             'url_map': url_map_id,
             'company': self.company_id,
             'application_user': USER,
-            'default_language': en_us,
+            'default_language': self.en_us_id,
             'guest_user': self.guest_user_id,
             'currencies': [('set', self.website_currency_ids)],
         })
@@ -89,58 +90,42 @@ class TestCurrency(NereidTestCase):
         Return templates
         """
         templates = {
-            'localhost/home.jinja': '{{get_flashed_messages()}}',
+            'localhost/home.jinja': '{{ request.nereid_currency.id }}',
         }
         return templates.get(name)
 
-    def test_0010_set_not_allowed_currency(self):
+    def test_0010_currency_from_company(self):
         """
-        Set not allowed currency and assert 403
+        Do not set a currency for the language, and the failover of
+        picking currency from company should work.
         """
         with Transaction().start(DB_NAME, USER, CONTEXT):
             self.setup_defaults()
             app = self.get_app()
 
-            invalid_id, = self.currency_obj.search(
-                [('id', 'not in', self.website_currency_ids)], limit=1
+            with app.test_client() as c:
+                rv = c.get('/en_US/')
+                self.assertEqual(rv.status_code, 200)
+
+            self.assertEqual(int(rv.data), self.company.currency.id)
+
+    def test_0020_currency_from_language(self):
+        """
+        Set the currency for the language and check if the currency
+        in the request is correct
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            self.language_obj.write(
+                self.en_us_id, {'default_currency': self.lang_currency}
             )
-
             with app.test_client() as c:
-                rv = c.post('/en_US/set_currency', data={'currency': invalid_id})
-                self.assertEqual(rv.status_code, 403)
+                rv = c.get('/en_US/')
+                self.assertEqual(rv.status_code, 200)
 
-    def test_0020_set_currency_post(self):
-        """
-        Set currency on POST and assert 302
-        """
-        with Transaction().start(DB_NAME, USER, CONTEXT):
-            self.setup_defaults()
-            app = self.get_app()
-
-            with app.test_client() as c:
-                rv = c.post(
-                    '/en_US/set_currency',
-                    data={'currency': self.website_currency_ids[0]}
-                )
-                self.assertEqual(rv.status_code, 302)
-
-    def test_0030_set_currency_get(self):
-        """
-        Set currency on GET and assert 302
-        """
-        with Transaction().start(DB_NAME, USER, CONTEXT):
-            self.setup_defaults()
-            app = self.get_app()
-
-            with app.test_client() as c:
-                rv = c.get(
-                    '/en_US/set_currency?currency=%s&next=/next' % (
-                        self.website_currency_ids[0]
-                    )
-                )
-                self.assertEqual(rv.status_code, 302)
-                self.assertEqual(rv.location, 'http://localhost/next')
-
+            self.assertEqual(int(rv.data), self.lang_currency)
 
 def suite():
     "Currency test suite"

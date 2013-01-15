@@ -15,3 +15,4 @@ import static_file
 import currency
 import attachment
 import template
+import lang

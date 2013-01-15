@@ -12,7 +12,6 @@ import unittest
 import trytond.tests.test_tryton
 from test_auth import TestAuth
 from test_address import TestAddress
-from test_currency import TestCurrency
 from test_i18n import TestI18N
 from test_static_file import TestStaticFile
 
@@ -24,9 +23,6 @@ def suite():
     )
     test_suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestAddress)
-    )
-    test_suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(TestCurrency)
     )
     test_suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestI18N)

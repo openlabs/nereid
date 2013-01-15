@@ -132,22 +132,6 @@
           <field name="url_map" ref="default_url_map" />
         </record> 
 
-        <record id="set_currency" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/set_currency</field>
-            <field name="endpoint">nereid.website.set_currency</field>
-            <field name="sequence" eval="140" />
-            <field name="methods">("GET", "POST")</field>
-            <field name="url_map" ref="nereid.default_url_map" />
-        </record>
-        
-        <record id="set_language" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/set_language</field>
-            <field name="endpoint">nereid.website.set_language</field>
-            <field name="sequence" eval="140" />
-            <field name="methods">("GET", "POST")</field>
-            <field name="url_map" ref="nereid.default_url_map" />
-        </record>
-
         <record id="user_status" model="nereid.url_rule">
             <field name="rule">/&lt;language&gt;/user_status</field>
             <field name="endpoint">nereid.website.user_status</field>
