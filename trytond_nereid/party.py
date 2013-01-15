@@ -5,7 +5,7 @@
     Partner Address is also considered as the login user
 
     :copyright: (c) 2010 by Sharoon Thomas.
-    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2013 by Openlabs Technologies & Consulting (P) Ltd.
     :license: GPLv3, see LICENSE for more details
 '''
 import random
@@ -169,10 +169,7 @@ AdditionalDetails()
 
 
 class Address(ModelSQL, ModelView):
-    """An address is considered as the equivalent of a user
-    in a conventional Web application. Hence, the username and
-    password are stored against the party.address object.
-    """
+    """Party Address"""
     _name = 'party.address'
 
     registration_form = RegistrationForm
@@ -269,10 +266,6 @@ Party()
 class NereidUser(ModelSQL, ModelView):
     """
     Nereid Users
-
-    The Users were address records in versions before 0.3
-
-    .. versionadded:: 0.3
     """
     _name = "nereid.user"
     _description = __doc__
