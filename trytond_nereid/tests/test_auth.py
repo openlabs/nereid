@@ -79,12 +79,7 @@ class TestAuth(NereidTestCase):
             'default_language': en_us,
             'guest_user': self.guest_user_id,
         })
-
-    def get_template_source(self, name):
-        """
-        Return templates
-        """
-        templates = {
+        self.templates = {
             'localhost/home.jinja': '{{get_flashed_messages()}}',
             'localhost/login.jinja':
                     '{{ login_form.errors }} {{get_flashed_messages()}}',
@@ -102,7 +97,13 @@ class TestAuth(NereidTestCase):
             'localhost/emails/reset-text.jinja': 'reset-email-text',
             'localhost/emails/reset-html.jinja': 'reset-email-html',
         }
-        return templates.get(name)
+
+    def get_template_source(self, name):
+        """
+        Return templates
+        """
+
+        return self.templates.get(name)
 
     def test_0005_mock_setup(self):
         assert get_smtp_server() is self.PatchedSMTP.return_value
@@ -465,6 +466,24 @@ class TestAuth(NereidTestCase):
             )
             with app.test_request_context():
                 self.assertTrue(test_permission_3())
+
+    def test_0070_gravatar(self):
+        """
+        Check if the gravatar is returned by the profile picture
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            self.templates['localhost/home.jinja'] = """
+            {{ request.nereid_user.get_profile_picture(request.nereid_user) }}
+            """
+
+            with app.test_client() as c:
+                response = c.get('/en_US/')
+                self.assertTrue(
+                    'http://www.gravatar.com/avatar/' in response.data
+                )
 
 
 def suite():

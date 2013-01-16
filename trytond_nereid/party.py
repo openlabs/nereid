@@ -11,6 +11,7 @@
 import random
 import string
 import hashlib
+import urllib
 
 import pytz
 from wtforms import Form, TextField, IntegerField, SelectField, validators, \
@@ -20,7 +21,6 @@ from werkzeug import redirect, abort
 
 from nereid import request, url_for, render_template, login_required, flash, \
     jsonify
-from nereid.contrib import gravatar
 from nereid.globals import session, current_app
 from nereid.signals import registration
 from nereid.templating import render_email
@@ -728,24 +728,40 @@ class NereidUser(ModelSQL, ModelView):
         """
         return super(NereidUser, self).write(ids, self._convert_values(values))
 
-    def get_profile_picture(self, user, **kwargs):
+    def get_gravatar_url(self, user, **kwargs):
         """
-        By default tries to get the email of the user and construct a gravatar 
-        URL from it
-
-        To change the behavior inherit `nereid.user` and change this method to
-        return an URL
-
-        :param user: Browse Record of the user
-
-        Other keyword arguments
+        Return a gravatar url for the given email
 
         :param https: To get a secure URL
         :param default: The default image to return if there is no profile pic
                         For example a unisex avatar
         :param size: The size for the image
         """
-        return gravatar.url(user.email, **kwargs)
+        if kwargs.get('https', request.scheme == 'https'):
+            url = 'https://secure.gravatar.com/avatar/%s?'
+        else:
+            url = 'http://www.gravatar.com/avatar/%s?'
+        url = url % hashlib.md5(user.email.lower()).hexdigest()
+
+        params = []
+        default = kwargs.get('default', None)
+        if default:
+            params.append(('d', default))
+
+        size = kwargs.get('size', None)
+        if size:
+            params.append(('s', str(size)))
+
+        return url + urllib.urlencode(params)
+
+    def get_profile_picture(self, user, **kwargs):
+        """
+        Return the url to the profile picture of the user.
+
+        The default implementation fetches the profile image of the user from
+        gravatar using :meth:`get_gravatar_url`
+        """
+        return self.get_gravatar_url(user, **kwargs)
 
     def aslocaltime(self, naive_date, user=None):
         """
