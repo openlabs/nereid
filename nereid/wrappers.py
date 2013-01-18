@@ -10,7 +10,6 @@
 from werkzeug.utils import cached_property
 from flask.wrappers import Request as RequestBase, Response as ResponseBase
 from flask.helpers import flash
-import ccy
 from .globals import current_app, session
 
 
@@ -44,12 +43,14 @@ class Request(RequestBase):
 
     @cached_property
     def nereid_currency(self):
-        """Return a browse record for the currency."""
-        currency_code = ccy.countryccy(self.nereid_language.code[-2:])
-        for currency in self.nereid_website.currencies:
-            if currency.code == currency_code:
-                return currency
-        raise RuntimeError("Currency %s is not valid" % currency_code)
+        """
+        Return a browse record for the currency.
+        Currency is looked up first in the language. If it does not exist
+        in the language then the currency of the company is returned
+        """
+        if self.nereid_language.default_currency:
+            return self.nereid_language.default_currency
+        return self.nereid_website.company.currency
 
     @cached_property
     def nereid_language(self):

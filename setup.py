@@ -3,43 +3,14 @@
 
     Nereid - Tryton as a web framework
 
-    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2013 by Openlabs Technologies & Consulting (P) Ltd.
     :license: GPLv3, see LICENSE for more details
 '''
-import re
-
-from setuptools import setup, Command
-
-
-class PyTest(Command):
-    user_options = []
-    def initialize_options(self):
-        pass
-    def finalize_options(self):
-        pass
-    def run(self):
-        import sys,subprocess
-        errno = subprocess.call([sys.executable, 'tests/texttestrunner.py'])
-        raise SystemExit(errno)
-
-
-trytond_module_info = eval(open('trytond_nereid/__tryton__.py').read())
-major_version, minor_version, _ = trytond_module_info.get(
-    'version', '0.0.1').split('.', 2)
-major_version = int(major_version)
-minor_version = int(minor_version)
-
-tryton_requires = []
-for dep in trytond_module_info.get('depends', []):
-    if not re.match(r'(ir|res|workflow|webdav)(\W|$)', dep):
-        tryton_requires.append('trytond_%s >= %s.%s, < %s.%s' %
-                (dep, major_version, minor_version, major_version,
-                    minor_version + 1))
-
+from setuptools import setup
 
 setup(
     name='Nereid',
-    version=trytond_module_info.get('version'),
+    version='2.4.0.7',
     url='http://nereid.openlabs.co.in/docs/',
     license='GPLv3',
     author='Openlabs Technologies & Consulting (P) Limited',
@@ -57,52 +28,26 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-
     install_requires=[
         'distribute',
-        'trytond>=2.4,<2.5',
-        'flask>=0.8,<0.9',
+        'trytond_nereid>=2.4.0.7,<2.5',
+        'flask',
         'wtforms',
         'wtforms-recaptcha',
-        'ccy',
         'babel',
         'speaklater',
         'Flask-Babel',
-    ] + tryton_requires,
+    ],
     packages=[
         'nereid',
         'nereid.contrib',
-        'nereid.contrib.testing',
-        'nereid_tests',
-
-        'trytond.modules.nereid',
-        'trytond.modules.nereid.tests',
+        'nereid.tests',
     ],
     package_dir={
         'nereid': 'nereid',
         'nereid.contrib': 'nereid/contrib',
-        'nereid.contrib.testing': 'nereid/contrib/testing',
-        'nereid_tests': 'tests',
-
-        'trytond.modules.nereid': 'trytond_nereid',
-        'trytond.modules.nereid.tests': 'trytond_nereid/tests',
-
-    },
-    package_data = {
-        'trytond.modules.nereid': trytond_module_info.get('xml', []) \
-                + trytond_module_info.get('translation', []) \
-                + ['i18n/*.pot', 'i18n/pt_BR/LC_MESSAGES/*'],
+        'nereid.tests': 'tests',
     },
     zip_safe=False,
     platforms='any',
-    entry_points="""
-    [trytond.modules]
-    nereid = trytond.modules.nereid
-    """,
-    tests_require=[
-        'unittest2',
-        'minimock',
-    ],
-    test_suite = 'tests.suite',
-    cmdclass = {'test': PyTest},
 )

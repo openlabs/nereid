@@ -337,20 +337,6 @@ class Nereid(Flask):
             )
         self.template_context_processors.update(db_ctx_processors)
 
-    def transaction_middleware(self, environ, start_response):
-        """Introduce a tryton transaction middleware
-        """
-        if not self.initialised:
-            self.initialise()
-
-        with self.transaction(environ['HTTP_HOST']) as txn:
-            rv = super(Nereid, self).wsgi_app(environ, start_response)
-            if rv.status_code >= 500 and rv.status_code <= 599:
-                txn.cursor.rollback()
-            else:
-                txn.cursor.commit()
-            return rv
-
     def wsgi_app(self, environ, start_response):
         """The actual WSGI application.  This is not implemented in
         `__call__` so that middlewares can be applied without losing a
@@ -380,11 +366,9 @@ class Nereid(Flask):
             with self.request_context(environ):
                 try:
                     response = self.full_dispatch_request()
-                    #self.logger.debug("Cursor: COMMIT")
                     txn.cursor.commit()
                 except Exception, e:
                     response = self.make_response(self.handle_exception(e))
-                    #self.logger.debug("Cursor: ROLLBACK")
                     txn.cursor.rollback()
                 return response(environ, start_response)
 

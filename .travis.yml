@@ -6,7 +6,7 @@ install:
 # Install CCY separately because there seems to be an issue
 # in their setup.py which prevents installation as dependency
   - pip install ccy
-  - pip install unittest2
-  - pip install minimock
+  - pip install pycountry
+  - pip install mock
   - python setup.py install
 script: python setup.py test
