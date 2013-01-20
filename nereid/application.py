@@ -281,28 +281,45 @@ class Nereid(Flask):
         """Load the websites and build a map of the website names to the ID
         in database for quick connection to the website
         """
-        website_obj = self.pool.get("nereid.website")
-        url_map_obj = self.pool.get('nereid.url_map')
+        Website = self.pool.get("nereid.website")
+        URLMap = self.pool.get('nereid.url_map')
 
+        #master_url_map = Map(host_matching=True)
+
+        #for website in Website.search([]):
+        #    for url_kwargs in website.url_map.get_rules_arguments():
+        #        url_kwargs['host'] = website.name
+        #        rule = self.url_rule_class(url_kwargs.pop('rule'), **url_kwargs)
+        #        rule.provide_automatic_options = True
+        #        master_url_map.add(rule)   # Add rule to map
+        #        if (not url_kwargs['build_only']) \
+        #                and not(url_kwargs['redirect_to']):
+                    # Add the method to the view_functions list if the
+                    # endpoint was not a build_only url
+        #            self.view_functions[url_kwargs['endpoint']] = self.get_method(
+        #                url_kwargs['endpoint']
+        #            )
+
+        url_maps = {}
         # Load all url maps first because many websites might reuse the same
         # URL map and it might be faster to load them just once
-        url_map_ids = url_map_obj.search([])
-        url_maps = dict.fromkeys(url_map_ids)
+        for url_map in URLMap.search([]):
 
-        for url_map_id in url_map_ids:
-            url_map = Map() # Define a new map
+            # Define a new map
+            map = Map()
+
             # Add the static url
-            url_map.add(
+            map.add(
                 self.url_rule_class(
                     self.static_url_path + '/<path:filename>',
                     endpoint = 'static'
                 )
             )
-            url_rules = url_map_obj.get_rules_arguments(url_map_id)
-            for url in url_rules:
+
+            for url in url_map.get_rules_arguments():
                 rule = self.url_rule_class(url.pop('rule'), **url)
                 rule.provide_automatic_options = True
-                url_map.add(rule)   # Add rule to map
+                map.add(rule)   # Add rule to map
 
                 if (not url['build_only']) and not(url['redirect_to']):
                     # Add the method to the view_functions list if the
@@ -310,10 +327,9 @@ class Nereid(Flask):
                     self.view_functions[url['endpoint']] = self.get_method(
                             url['endpoint']
                     )
-            url_maps[url_map_id] = url_map
+            url_maps[url_map.id] = map
 
-        website_ids = website_obj.search([])
-        for website in website_obj.browse(website_ids):
+        for website in Website.search([]):
             self.websites[website.name] = {
                 'id': website.id,
                 'url_map': url_maps[website.url_map.id],
@@ -398,6 +414,7 @@ class Nereid(Flask):
         return value of the view or error handler.  This does not have to
         be a response object.
         """
+        from trytond.pool import Pool
         from trytond.transaction import Transaction
 
         req = _request_ctx_stack.top.request
@@ -416,7 +433,17 @@ class Nereid(Flask):
         )
         with Transaction().set_context(language=language):
             # otherwise dispatch to the handler for that endpoint
-            return self.view_functions[rule.endpoint](**req.view_args)
+            meth = self.view_functions[rule.endpoint]
+            if not hasattr(meth, 'im_self') or meth.im_self:
+                # static or class method
+                result = meth(**req.view_args)
+            else:
+                # instance method, extract active_id from the url
+                # arguments and pass the model instance as first argument
+                model = Pool().get(rule.endpoint.rsplit('.', 1)[0])
+                i = model(req.view_args.pop('active_id'))
+                result = meth(i, **req.view_args)
+            return result
 
     def create_jinja_environment(self):
         """Extend the default jinja environment that is created. Also

@@ -109,8 +109,7 @@ class permissions_required(object):
     def __call__(self, function):
         @wraps(function)
         def wrapper(*args, **kwargs):
-            if request.nereid_user.has_permissions(
-                    request.nereid_user, self.permissions):
+            if request.nereid_user.has_permissions(self.permissions):
                 return function(*args, **kwargs)
             abort(403)
         return wrapper
