@@ -4,14 +4,14 @@
 
     Implements the Jinja2 bridge
 
-    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2010-2013 by Openlabs Technologies & Consulting (P) Ltd.
     :copyright: (c) 2010 by Armin Ronacher.
     :license: GPLv3, see LICENSE for more details
 '''
 from decimal import Decimal
 
 from flask.templating import render_template as flask_render_template
-from jinja2 import BaseLoader, TemplateNotFound, nodes
+from jinja2 import BaseLoader, TemplateNotFound, nodes, Template
 from jinja2.ext import Extension
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -176,11 +176,17 @@ def render_email(from_email, to, subject,
     else:
         msg = MIMEMultipart('alternative')
     if text_template:
-        text = render_template(text_template, **context)
+        if isinstance(text_template, Template):
+            text = text_template.render(**context)
+        else:
+            text = render_template(text_template, **context)
         text_part = MIMEText(text.encode("utf-8"), 'plain', _charset="UTF-8")
         msg.attach(text_part)
     if html_template:
-        html = render_template(html_template, **context)
+        if isinstance(html_template, Template):
+            html = html_template.render(**context)
+        else:
+            html = render_template(html_template, **context)
         html_part = MIMEText(html.encode("utf-8"), 'html', _charset="UTF-8")
         msg.attach(html_part)
         
