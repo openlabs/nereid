@@ -27,19 +27,18 @@ class Request(RequestBase):
     @cached_property
     def nereid_website(self):
         """Fetch the Browse Record of current website."""
-        website_obj = current_app.pool.get('nereid.website')
-        website, = website_obj.search([
+        Website = current_app.pool.get('nereid.website')
+        return Website.search([
             ('name', '=', _get_website_name(self.host))]
-        )
-        return website_obj.browse(website)
+        )[0]
 
     @cached_property
     def nereid_user(self):
         """Fetch the browse record of current user or None."""
-        user_obj = current_app.pool.get('nereid.user')
+        NereidUser = current_app.pool.get('nereid.user')
         if 'user' not in session:
-            return user_obj.browse(self.nereid_website.guest_user.id)
-        return user_obj.browse(session['user'])
+            return NereidUser(self.nereid_website.guest_user.id)
+        return NereidUser(session['user'])
 
     @cached_property
     def nereid_currency(self):
@@ -56,12 +55,12 @@ class Request(RequestBase):
     def nereid_language(self):
         """Return a browse record for the language."""
         from trytond.transaction import Transaction
-        lang_obj = current_app.pool.get('ir.lang')
-        lang_ids = lang_obj.search([('code', '=', Transaction().language)])
-        if not lang_ids:
+        IRLanguage = current_app.pool.get('ir.lang')
+        languages = IRLanguage.search([('code', '=', Transaction().language)])
+        if not languages:
             flash("We are sorry we don't speak your language yet!")
-            lang_ids = [self.nereid_website.default_language.id]
-        return lang_obj.browse(lang_ids[0])
+            return self.nereid_website.default_language
+        return languages[0]
 
     @cached_property
     def is_guest_user(self):
