@@ -1,3 +1,10 @@
+Version 2.4.0.8
+===============
+
+  * Removed the SitemapSectionSQL which was due for deprecation
+  * Remove the raw SQL query used in finding max id with a search
+  * Allow render_email to be used outside nereid context
+
 Version 2.4.0.6
 ===============
 
