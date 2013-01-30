@@ -23,24 +23,26 @@ class SitemapIndex(object):
     To add a sitemap index to one of your objects do the following:
 
     class Product(ModelSQL, ModelView):
-        _name = "product.product"
+        __name__ = "product.product"
 
-        def sitemap_index(self):
+        @classmethod
+        def sitemap_index(cls):
             index = SitemapIndex(
-                self, self.search_domain
+                cls, cls.search_domain
                 )
             return index.render()
 
-        def sitemap(self, page):
+        @classmethod
+        def sitemap(cls, page):
             sitemap_section = SitemapSection(
-                self, self.search_domain, page
+                cls, cls.search_domain, page
                 )
             return sitemap_section.render()
 
-        def get_absolute_url(self, browse_record, **kwargs):
+        def get_absolute_url(self, **kwargs):
             "Return the full_path of the current object"
             return url_for('product.product.render',
-                uri=browse_record.uri, **kwargs)
+                uri=self.uri, **kwargs)
     """
     #: Batch Size: The number of URLs per sitemap page
     batch_size = 1000
@@ -69,7 +71,7 @@ class SitemapIndex(object):
             )
             for page in xrange(1, self.page_count + 1):
                 loc = '<sitemap><loc>%s</loc></sitemap>\n'
-                method = '%s.sitemap' % self.model._name
+                method = '%s.sitemap' % self.model.__name__
                 buffer.write(loc % url_for(method, page=page, _external=True))
             buffer.write('</sitemapindex>')
             return send_file(buffer.name, cache_timeout=self.cache_timeout)
@@ -81,7 +83,7 @@ class SitemapIndex(object):
         max_id = self.model.search(
             self.domain, order=[('id', 'DESC')], limit=1
         )
-        return max_id and max_id[0] or 0
+        return max_id and max_id[0].id or 0
 
     @cached_property
     def page_count(self):
@@ -120,18 +122,19 @@ class SitemapSection(object):
                 a sitemap. Example:
 
                 class Product(ModelSQL, ModelView):
-                    _name = "product.product"
+                    __name__ = "product.product"
 
-                    def sitemap(self, page):
+                    @classmethod
+                    def sitemap(cls, page):
                         sitemap_section = SitemapSection(
-                            self, self.search_domain, page
+                            cls, cls.search_domain, page
                             )
                         return sitemap_section.render()
 
-                    def get_absolute_url(self, browse_record, **kwargs):
+                    def get_absolute_url(self, **kwargs):
                         "Return the full_path of the current object"
                         return url_for('product.product.render',
-                            uri=browse_record.uri, **kwargs)
+                            uri=self.uri, **kwargs)
 
 
     :param model: The Tryton model/object from which the pagination needs to
@@ -212,7 +215,7 @@ class SitemapSection(object):
 
         ids = self.model.search(domain)
         for id in ids:
-            record = self.model.browse(id)
+            record = self.model(id)
             yield(self.get_url_xml(record))
             del record
 
@@ -250,9 +253,9 @@ class SitemapSection(object):
 
         Default: returns the absolute url of the object
 
-        :param item: browse_record of the item.
+        :param item: Instance of the item.
         """
-        return self.model.get_absolute_url(item, _external=True)
+        return item.get_absolute_url(_external=True)
 
     def lastmod(self, item):
         """The date of last modification of the file. This date should be in
