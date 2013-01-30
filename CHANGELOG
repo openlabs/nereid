@@ -1,3 +1,9 @@
+Version 2.6.0.2
+===============
+
+  * Update sitemap to use ActiveRecord pattern.
+  * Remove raw SQL transactions from SitemapIndex.
+
 Version 2.4.0.6
 ===============
 
