@@ -75,12 +75,19 @@ class NereidTestApp(Nereid):
                                a list of headers and an optional
                                exception context to start the response
         """
+        from trytond.transaction import Transaction
+        from trytond.pool import Pool
+
+        Website = Pool().get('nereid.website')
+        website, = Website.search([('name', '=', environ['HTTP_HOST'])])
+
         if not self.initialised:
             self.initialise()
 
-        with self.request_context(environ):
-            response = self.full_dispatch_request()
-            return response(environ, start_response)
+        with Transaction().set_context(company=website.company.id):
+            with self.request_context(environ):
+                response = self.full_dispatch_request()
+                return response(environ, start_response)
 
 
 class NereidTestCase(unittest.TestCase):
