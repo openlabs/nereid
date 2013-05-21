@@ -10,7 +10,7 @@ from setuptools import setup
 
 setup(
     name='Nereid',
-    version='2.6.0.3dev',
+    version='2.8.0.1',
     url='http://nereid.openlabs.co.in/docs/',
     license='GPLv3',
     author='Openlabs Technologies & Consulting (P) Limited',
@@ -30,7 +30,6 @@ setup(
     ],
     install_requires=[
         'distribute',
-        'trytond_nereid',
         'flask',
         'wtforms',
         'wtforms-recaptcha',
