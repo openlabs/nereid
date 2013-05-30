@@ -1,12 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-    nereid.cache
-
-    Adds cache support to a nereid application
-
-    :copyright: (c) 2011-2012 by Openlabs Technologies & Consulting (P) Limited
-    :license: GPLv3, see LICENSE for more details.
-"""
+#This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
+#this repository contains the full copyright notices and license terms.
 from functools import wraps
 from hashlib import md5
 import inspect

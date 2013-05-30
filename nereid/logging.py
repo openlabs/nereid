@@ -1,11 +1,4 @@
-# -*- coding: UTF-8 -*-
-'''
-    nereid.logging
-
-    Logging Support for the Application
-
-    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
-    :license: GPLv3, see LICENSE for more details
-'''
+#This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
+#this repository contains the full copyright notices and license terms.
 
 from flask.logging import create_logger

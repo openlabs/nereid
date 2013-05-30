@@ -1,12 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-    sitemap
-
-    Sitemap helpers
-
-    :copyright: (c) 2012 by Openlabs Technologies & Consulting (P) LTD
-    :license: GPLv3, see LICENSE for more details.
-"""
+#This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
+#this repository contains the full copyright notices and license terms.
 from math import ceil
 from tempfile import NamedTemporaryFile
 

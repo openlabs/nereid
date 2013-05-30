@@ -1,15 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-    nereid.testing
-    ~~~~~~~~~~~~~~
-
-    Implements test support helpers.  This module is lazily imported
-    and usually not used in production environments.
-
-    :copyright: (c) 2010-2013 by Openlabs Technologies & Consulting (P) Ltd.
-    :copyright: (c) 2010 by Armin Ronacher.
-    :license: GPLv3, see LICENSE for more details.
-"""
+#This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
+#this repository contains the full copyright notices and license terms.
 from contextlib import contextmanager
 
 import jinja2

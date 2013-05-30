@@ -1,13 +1,5 @@
-# -*- coding: UTF-8 -*-
-'''
-    nereid.helpers
-
-    Helper utilities
-
-    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
-    :copyright: (c) 2010 by Armin Ronacher.
-    :license: GPLv3, see LICENSE for more details
-'''
+#This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
+#this repository contains the full copyright notices and license terms.
 import os
 import posixpath
 import mimetypes
