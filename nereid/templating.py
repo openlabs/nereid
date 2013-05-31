@@ -1,13 +1,5 @@
-# -*- coding: UTF-8 -*-
-'''
-    nereid.templating
-
-    Implements the Jinja2 bridge
-
-    :copyright: (c) 2010-2013 by Openlabs Technologies & Consulting (P) Ltd.
-    :copyright: (c) 2010 by Armin Ronacher.
-    :license: GPLv3, see LICENSE for more details
-'''
+#This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
+#this repository contains the full copyright notices and license terms.
 from decimal import Decimal
 
 from flask.templating import render_template as flask_render_template

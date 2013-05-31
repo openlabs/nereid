@@ -1,12 +1,5 @@
-# -*- coding: UTF-8 -*-
-'''
-    nereid.signals
-
-    Flask/Blicker based signalling
-
-    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
-    :license: GPLv3, see LICENSE for more details
-'''
+#This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
+#this repository contains the full copyright notices and license terms.
 # pylint: disable-msg=W0611
 from flask.signals import template_rendered, request_started, \
         request_finished, got_request_exception, _signals, request_tearing_down

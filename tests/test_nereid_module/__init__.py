@@ -1,10 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-    __init__
+#This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
+#this repository contains the full copyright notices and license terms.
 
-    A test module to test core nereid features where Tryton model is reqd
-
-    :copyright: (c) 2011 by Openlabs Technologies & Consulting (P) Limited
-    :license: GPLv3, see LICENSE for more details.
-"""
 from .model import *
