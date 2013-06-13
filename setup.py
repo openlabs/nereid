@@ -25,7 +25,7 @@ setup(
     ],
     install_requires=[
         'distribute',
-        'flask',
+        'flask<0.10',
         'wtforms',
         'wtforms-recaptcha',
         'babel',
