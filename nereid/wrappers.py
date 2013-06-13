@@ -1,12 +1,5 @@
-# -*- coding: UTF-8 -*-
-'''
-    nereid.wrappers
-
-    Implements the WSGI wrappers
-
-    :copyright: (c) 2010-2012 by Openlabs Technologies & Consulting (P) Ltd.
-    :license: GPLv3, see LICENSE for more details
-'''
+#This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
+#this repository contains the full copyright notices and license terms.
 from werkzeug.utils import cached_property
 from flask.wrappers import Request as RequestBase, Response as ResponseBase
 from flask.helpers import flash

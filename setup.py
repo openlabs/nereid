@@ -1,16 +1,11 @@
-'''
-    Nereid
+#This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
+#this repository contains the full copyright notices and license terms.
 
-    Nereid - Tryton as a web framework
-
-    :copyright: (c) 2010-2013 by Openlabs Technologies & Consulting (P) Ltd.
-    :license: GPLv3, see LICENSE for more details
-'''
 from setuptools import setup
 
 setup(
     name='Nereid',
-    version='2.6.0.2',
+    version='2.8.0.2',
     url='http://nereid.openlabs.co.in/docs/',
     license='GPLv3',
     author='Openlabs Technologies & Consulting (P) Limited',
@@ -30,7 +25,6 @@ setup(
     ],
     install_requires=[
         'distribute',
-        'trytond_nereid',
         'flask',
         'wtforms',
         'wtforms-recaptcha',
