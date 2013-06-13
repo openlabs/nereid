@@ -31,7 +31,7 @@ setup(
     install_requires=[
         'distribute',
         'trytond_nereid>=2.4.0.7,<2.5',
-        'flask',
+        'flask<0.10',
         'wtforms',
         'wtforms-recaptcha',
         'babel',
