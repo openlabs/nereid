@@ -20,7 +20,8 @@ from functools import wraps
 from hashlib import md5
 
 from flask.helpers import _assert_have_json, json, jsonify, \
-    _PackageBoundObject, locked_cached_property
+    _PackageBoundObject, locked_cached_property, get_flashed_messages, \
+    flash
 from werkzeug import Headers, wrap_file, redirect, abort
 from werkzeug.exceptions import NotFound
 
@@ -113,47 +114,6 @@ class permissions_required(object):
                 return function(*args, **kwargs)
             abort(403)
         return wrapper
-
-
-def flash(message, category='message'):
-    """Flashes a message to the next request.  In order to remove the
-    flashed message from the session and to display it to the user,
-    the template has to call :func:`get_flashed_messages`.
-
-    :param message: the message to be flashed.
-    :param category: the category for the message.  The following values
-                     are recommended: ``'message'`` for any kind of message,
-                     ``'error'`` for errors, ``'info'`` for information
-                     messages and ``'warning'`` for warnings.  However any
-                     kind of string can be used as category.
-    """
-    session.setdefault('_flashes', []).append((category, unicode(message)))
-
-
-def get_flashed_messages(with_categories=False):
-    """Pulls all flashed messages from the session and returns them.
-    Further calls in the same request to the function will return
-    the same messages.  By default just the messages are returned,
-    but when `with_categories` is set to `True`, the return value will
-    be a list of tuples in the form ``(category, message)`` instead.
-
-    Example usage:
-
-    .. sourcecode:: html+jinja
-
-        {% for category, msg in get_flashed_messages(with_categories=true) %}
-          <p class=flash-{{ category }}>{{ msg }}
-        {% endfor %}
-
-    :param with_categories: set to `True` to also receive categories.
-    """
-    flashes = _request_ctx_stack.top.flashes
-    if flashes is None:
-        _request_ctx_stack.top.flashes = flashes = session.pop('_flashes') \
-            if '_flashes' in session else []
-    if not with_categories:
-        return [x[1] for x in flashes]
-    return flashes
 
 
 def send_from_directory(directory, filename, **options):
