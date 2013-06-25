@@ -9,4 +9,6 @@ install:
   - pip install pycountry
   - pip install mock
   - python setup.py install
+# Install trytond-nereid from github (only on develop)
+  - pip install git+https://github.com/openlabs/trytond-nereid.git@develop
 script: python setup.py test
