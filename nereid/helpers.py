@@ -12,8 +12,8 @@ import unicodedata
 from functools import wraps
 from hashlib import md5
 
-from flask.helpers import _PackageBoundObject, locked_cached_property, \
-        get_flashed_messages, flash
+from flask.helpers import (_PackageBoundObject, locked_cached_property,  # noqa
+        get_flashed_messages, flash)
 from werkzeug import Headers, wrap_file, redirect, abort
 from werkzeug.exceptions import NotFound
 
@@ -23,8 +23,10 @@ from .globals import session, _request_ctx_stack, current_app, request
 _SLUGIFY_STRIP_RE = re.compile(r'[^\w\s-]')
 _SLUGIFY_HYPHENATE_RE = re.compile(r'[-\s]+')
 
+
 def url_for(endpoint, **values):
-    """Generates a URL to the given endpoint with the method provided.
+    """
+    Generates a URL to the given endpoint with the method provided.
     The endpoint is relative to the active module if modules are in use.
 
     Here are some examples:
@@ -48,9 +50,10 @@ def url_for(endpoint, **values):
     :param values: the variable arguments of the URL rule
     :param _external: if set to `True`, an absolute URL is generated.
     :param _secure: if set to `True`, returns an absolute https URL.
-    :param _params: if specified as list of tuples or dict, additional url parameters.
-            If params is specified then the default behaviour of appending_unknown
-            paramters to URL generated is disabled
+    :param _params: if specified as list of tuples or dict, additional url
+                    parameters. If params is specified then the default
+                    behaviour of appending_unknown paramters to URL generated
+                    is disabled.
     """
     ctx = _request_ctx_stack.top
     external = values.pop('_external', False)
@@ -109,7 +112,8 @@ class permissions_required(object):
 
 
 def send_from_directory(directory, filename, **options):
-    """Send a file from a given directory with :func:`send_file`.  This
+    """
+    Send a file from a given directory with :func:`send_file`.  This
     is a secure way to quickly expose static files from an upload folder
     or something similar.
 
@@ -144,7 +148,8 @@ def send_from_directory(directory, filename, **options):
 def send_file(filename_or_fp, mimetype=None, as_attachment=False,
               attachment_filename=None, add_etags=True,
               cache_timeout=60 * 60 * 12, conditional=False):
-    """Sends the contents of a file to the client.  This will use the
+    """
+    Sends the contents of a file to the client.  This will use the
     most efficient method available and configured.  By default it will
     try to use the WSGI server's file_wrapper support.  Alternatively
     you can set the application's :attr:`~Flask.use_x_sendfile` attribute
@@ -193,24 +198,31 @@ def send_file(filename_or_fp, mimetype=None, as_attachment=False,
 
         # XXX: this behaviour is now deprecated because it was unreliable.
         # removed in Flask 1.0
-        if not attachment_filename and not mimetype \
-           and isinstance(filename, basestring):
-            warn(DeprecationWarning('The filename support for file objects '
-                'passed to send_file is not deprecated.  Pass an '
-                'attach_filename if you want mimetypes to be guessed.'),
-                stacklevel=2)
+        if not attachment_filename and not mimetype and \
+                isinstance(filename, basestring):
+            warn(
+                DeprecationWarning(
+                    'The filename support for file objects passed to '
+                    'send_file is not deprecated. Pass an attach_filename '
+                    'if you want mimetypes to be guessed.'
+                ), stacklevel=2
+            )
         if add_etags:
-            warn(DeprecationWarning('In future flask releases etags will no '
-                'longer be generated for file objects passed to the send_file '
-                'function because this behaviour was unreliable.  Pass '
-                'filenames instead if possible, otherwise attach an etag '
-                'yourself based on another value'), stacklevel=2)
+            warn(
+                DeprecationWarning(
+                    'In future flask releases etags will no longer be '
+                    'generated for file objects passed to the send_file '
+                    'function because this behaviour was unreliable. Pass '
+                    'filenames instead if possible, otherwise attach an etag '
+                    'yourself based on another value'
+                ), stacklevel=2
+            )
 
     if filename is not None:
         if not os.path.isabs(filename):
             from trytond.config import CONFIG
             filename = os.path.join(
-                CONFIG['data_path'], 
+                CONFIG['data_path'],
                 current_app.database_name,
                 filename)
     if mimetype is None and (filename or attachment_filename):
@@ -298,7 +310,7 @@ def _rst_to_html_filter(value):
     """
     Converts RST text to HTML
     ~~~~~~~~~~~~~~~~~~~~~~~~~
-    This uses docutils, if the library is missing, then the 
+    This uses docutils, if the library is missing, then the
     original text is returned
 
     Loading to environment::
@@ -312,12 +324,13 @@ def _rst_to_html_filter(value):
         from docutils import core
         parts = core.publish_parts(source=value, writer_name='html')
         return parts['body_pre_docinfo'] + parts['fragment']
-    except Exception, exc:
+    except Exception:
         return value
 
 
 def key_from_list(list_of_args):
-    """Builds a key from a list of arguments which could be used for caching
+    """
+    Builds a key from a list of arguments which could be used for caching
     The key s constructed as an md5 hash
     """
     hash = md5()
@@ -330,31 +343,33 @@ def get_website_from_host(http_host):
     return http_host.split(':')[0]
 
 
-def make_crumbs(browse_record, endpoint, add_home=True, max_depth=10, 
-        field_map_changes=None, root_ids=None):
-    """Makes bread crumbs for a given browse record based on the field
+def make_crumbs(browse_record, endpoint, add_home=True, max_depth=10,
+                field_map_changes=None, root_ids=None):
+    """
+    Makes bread crumbs for a given browse record based on the field
     parent of the browse record
 
-    :param browse_record: The browse record of the object from which upward 
-        tracing of crumbs need to be done
+    :param browse_record: The browse record of the object from which upward
+                          tracing of crumbs need to be done
     :param endpoint: The endpoint against which the urls have to be generated
     :param add_home: If provided will add home and home url as the first item
     :param max_depth: Maximum depth of the crumbs
-    :param field_map_changes: A dictionary/list of key value pair (tuples) to 
-        update the default field_map. Only the changing entries need to be 
-        provided.
+    :param field_map_changes: A dictionary/list of key value pair (tuples) to
+                              update the default field_map. Only the changing
+                              entries need to be provided.
     :param root_ids: IDs of root nodes where the recursion to a parent node
-        will need to be stopped. If not specified the recursion continues
-        upto the max_depth. Expects a list or tuple  of ids.
+                     will need to be stopped. If not specified the recursion
+                     continues upto the max_depth. Expects a list or tuple of
+                     ids.
 
     .. versionchanged:: 0.3
         Added root_ids
     """
     field_map = dict(
-        parent_field = 'parent',
-        uri_field = 'uri',
-        title_field = 'title',
-        )
+        parent_field='parent',
+        uri_field='uri',
+        title_field='title',
+    )
     if field_map_changes is not None:
         field_map.update(field_map_changes)
     if root_ids is None:

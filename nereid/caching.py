@@ -10,17 +10,17 @@ from flask.globals import current_app
 
 
 class Cache(object):
-    """Implements a Cache with helper utils
+    """
+    Implements a Cache with helper utils
 
     This is implemented using __slots__ based optimisation
     and reimplements most arguments already in the application.
-    However, this will increase performance as cache related 
+    However, this will increase performance as cache related
     operations will then not depend on a dictionary lookup, which
     is one of the most expensive python operations.
 
     :param app: Instance of application. Values for cache are
-    fetched from there
-
+                fetched from there
     """
     __slots__ = tuple()
 
@@ -69,15 +69,16 @@ class Cache(object):
         return current_app.cache.set_many(mapping, timeout)
 
     def cache(self, key, timeout=None, unless=None):
-        """Decorator to use as caching function
+        """
+        Decorator to use as caching function
 
         :copyright: (c) 2010 by Thadeus Burgess.
 
         :param timeout: Time in seconds to retain cached value
-        :param key_prefix: Key to use for cache. 
-        :param unless: Callable for truth testing. If provided, the 
-            callable is called with no arguments and if true, caching
-            operation will be cancelled
+        :param key_prefix: Key to use for cache.
+        :param unless: Callable for truth testing. If provided, the
+                       callable is called with no arguments and if true,
+                       caching operation will be cancelled.
         """
         def decorator(function):
             @wraps(function)
@@ -95,19 +96,21 @@ class Cache(object):
         return decorator
 
     def memoize(self, key, timeout=None, unless=None):
-        """Decorator to use as caching function but also evaluates
+        """
+        Decorator to use as caching function but also evaluates
         the arguments
 
         :copyright: (c) 2010 by Thadeus Burgess.
 
         :param timeout: Time in seconds to retain cached value
-        :param key_prefix: Key to use for cache. 
-        :param unless: Callable for truth testing. If provided, the 
-            callable is called with no arguments and if true, caching
-            operation will be cancelled
+        :param key_prefix: Key to use for cache.
+        :param unless: Callable for truth testing. If provided, the
+                       callable is called with no arguments and if true,
+                       caching operation will be cancelled
         """
         def decorator(function):
             arg_names = inspect.getargspec(function)[0]
+
             @wraps(function)
             def wrapper(*args, **kwargs):
                 if callable(unless) and unless() is True:
@@ -132,19 +135,21 @@ class Cache(object):
         return decorator
 
     def memoize_method(self, key, timeout=None, unless=None):
-        """Decorator to use as caching function but also evaluates
+        """
+        Decorator to use as caching function but also evaluates
         the arguments
 
         :copyright: (c) 2010 by Thadeus Burgess.
 
         :param timeout: Time in seconds to retain cached value
         :param key_prefix: Key to use for cache.
-        :param unless: Callable for truth testing. If provided, the 
-            callable is called with no arguments and if true, caching
-            operation will be cancelled
+        :param unless: Callable for truth testing. If provided, the
+                       callable is called with no arguments and if true,
+                       caching operation will be cancelled
         """
         def decorator(function):
             arg_names = inspect.getargspec(function)[0]
+
             @wraps(function)
             def wrapper(*args, **kwargs):
                 if callable(unless) and unless() is True:

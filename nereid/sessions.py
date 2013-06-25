@@ -1,6 +1,6 @@
 #This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
 #this repository contains the full copyright notices and license terms.
-from datetime import datetime
+from datetime import datetime  # noqa
 
 from flask.sessions import SessionInterface, SessionMixin
 from werkzeug.contrib.sessions import Session as SessionBase, SessionStore
@@ -13,7 +13,8 @@ class Session(SessionBase, SessionMixin):
 
 
 class NullSession(Session):
-    """Class used to generate nicer error messages if sessions are not
+    """
+    Class used to generate nicer error messages if sessions are not
     available.  Will still allow read-only access to the empty session
     but fail on setting.
     """
@@ -28,23 +29,33 @@ class NullSession(Session):
 
 
 class MemcachedSessionStore(SessionStore):
-    """Session store that stores session on memcached
+    """
+    Session store that stores session on memcached
 
-    :param session_class: The session class to use.  Defaults to
-                          :class:`Session`.
+    :param session_class: The session class to use.
+    Defaults to :class:`Session`.
     """
     def __init__(self, session_class=Session):
         SessionStore.__init__(self, session_class)
 
     def save(self, session):
-        success = current_app.cache.set(
+        """
+        Updates the session
+        """
+        current_app.cache.set(
             session.sid, dict(session), 30 * 24 * 60 * 60
         )
 
     def delete(self, session):
+        """
+        Deletes the session
+        """
         current_app.cache.delete(session.sid)
 
     def get(self, sid):
+        """
+        Returns session
+        """
         if not self.is_valid_key(sid):
             return self.new()
         session_data = current_app.cache.get(sid)
@@ -53,7 +64,8 @@ class MemcachedSessionStore(SessionStore):
         return self.session_class(session_data, sid, False)
 
     def list(self):
-        """Lists all sessions in the store
+        """
+        Lists all sessions in the store
         """
         raise Exception("Not implemented yet")
 
@@ -65,7 +77,8 @@ class NereidSessionInterface(SessionInterface):
     null_session_class = NullSession
 
     def open_session(self, app, request):
-        """Creates or opens a new session.
+        """
+        Creates or opens a new session.
 
         :param request: an instance of :attr:`request_class`.
         """
@@ -76,7 +89,8 @@ class NereidSessionInterface(SessionInterface):
             return self.session_store.new()
 
     def save_session(self, app, session, response):
-        """Saves the session if it needs updates.  For the default
+        """
+        Saves the session if it needs updates.  For the default
         implementation, check :meth:`open_session`.
 
         :param session: the session to be saved

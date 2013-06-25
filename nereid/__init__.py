@@ -3,6 +3,7 @@
 
 # utilities we import from Werkzeug and Jinja2 that are unused
 # in the module but are exported as public interface.
+# Flake8: noqa
 from werkzeug import abort, redirect
 from jinja2 import Markup, escape
 

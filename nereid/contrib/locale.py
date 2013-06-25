@@ -1,14 +1,15 @@
 #This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
 #this repository contains the full copyright notices and license terms.
 import flaskext.babel
-from flaskext.babel import Babel
+from flaskext.babel import Babel  # noqa
 from babel import support, Locale
 from pytz import timezone
 from nereid.globals import _request_ctx_stack
 
 
 def get_translations():
-    """Returns the correct gettext translations that should be used for
+    """
+    Returns the correct gettext translations that should be used for
     this request.  This will never fail and return a dummy translation
     object if used outside of the request or if a translation cannot be
     found.
@@ -28,7 +29,8 @@ flaskext.babel.get_translations = get_translations
 
 
 def get_locale():
-    """Returns the locale that should be used for this request as
+    """
+    Returns the locale that should be used for this request as
     `babel.Locale` object.  This returns `None` if used outside of
     a request.
     """
@@ -40,7 +42,6 @@ def get_locale():
     if locale is None:
         babel = ctx.app.extensions['babel']
         if babel.locale_selector_func is None:
-            # Try to use the 
             rv = ctx.request.nereid_language.code
         else:
             rv = babel.locale_selector_func()
@@ -56,7 +57,8 @@ flaskext.babel.get_locale = get_locale
 
 
 def get_timezone():
-    """Returns the timezone that should be used for this request as
+    """
+    Returns the timezone that should be used for this request as
     `pytz.timezone` object.  This returns `None` if used outside of
     a request.
     """
