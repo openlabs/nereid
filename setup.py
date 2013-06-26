@@ -44,4 +44,8 @@ setup(
     },
     zip_safe=False,
     platforms='any',
+    test_suite='tests.suite',
+    tests_require=[
+        'trytond_nereid_test>=2.8,<2.9',
+    ]
 )

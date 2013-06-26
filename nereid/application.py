@@ -10,7 +10,7 @@ from flask import Flask
 from flask.config import ConfigAttribute
 from flask.globals import _request_ctx_stack
 from flask.helpers import locked_cached_property
-from jinja2 import FileSystemLoader, MemcachedBytecodeCache
+from jinja2 import MemcachedBytecodeCache
 from werkzeug.routing import Map
 from werkzeug import import_string
 
@@ -18,7 +18,7 @@ from .wrappers import Request, Response
 from .backend import TransactionManager
 from .session import NereidSessionInterface
 from .templating import nereid_default_template_ctx_processor, \
-    NEREID_TEMPLATE_FILTERS
+    NEREID_TEMPLATE_FILTERS, ModuleTemplateLoader
 from .helpers import get_website_from_host, url_for
 
 
@@ -111,6 +111,18 @@ class Nereid(Flask):
     #: :meth:`initialise`
     initialised = False
 
+    #: Prefix the name of the website to the template name sutomatically
+    #: This feature would be deprecated in future in lieu of writing
+    #: Jinja2 Loaders which could offer this behavior. This is set to False
+    #: by default. For backward compatibility of loading templates from
+    #: a template folder which has website names as subfolders, set this
+    #: to True
+    #:
+    #: .. versionadded:: 2.8.0.4
+    template_prefix_website_name = ConfigAttribute(
+        'TEMPLATE_PREFIX_WEBSITE_NAME'
+    )
+
     def __init__(self, **config):
         """
         The import_name is forced into `Nereid`
@@ -121,8 +133,7 @@ class Nereid(Flask):
         self.config.update({
             'TRYTON_CONFIG': None,
 
-            'TEMPLATE_SEARCH_PATH': '',
-            'TEMPLATE_LOADER_CLASS': 'nereid.templating.TrytonTemplateLoader',
+            'TEMPLATE_PREFIX_WEBSITE_NAME': True,
 
             'CACHE_TYPE': 'werkzeug.contrib.cache.NullCache',
             'CACHE_DEFAULT_TIMEOUT': 300,
@@ -132,7 +143,7 @@ class Nereid(Flask):
         })
 
     def initialise(self):
-        """The application needs initialisation to load the database 
+        """The application needs initialisation to load the database
         connection etc. In previous versions this was done with the
         initialisation of the class in the __init__ method. This is
         now separated into this function.
@@ -467,10 +478,10 @@ class Nereid(Flask):
     def jinja_loader(self):
         """Creates the loader for the Jinja2 Environment
         """
-        req = _request_ctx_stack.top.request
-        return FileSystemLoader(os.path.join([
-            self.config['TEMPLATE_SEARCH_PATH'], req.nereid_website.name
-        ]))
+        return ModuleTemplateLoader(
+            self.database_name, searchpath=self.template_folder,
+            prefix_website_name=self.template_prefix_website_name
+        )
 
     def select_jinja_autoescape(self, filename):
         """Returns `True` if autoescaping should be active for the given

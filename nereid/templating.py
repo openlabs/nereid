@@ -1,17 +1,22 @@
 # -*- coding: utf-8 -*-
 #This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
 #this repository contains the full copyright notices and license terms.
+import os
+import contextlib
 from decimal import Decimal
 
-from flask.templating import render_template as flask_render_template
-from jinja2 import BaseLoader, TemplateNotFound, nodes, Template
+from flask.templating import render_template
+from jinja2 import BaseLoader, TemplateNotFound, nodes, Template, \
+        ChoiceLoader, FileSystemLoader
 from jinja2.ext import Extension
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.MIMEBase import MIMEBase
 from email import Encoders
+import trytond.tools as tools
+from trytond.transaction import Transaction
 
-from .globals import request
+from .globals import request, current_app
 from .helpers import _rst_to_html_filter, make_crumbs
 
 
@@ -27,60 +32,135 @@ NEREID_TEMPLATE_FILTERS = dict(
     rst = _rst_to_html_filter,
 )
 
-def render_template(template_name, _prefix_website=True, **context):
-    """Renders a template and by default adds the current website
-    name as a prefix to the template name thereby allowing automatic
-    name conversions from nereid base template to application specific
-    templates
-    """
-    if _prefix_website:
-        template_name = '%s/%s' % (
-            request.nereid_website.name, template_name
-        )
-    return flask_render_template(template_name, **context)
 
+class SiteNamePrefixLoader(FileSystemLoader):
+    '''Loads templates from the file system but prefixes the template
+    name with the name of the site.
 
-class TrytonTemplateLoader(BaseLoader):
-    """
-    Loaders are responsible for loading templates from a resource.
-    In this case the tempalte is loaded from Tryton Database
+    The loader takes the path to the templates as string, or if multiple
+    locations are wanted a list of them which is then looked up in the
+    given order:
 
-    :param app: the application instance
-    """
-    model = 'nereid.template'
+    >>> loader = SiteNamePrefixLoader('/path/to/templates')
+    >>> loader = SiteNamePrefixLoader(['/path/to/templates', '/other/path'])
 
-    def __init__(self, app):
-        self.app = app
+    The templates are expected to be created on separate folders with
+    the name of the website as defined when creating a nereid website.
 
+    This loader can be used to emulate the default behavior of
+    render_template in versions of Nereid prior to 2.8.0.4
+
+    .. versionadded:: 2.8.0.4
+    '''
     def get_source(self, environment, template):
         """
-        The environment provides a get_template method that calls 
-        the loader’s load method to get the Template object. Hence,
-        to override and implement a custom loading mechanism this
-        method has to be sublassed.
-
-        It’s passed the environment and template name and has to 
-        return a tuple in the form (source, filename, uptodate)
-
-        source - source of the template as unicode string/ASCII bytestring
-        filename - None (as not loaded from filesystem)
-        uptodate - A function to check if template has changed
+        Returns the source of the template after finding it in the local
+        environment. This method adds the site name as a prefix to the
+        template name as though the website name is a folder.
         """
-        template_obj = self.app.pool.get(self.model)
-        source = template_obj.get_template_source(template)
-        if source is None:
-            raise TemplateNotFound(template)
-        return source, None, lambda: False
+        template = os.path.join(request.nereid_website.name, template)
+        return super(SiteNamePrefixLoader, self).get_source(
+            environment, template
+        )
 
-    def list_templates(self):
-        result = self.app.jinja_loader.list_templates()
 
-        template_obj = self.app.pool.get(self.model)
-        template_ids = template_obj.search([])
-        for template in template_obj.browse(template_ids):
-            result.append(template.name)
+class ModuleTemplateLoader(ChoiceLoader):
+    '''This loader works like the `ChoiceLoader` and loads templates from
+    a filesystem path (optional) followed by the template folders in the
+    tryton module path. The template folders are ordered by the same
+    order in which Tryton arranges modules based on the dependencies.
 
-        return result
+    The optional keyword argument searchpath could be used to specify
+    local folder which contains templates which may override the templates
+    bundled into nereid modules.
+
+    :param database_name: The name of the Tryton database. This is required
+                          since the modules installed in a database is what
+                          matters and not the modules in the site-packages
+    :param searchpath: Optional filesystem path where templates that override
+                       templates bundled with nereid are located.
+    :param prefix_website_name: Flag to indicate if the website name needs to
+                                be prefixed when looking up templates in the
+                                given `searchpath`. This is not applicable to
+                                templates loaded from packages as it would not
+                                be possible to predict site names when writing
+                                modules.
+                                It is recommended not to use this feature, but
+                                use the `NereidSiteNameLoader` directly to get
+                                the same behavior. This would be deprecated in
+                                future.
+
+    .. versionadded:: 2.8.0.4
+    '''
+    def __init__(self, database_name, searchpath=None, prefix_website_name=False):
+        self.database_name = database_name
+        self.searchpath = searchpath
+        self.prefix_website_name = prefix_website_name
+        self._loaders = None
+
+    @property
+    def loaders(self):
+        '''
+        Lazy load the loaders
+        '''
+        if self._loaders is None:
+            self._loaders = []
+
+            if not Transaction().cursor:
+                contextmanager = Transaction().start(self.database_name, 0)
+            else:
+                contextmanager = contextlib.nested(
+                    Transaction().set_user(0),
+                    Transaction().reset_context()
+                )
+            with contextmanager:
+                cursor = Transaction().cursor
+                cursor.execute("SELECT name FROM ir_module_module "
+                    "WHERE state = 'installed'")
+                installed_module_list = [name for (name,) in cursor.fetchall()]
+
+            if self.searchpath is not None:
+                # A path is specified from where templates have to be looked
+                # up first
+                if self.prefix_website_name:
+                    # TODO: raise a deprecation warning
+                    self._loaders.append(SiteNamePrefixLoader(self.searchpath))
+                else:
+                    self._loaders.append(FileSystemLoader(self.searchpath))
+
+            # Look into the module graph and check if they have template
+            # folders and if they do add them too
+            from trytond.modules import create_graph, get_module_list, \
+                    MODULES_PATH, EGG_MODULES
+
+            packages = list(create_graph(get_module_list())[0])[::-1]
+            for package in packages:
+                if package.name not in installed_module_list:
+                    # If the module is not installed in the current database
+                    # then don't load the templates either to be consistent
+                    # with Tryton's modularity
+                    continue
+                if package.name in EGG_MODULES:
+                    # trytond.tools has a good helper which allows resources to
+                    # be loaded from the installed site packages. Just use it
+                    # to load the tryton.cfg file which is guaranteed to exist
+                    # and from it lookup the directory. From here, its just
+                    # another searchpath for the loader.
+                    f = tools.file_open(
+                        os.path.join(package.name, 'tryton.cfg')
+                    )
+                    template_dir = os.path.join(
+                        os.path.dirname(f.name), 'templates'
+                    )
+                else:
+                    template_dir = os.path.join(
+                        MODULES_PATH, package.name, 'templates'
+                    )
+                if os.path.isdir(template_dir):
+                    # Add to FS Loader only if the folder exists
+                    self._loaders.append(FileSystemLoader(template_dir))
+
+        return self._loaders
 
 
 class FragmentCacheExtension(Extension):
