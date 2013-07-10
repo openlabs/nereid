@@ -3,13 +3,14 @@
 #this repository contains the full copyright notices and license terms.
 import os
 import unittest
+import pickle
 
 import pycountry
 import trytond.tests.test_tryton
 from trytond.transaction import Transaction
 from trytond.backend.sqlite.database import Database as SQLiteDatabase
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
-from nereid import render_template
+from nereid import render_template, LazyRenderer
 from nereid.testing import NereidTestCase, NereidTestApp
 from nereid.sessions import Session
 from nereid.contrib.locale import Babel
@@ -218,11 +219,91 @@ class TestTemplateLoading(BaseTestCase):
                 )
 
 
+class TestLazyRendering(BaseTestCase):
+    '''
+    Test the lazy rendering of templates
+    '''
+
+    def test_0010_change_context(self):
+        '''
+        Render template from local searchpath
+        '''
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            with app.test_request_context('/'):
+                self.assertEqual(
+                    render_template(
+                        'tests/test-changing-context.html',
+                        variable="a"
+                    ), 'a'
+                )
+                lazy_template = render_template(
+                    'tests/test-changing-context.html',
+                    variable="a"
+                )
+                self.assertTrue(
+                    isinstance(lazy_template, LazyRenderer)
+                )
+
+                # Now change the value of the variable in the context and
+                # see if the template renders with the new value
+                lazy_template.context['variable'] = "b"
+                self.assertEqual(lazy_template, "b")
+
+                # Make a unicode of the same template
+                unicode_of_response = unicode(lazy_template)
+                self.assertEqual(unicode_of_response, "b")
+                self.assertTrue(
+                    isinstance(unicode_of_response, unicode)
+                )
+
+    def test_0020_pickling(self):
+        '''
+        Test if the lazy rendering object can be pickled and rendered
+        with a totally different context (when no application, request
+        or transaction bound objects are present).
+        '''
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            with app.test_request_context('/'):
+                response = render_template(
+                    'tests/test-changing-context.html',
+                    variable="a"
+                )
+                self.assertEqual(response, 'a')
+                pickled_response = pickle.dumps(response)
+
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            with app.test_request_context('/'):
+                response = pickle.loads(pickled_response)
+                self.assertEqual(response, 'a')
+
+    def test_0030_simple_render(self):
+        '''
+        Simply render a template.
+        '''
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            with app.test_client() as c:
+                response = c.get('/en_US/registration')
+                self.assertEqual(response.status_code, 200)
+
+
 def suite():
     "Nereid Template Loading test suite"
     test_suite = unittest.TestSuite()
     test_suite.addTests([
         unittest.TestLoader().loadTestsFromTestCase(TestTemplateLoading),
+        unittest.TestLoader().loadTestsFromTestCase(TestLazyRendering),
     ])
     return test_suite
 

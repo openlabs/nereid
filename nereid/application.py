@@ -18,7 +18,7 @@ from .wrappers import Request, Response
 from .backend import TransactionManager
 from .session import NereidSessionInterface
 from .templating import nereid_default_template_ctx_processor, \
-    NEREID_TEMPLATE_FILTERS, ModuleTemplateLoader
+    NEREID_TEMPLATE_FILTERS, ModuleTemplateLoader, LazyRenderer
 from .helpers import get_website_from_host, url_for
 
 
@@ -356,6 +356,14 @@ class Nereid(Flask):
                 db_ctx_processors.pop(None)
             )
         self.template_context_processors.update(db_ctx_processors)
+
+    def make_response(self, rv):
+        """Converts the return value from a view function to a real
+        response object that is an instance of :attr:`response_class`.
+        """
+        if isinstance(rv, LazyRenderer):
+            rv = unicode(rv)
+        return super(Nereid, self).make_response(rv)
 
     def wsgi_app(self, environ, start_response):
         """The actual WSGI application.  This is not implemented in

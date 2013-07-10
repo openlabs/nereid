@@ -5,9 +5,10 @@ import os
 import contextlib
 from decimal import Decimal
 
-from flask.templating import render_template
+from flask.templating import render_template as flask_render_template
 from jinja2 import BaseLoader, TemplateNotFound, nodes, Template, \
         ChoiceLoader, FileSystemLoader
+from speaklater import _LazyString
 from jinja2.ext import Extension
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -18,6 +19,84 @@ from trytond.transaction import Transaction
 
 from .globals import request, current_app
 from .helpers import _rst_to_html_filter, make_crumbs
+
+
+class LazyRenderer(_LazyString):
+    """
+    A Lazy Rendering object which when called renders the template
+    with the current context.
+
+    >>> lazy_render_object = LazyRenderer('template.html', {'a': 1})
+
+    You can change the context by setting values to the contex dictionary
+
+    >>> lazy_render_object.context['a'] = 100
+
+    You can also change the template(s) that should be rendered
+
+    >>> lazy_render_object.template_name_or_list = "another-template.html"
+
+    or even, change it into an iterable of templates
+
+    >>> lazy_render_object.template_name_or_list = ['t1.html', 't2.html']
+
+    The template can be rendered and serialized to unicode by calling
+
+    >>> unicode(lazy_render_object)
+
+    .. note::
+
+        If the template renders objects which depend on the application,
+        request or a tryton transaction context (like an active record),
+        the call must be made within those contexts.
+    """
+
+    __slots__ = ('template_name_or_list', 'context',)
+
+    def __init__(self, template_name_or_list, context):
+        """
+        :param template_name_or_list: the name of the template to be
+                                      rendered, or an iterable with template
+                                      names the first one existing will be
+                                      rendered
+        :param context: the variables that should be available in the
+                        context of the template.
+        """
+        self.template_name_or_list = template_name_or_list
+        self.context = context
+
+    @property
+    def value(self):
+        """
+        Return the rendered template with the current context
+        """
+        return flask_render_template(
+            self.template_name_or_list, **self.context
+        )
+
+    def __getstate__(self):
+        return self.template_name_or_list, self.context
+
+    def __setstate__(self, tup):
+        self.template_name_or_list, self.context = tup
+
+
+def render_template(template_name_or_list, **context):
+    """Returns a lazy renderer object which renders a template from the 
+    template folder with the given context. The returned object is an instance
+    of :class:`LazyRenderer` which has all magic methods implemented to make
+    the object look as close as possible to an unicode object.
+
+    LazyRenderer objects are automatically converted into response objects
+    by the WSGI dispatcher into a rendered string by the make_response method.
+
+    :param template_name_or_list: the name of the template to be
+                                  rendered, or an iterable with template names
+                                  the first one existing will be rendered
+    :param context: the variables that should be available in the
+                    context of the template.
+    """
+    return LazyRenderer(template_name_or_list, context)
 
 
 def nereid_default_template_ctx_processor():
