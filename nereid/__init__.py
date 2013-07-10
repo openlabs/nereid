@@ -9,8 +9,9 @@ from jinja2 import Markup, escape
 from flask.globals import current_app, g, request, \
     session, _request_ctx_stack
 from flask.templating import render_template_string
+from flask.json import jsonify
 
-from .helpers import flash, get_flashed_messages, jsonify, url_for, \
+from .helpers import flash, get_flashed_messages, url_for, \
     login_required, permissions_required
 from .application import Nereid, Request, Response
 from .sessions import Session
