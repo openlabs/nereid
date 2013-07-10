@@ -12,9 +12,8 @@ import unicodedata
 from functools import wraps
 from hashlib import md5
 
-from flask.helpers import _assert_have_json, json, jsonify, \
-    _PackageBoundObject, locked_cached_property, get_flashed_messages, \
-    flash
+from flask.helpers import _PackageBoundObject, locked_cached_property, \
+        get_flashed_messages, flash
 from werkzeug import Headers, wrap_file, redirect, abort
 from werkzeug.exceptions import NotFound
 
