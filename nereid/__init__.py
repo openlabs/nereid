@@ -16,4 +16,4 @@ from .helpers import flash, get_flashed_messages, url_for, \
 from .application import Nereid, Request, Response
 from .sessions import Session
 from .globals import cache
-from .templating import render_template, render_email
+from .templating import render_template, render_email, LazyRenderer
