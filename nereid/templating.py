@@ -6,8 +6,8 @@ import contextlib
 from decimal import Decimal
 
 from flask.templating import render_template as flask_render_template
-from jinja2 import BaseLoader, TemplateNotFound, nodes, Template, \
-        ChoiceLoader, FileSystemLoader
+from jinja2 import (BaseLoader, TemplateNotFound, nodes, Template,  # noqa
+        ChoiceLoader, FileSystemLoader)
 from speaklater import _LazyString
 from jinja2.ext import Extension
 from email.mime.multipart import MIMEMultipart
@@ -17,7 +17,7 @@ from email import Encoders
 import trytond.tools as tools
 from trytond.transaction import Transaction
 
-from .globals import request, current_app
+from .globals import request, current_app  # noqa
 from .helpers import _rst_to_html_filter, make_crumbs
 
 
@@ -82,7 +82,8 @@ class LazyRenderer(_LazyString):
 
 
 def render_template(template_name_or_list, **context):
-    """Returns a lazy renderer object which renders a template from the 
+    """
+    Returns a lazy renderer object which renders a template from the
     template folder with the given context. The returned object is an instance
     of :class:`LazyRenderer` which has all magic methods implemented to make
     the object look as close as possible to an unicode object.
@@ -108,12 +109,13 @@ def nereid_default_template_ctx_processor():
 
 
 NEREID_TEMPLATE_FILTERS = dict(
-    rst = _rst_to_html_filter,
+    rst=_rst_to_html_filter,
 )
 
 
 class SiteNamePrefixLoader(FileSystemLoader):
-    '''Loads templates from the file system but prefixes the template
+    '''
+    Loads templates from the file system but prefixes the template
     name with the name of the site.
 
     The loader takes the path to the templates as string, or if multiple
@@ -144,7 +146,8 @@ class SiteNamePrefixLoader(FileSystemLoader):
 
 
 class ModuleTemplateLoader(ChoiceLoader):
-    '''This loader works like the `ChoiceLoader` and loads templates from
+    '''
+    This loader works like the `ChoiceLoader` and loads templates from
     a filesystem path (optional) followed by the template folders in the
     tryton module path. The template folders are ordered by the same
     order in which Tryton arranges modules based on the dependencies.
@@ -171,7 +174,8 @@ class ModuleTemplateLoader(ChoiceLoader):
 
     .. versionadded:: 2.8.0.4
     '''
-    def __init__(self, database_name, searchpath=None, prefix_website_name=False):
+    def __init__(
+            self, database_name, searchpath=None, prefix_website_name=False):
         self.database_name = database_name
         self.searchpath = searchpath
         self.prefix_website_name = prefix_website_name
@@ -194,8 +198,10 @@ class ModuleTemplateLoader(ChoiceLoader):
                 )
             with contextmanager:
                 cursor = Transaction().cursor
-                cursor.execute("SELECT name FROM ir_module_module "
-                    "WHERE state = 'installed'")
+                cursor.execute(
+                    "SELECT name FROM ir_module_module "
+                    "WHERE state = 'installed'"
+                )
                 installed_module_list = [name for (name,) in cursor.fetchall()]
 
             if self.searchpath is not None:
@@ -210,7 +216,7 @@ class ModuleTemplateLoader(ChoiceLoader):
             # Look into the module graph and check if they have template
             # folders and if they do add them too
             from trytond.modules import create_graph, get_module_list, \
-                    MODULES_PATH, EGG_MODULES
+                MODULES_PATH, EGG_MODULES
 
             packages = list(create_graph(get_module_list())[0])[::-1]
             for package in packages:
@@ -253,7 +259,7 @@ class FragmentCacheExtension(Extension):
         environment.extend(
             fragment_cache_prefix='',
             fragment_cache=None
-            )
+        )
 
     def parse(self, parser):
         # the first token is the token that started the tag.  In our case
@@ -296,10 +302,11 @@ class FragmentCacheExtension(Extension):
         return rv
 
 
-def render_email(from_email, to, subject,
-        text_template=None, html_template=None, cc=None, attachments=None,
-        **context):
-    """Read the templates for email messages, format them, construct
+def render_email(
+        from_email, to, subject, text_template=None, html_template=None,
+        cc=None, attachments=None, **context):
+    """
+    Read the templates for email messages, format them, construct
     the email from them and return the corresponding email message
     object.
 
@@ -310,14 +317,14 @@ def render_email(from_email, to, subject,
     :param html_template: <HTML email template path>
     :param cc: Email IDs of Cc recepients
     :param attachments: A dict of filename:string as key value pair
-        [preferable file buffer streams]
+                        [preferable file buffer streams]
     :param context: Context to be sent to template rendering
 
     :return: Email multipart instance or Text/HTML part
     """
     if not (text_template or html_template):
         raise Exception("Atleast HTML or TEXT template is required")
-        
+
     # Create the body of the message (a plain-text and an HTML version).
     # text is your plain-text email
     # html is your html version of the email
@@ -341,7 +348,7 @@ def render_email(from_email, to, subject,
             html = render_template(html_template, **context)
         html_part = MIMEText(html.encode("utf-8"), 'html', _charset="UTF-8")
         msg.attach(html_part)
-        
+
     if text_template and not (html_template or attachments):
         msg = text_part
     elif html_template and not (text_template or attachments):

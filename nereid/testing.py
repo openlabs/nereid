@@ -28,14 +28,16 @@ class NereidTestApp(Nereid):
         return do_nothing()
 
     def load_backend(self):
-        """Just reuse the pool and DB already loaded by the tryton test loader
+        """
+        Just reuse the pool and DB already loaded by the tryton test loader
         """
         from trytond.tests.test_tryton import DB, POOL
         self._database = DB
         self._pool = POOL
 
     def wsgi_app(self, environ, start_response):
-        """The actual WSGI application.  This is not implemented in
+        """
+        The actual WSGI application.  This is not implemented in
         `__call__` so that middlewares can be applied without losing a
         reference to the class.  So instead of doing this::
 

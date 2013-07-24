@@ -3,7 +3,7 @@
 
 from __future__ import with_statement
 
-import os
+import os  # noqa
 import warnings
 
 from flask import Flask
@@ -34,7 +34,7 @@ class Nereid(Flask):
     ...
 
     """
-    #: The class that is used for request objects.  See 
+    #: The class that is used for request objects.  See
     #: :class:`~nereid.wrappers.Request`
     #: for more information.
     request_class = Request
@@ -47,7 +47,7 @@ class Nereid(Flask):
     #: :class:`~nereid.session.NereidSessionInterface` is used here.
     session_interface = NereidSessionInterface()
 
-    #: An internal attribute to hold the Tryton model pool to avoid being 
+    #: An internal attribute to hold the Tryton model pool to avoid being
     #: initialised at every request as it is quite expensive to do so.
     #: To access the pool from modules, use the :meth:`pool`
     _pool = None
@@ -56,7 +56,7 @@ class Nereid(Flask):
     _database = None
 
     #: Configuration file for Tryton. The path to the configuration file
-    #: can be specified and will be loaded when the application is 
+    #: can be specified and will be loaded when the application is
     #: initialised
     tryton_configfile = ConfigAttribute('TRYTON_CONFIG')
 
@@ -70,18 +70,18 @@ class Nereid(Flask):
     #: specified in the set or set many argument
     cache_default_timeout = ConfigAttribute('CACHE_DEFAULT_TIMEOUT')
 
-    #: the maximum number of items the cache stores before it starts 
+    #: the maximum number of items the cache stores before it starts
     #: deleting some items.
     #: Applies for: SimpleCache, FileSystemCache
     cache_threshold = ConfigAttribute('CACHE_THRESHOLD')
 
-    #: a prefix that is added before all keys. This makes it possible 
+    #: a prefix that is added before all keys. This makes it possible
     #: to use the same memcached server for different applications.
     #: Applies for: MecachedCache, GAEMemcachedCache
     #: If key_prefix is none the value of site is used as key
     cache_key_prefix = ConfigAttribute('CACHE_KEY_PREFIX')
 
-    #: a list or tuple of server addresses or alternatively a 
+    #: a list or tuple of server addresses or alternatively a
     #: `memcache.Client` or a compatible client.
     cache_memcached_servers = ConfigAttribute('CACHE_MEMCACHED_SERVERS')
 
@@ -89,7 +89,7 @@ class Nereid(Flask):
     cache_dir = ConfigAttribute('CACHE_DIR')
 
     #: The type of cache to use. The type must be a full specification of
-    #: the module so that an import can be made. Examples for werkzeug 
+    #: the module so that an import can be made. Examples for werkzeug
     #: backends are given below
     #:
     #:  NullCache - werkzeug.contrib.cache.NullCache (default)
@@ -104,10 +104,10 @@ class Nereid(Flask):
     #: of the cache could be passed here as a `dict`
     cache_init_kwargs = ConfigAttribute('CACHE_INIT_KWARGS')
 
-    #: boolean attribute to indicate if the initialisation of backend 
+    #: boolean attribute to indicate if the initialisation of backend
     #: connection and other nereid support features are loaded. The
     #: application can work only after the initialisation is done.
-    #: It is not advisable to set this manually, instead call the 
+    #: It is not advisable to set this manually, instead call the
     #: :meth:`initialise`
     initialised = False
 
@@ -143,7 +143,8 @@ class Nereid(Flask):
         })
 
     def initialise(self):
-        """The application needs initialisation to load the database
+        """
+        The application needs initialisation to load the database
         connection etc. In previous versions this was done with the
         initialisation of the class in the __init__ method. This is
         now separated into this function.
@@ -158,7 +159,7 @@ class Nereid(Flask):
         #:
         #:  1. id - ID of the website in the backend
         #:  2. url_map - The loaded url_map of the website
-        #: 
+        #:
         #: .. tip:
         #:  If a new website is introduced a reload of the application would
         #:  be necessary for it to reflect here
@@ -179,7 +180,8 @@ class Nereid(Flask):
         self.initialised = True
 
     def load_cache(self):
-        """Load the cache and assign the Cache interface to
+        """
+        Load the cache and assign the Cache interface to
         """
         BackendClass = import_string(self.cache_type)
 
@@ -206,7 +208,8 @@ class Nereid(Flask):
             self.cache = BackendClass(**self.cache_init_kwargs)
 
     def load_backend(self):
-        """This method loads the configuration file if specified and
+        """
+        This method loads the configuration file if specified and
         also connects to the backend, initialising the pool on the go
         """
         if self.tryton_configfile is not None:
@@ -225,16 +228,21 @@ class Nereid(Flask):
 
     @property
     def pool(self):
-        """A proxy to the _pool"""
+        """
+        A proxy to the _pool
+        """
         return self._pool
 
     @property
     def database(self):
-        "Return connection to Database backend of tryton"
+        """
+        Return connection to Database backend of tryton
+        """
         return self._database
 
     def transaction(self, http_host):
-        """Allows the use of the transaction as a context manager.
+        """
+        Allows the use of the transaction as a context manager.
         The transaction created loads the user from the known websites
         which is identified through the http_host
         """
@@ -250,14 +258,15 @@ class Nereid(Flask):
         else:
             context = {
                 'company': website['company'],
-                }
+            }
             return TransactionManager(
                 self.database_name, website['application_user'], context
             )
 
     @property
     def root_transaction(self):
-        """Allows the use of the transaction as a context manager with the
+        """
+        Allows the use of the transaction as a context manager with the
         root user.
 
         .. versionadded::0.3
@@ -265,7 +274,8 @@ class Nereid(Flask):
         return TransactionManager(self.database_name, 0, None)
 
     def get_method(self, model_method):
-        """Get the object from pool and fetch the method from it
+        """
+        Get the object from pool and fetch the method from it
 
         model_method is expected to be '<model>.<method>'. The returned
         function/method object can be stored in the endpoint map for a
@@ -282,7 +292,8 @@ class Nereid(Flask):
             raise Exception("Method %s not in Model %s" % (method, model))
 
     def load_websites(self):
-        """Load the websites and build a map of the website names to the ID
+        """
+        Load the websites and build a map of the website names to the ID
         in database for quick connection to the website
         """
         Website = self.pool.get("nereid.website")
@@ -293,16 +304,17 @@ class Nereid(Flask):
         #for website in Website.search([]):
         #    for url_kwargs in website.url_map.get_rules_arguments():
         #        url_kwargs['host'] = website.name
-        #        rule = self.url_rule_class(url_kwargs.pop('rule'), **url_kwargs)
+        #        rule = self.url_rule_class(
+        #           url_kwargs.pop('rule'), **url_kwargs
+        #        )
         #        rule.provide_automatic_options = True
         #        master_url_map.add(rule)   # Add rule to map
         #        if (not url_kwargs['build_only']) \
         #                and not(url_kwargs['redirect_to']):
                     # Add the method to the view_functions list if the
                     # endpoint was not a build_only url
-        #            self.view_functions[url_kwargs['endpoint']] = self.get_method(
-        #                url_kwargs['endpoint']
-        #            )
+        #            self.view_functions[url_kwargs['endpoint']] =
+        #               self.get_method(url_kwargs['endpoint'])
 
         url_maps = {}
         # Load all url maps first because many websites might reuse the same
@@ -316,7 +328,7 @@ class Nereid(Flask):
             map.add(
                 self.url_rule_class(
                     self.static_url_path + '/<path:filename>',
-                    endpoint = 'static'
+                    endpoint='static'
                 )
             )
 
@@ -329,7 +341,7 @@ class Nereid(Flask):
                     # Add the method to the view_functions list if the
                     # endpoint was not a build_only url
                     self.view_functions[url['endpoint']] = self.get_method(
-                            url['endpoint']
+                        url['endpoint']
                     )
             url_maps[url_map.id] = map
 
@@ -346,8 +358,10 @@ class Nereid(Flask):
         self.view_functions['static'] = self.send_static_file
 
     def add_ctx_processors_from_db(self):
-        """Adds template context processors registers with the model
-        nereid.template.context_processor"""
+        """
+        Adds template context processors registers with the model
+        nereid.template.context_processor
+        """
         ctx_processor_obj = self.pool.get('nereid.template.context_processor')
 
         db_ctx_processors = ctx_processor_obj.get_processors()
@@ -358,7 +372,8 @@ class Nereid(Flask):
         self.template_context_processors.update(db_ctx_processors)
 
     def make_response(self, rv):
-        """Converts the return value from a view function to a real
+        """
+        Converts the return value from a view function to a real
         response object that is an instance of :attr:`response_class`.
         """
         if isinstance(rv, LazyRenderer):
@@ -366,7 +381,8 @@ class Nereid(Flask):
         return super(Nereid, self).make_response(rv)
 
     def wsgi_app(self, environ, start_response):
-        """The actual WSGI application.  This is not implemented in
+        """
+        The actual WSGI application.  This is not implemented in
         `__call__` so that middlewares can be applied without losing a
         reference to the class.  So instead of doing this::
 
@@ -401,7 +417,8 @@ class Nereid(Flask):
                 return response(environ, start_response)
 
     def create_url_adapter(self, request):
-        """Return the URL adapter for the website instead of the standard
+        """
+        Return the URL adapter for the website instead of the standard
         operation of just binding the environ to the url_map
         """
         if request is None:
@@ -422,7 +439,8 @@ class Nereid(Flask):
             )
 
     def dispatch_request(self):
-        """Does the request dispatching.  Matches the URL and returns the
+        """
+        Does the request dispatching.  Matches the URL and returns the
         return value of the view or error handler.  This does not have to
         be a response object.
         """
@@ -458,7 +476,8 @@ class Nereid(Flask):
             return result
 
     def create_jinja_environment(self):
-        """Extend the default jinja environment that is created. Also
+        """
+        Extend the default jinja environment that is created. Also
         the environment returned here should be specific to the current
         website.
         """
@@ -484,7 +503,8 @@ class Nereid(Flask):
 
     @locked_cached_property
     def jinja_loader(self):
-        """Creates the loader for the Jinja2 Environment
+        """
+        Creates the loader for the Jinja2 Environment
         """
         return ModuleTemplateLoader(
             self.database_name, searchpath=self.template_folder,
@@ -492,7 +512,8 @@ class Nereid(Flask):
         )
 
     def select_jinja_autoescape(self, filename):
-        """Returns `True` if autoescaping should be active for the given
+        """
+        Returns `True` if autoescaping should be active for the given
         template name.
         """
         if filename is None:
@@ -506,7 +527,6 @@ class Nereid(Flask):
         warnings.warn(DeprecationWarning(
             "guest_user as an attribute will be deprecated.\n"
             "Use request.nereid_website.guest_user.id instead"
-            )
-        )
+        ))
         from .globals import request
         return request.nereid_website.guest_user.id

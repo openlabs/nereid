@@ -7,7 +7,8 @@ from .globals import current_app, session
 
 
 def _get_website_name(host):
-    """The host could have the host_name and port number. This will try
+    """
+    The host could have the host_name and port number. This will try
     to get the best possible guess of the website name from the host name
     """
     #XXX: Needs improvement

@@ -12,7 +12,8 @@ from werkzeug.utils import cached_property
 
 
 class SitemapIndex(object):
-    """A collection of Sitemap objects
+    """
+    A collection of Sitemap objects
 
     To add a sitemap index to one of your objects do the following:
 
@@ -41,16 +42,17 @@ class SitemapIndex(object):
     #: Batch Size: The number of URLs per sitemap page
     batch_size = 1000
 
-    def __init__(self, model, domain, cache_timeout = 60 * 60 * 24):
-        """A collection of SitemapSection objects which are automatically
+    def __init__(self, model, domain, cache_timeout=60 * 60 * 24):
+        """
+        A collection of SitemapSection objects which are automatically
         generated based on the
 
         :param collection: An iterable of tuples with the name of the model
-            and the domain. Example::
+                           and the domain. Example
 
-                >>> product_obj = pool.get('product.product')
-                >>> sitemap = Sitemap(
-                ...     product_obj, [('displayed_on_eshop', '=', True)])
+        ...>>> product_obj = pool.get('product.product')
+        ...>>> sitemap = Sitemap(
+        ...        product_obj, [('displayed_on_eshop', '=', True)])
         """
         self.model = model
         self.domain = domain
@@ -72,7 +74,8 @@ class SitemapIndex(object):
 
     @cached_property
     def count(self):
-        """Returns the number of items of the object
+        """
+        Returns the number of items of the object
         """
         max_id = self.model.search(
             self.domain, order=[('id', 'DESC')], limit=1
@@ -81,7 +84,8 @@ class SitemapIndex(object):
 
     @cached_property
     def page_count(self):
-        """Returns the number of pages that will exist for the sitemap index
+        """
+        Returns the number of pages that will exist for the sitemap index
         >>> int(ceil(1.00/50000.00))
         1
         >>> int(ceil(50000.00/50000.00))
@@ -97,7 +101,8 @@ class SitemapIndex(object):
 
 
 class SitemapSection(object):
-    """A SitemapSection class is a simple Python class that represents a
+    """
+    A SitemapSection class is a simple Python class that represents a
     "section" of  entries in your sitemap. For example, one Sitemap class could
     represent all the entries of your weblog, while another could represent all
     of the events in your events calendar.
@@ -132,10 +137,10 @@ class SitemapSection(object):
 
 
     :param model: The Tryton model/object from which the pagination needs to
-        be generated. Passing `self` from the calling object's method would be
-        the usual way you will have to pass this argument
+                  be generated. Passing `self` from the calling object's method
+                  would be the usual way you will have to pass this argument
     :param domain: The domain expression which should be searched against in
-        the model
+                   the model
     :param page: The page of the sitemap.
     """
 
@@ -143,8 +148,8 @@ class SitemapSection(object):
     #: intermediate cache servers.
     cache_timeout = 60 * 60 * 24
 
-    #: Indicates how frequently the page is likely to change. This value 
-    #: provides general information to search engines and may not correlate 
+    #: Indicates how frequently the page is likely to change. This value
+    #: provides general information to search engines and may not correlate
     #: exactly to how often they crawl the page. Valid values are:
     #:
     #:     always
@@ -155,44 +160,44 @@ class SitemapSection(object):
     #:     yearly
     #:     never
     #:
-    #: The value "always" should be used to describe documents that change 
-    #: each time they are accessed. The value "never" should be used to 
-    #: describe archived URLs. Please note that the value of this tag is 
-    #: considered a hint and not a command. 
+    #: The value "always" should be used to describe documents that change
+    #: each time they are accessed. The value "never" should be used to
+    #: describe archived URLs. Please note that the value of this tag is
+    #: considered a hint and not a command.
     #:
-    #: Even though search engine crawlers may consider this information when 
-    #: making decisions, they may crawl pages marked "hourly" less frequently 
-    #: than that, and they may crawl pages marked "yearly" more frequently 
+    #: Even though search engine crawlers may consider this information when
+    #: making decisions, they may crawl pages marked "hourly" less frequently
+    #: than that, and they may crawl pages marked "yearly" more frequently
     #: than that. Crawlers may periodically crawl pages marked "never" so that
     #: they can handle unexpected changes to those pages.
     #:
     #: Defaults to 'never'
     changefreq = 'never'
 
-    #: The priority of this URL relative to other URLs on your site. Valid 
+    #: The priority of this URL relative to other URLs on your site. Valid
     #: values range from 0.0 to 1.0. This value does not affect how your pages
     #: are compared to pages on other sitesâ€”it only lets the search engines
     #:  know which pages you deem most important for the crawlers.
     #:
     #: A default priority of 0.5 is assumed by the protocol.
     #:
-    #: Please note that the priority you assign to a page is not likely to 
-    #: influence the position of your URLs in a search engine's result pages. 
-    #: Search engines may use this information when selecting between URLs on 
-    #: the same site, so you can use this tag to increase the likelihood that 
+    #: Please note that the priority you assign to a page is not likely to
+    #: influence the position of your URLs in a search engine's result pages.
+    #: Search engines may use this information when selecting between URLs on
+    #: the same site, so you can use this tag to increase the likelihood that
     #: your most important pages are present in a search index.
     #:
-    #: Also, please note that assigning a high priority to all of the URLs on 
+    #: Also, please note that assigning a high priority to all of the URLs on
     #: your site is not likely to help you. Since the priority is relative, it
     #: is only used to select between URLs on your site.
     priority = 0.5
 
     #: It is really memory intensive to call complete records and generate site
-    #: maps from them if the collection is large. Hence the queries may be 
+    #: maps from them if the collection is large. Hence the queries may be
     #: divided into batches of this size
     batch_size = 1000
 
-    min_id = property(lambda self: (self.page -1) * self.batch_size)
+    min_id = property(lambda self: (self.page - 1) * self.batch_size)
     max_id = property(lambda self: self.min_id + self.batch_size)
 
     def __init__(self, model, domain, page):
@@ -201,7 +206,8 @@ class SitemapSection(object):
         self.page = page
 
     def __iter__(self):
-        """The default implementation searches for the domain and finds the
+        """
+        The default implementation searches for the domain and finds the
         ids and generates xml for it
         """
         domain = [('id', '>', self.min_id), ('id', '<=', self.max_id)]
@@ -214,23 +220,27 @@ class SitemapSection(object):
             del record
 
     def render(self):
-        """This method writes the sitemap directly into the response as a stream
-        using the ResponseStream
+        """
+        This method writes the sitemap directly into the response as a
+        stream using the ResponseStream
         """
         with NamedTemporaryFile(suffix=".xml") as buffer:
             buffer.write('<?xml version="1.0" encoding="UTF-8"?>\n')
             buffer.write(
-                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-                )
+                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+                '\n'
+            )
             for line in self:
                 buffer.write(etree.tostring(line) + u'\n')
             buffer.write('</urlset>')
             return send_file(buffer.name, cache_timeout=self.cache_timeout)
 
     def get_url_xml(self, item):
-        """Returns the etree node for the specific item
         """
-        return E('url',
+        Returns the etree node for the specific item
+        """
+        return E(
+            'url',
             E('loc', self.loc(item)),
             E('lastmod', self.lastmod(item)),
             E('changefreq', self.changefreq),
@@ -238,7 +248,8 @@ class SitemapSection(object):
         )
 
     def loc(self, item):
-        """URL of the page. This URL must begin with the protocol
+        """
+        URL of the page. This URL must begin with the protocol
         (such as http) and end with a trailing slash, if the application
         requires it. This value must be less than 2,048 characters.
 
@@ -252,7 +263,8 @@ class SitemapSection(object):
         return item.get_absolute_url(_external=True)
 
     def lastmod(self, item):
-        """The date of last modification of the file. This date should be in
+        """
+        The date of last modification of the file. This date should be in
         W3C Datetime format. This format allows you to omit the time portion,
         if desired, and use YYYY-MM-DD. Note that this tag is separate from
         the If-Modified-Since (304) header the server can return, and

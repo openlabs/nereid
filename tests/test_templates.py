@@ -8,7 +8,7 @@ import pickle
 import pycountry
 import trytond.tests.test_tryton
 from trytond.transaction import Transaction
-from trytond.backend.sqlite.database import Database as SQLiteDatabase
+from trytond.backend.sqlite.database import Database as SQLiteDatabase  # noqa
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from nereid import render_template, LazyRenderer
 from nereid.testing import NereidTestCase, NereidTestApp
@@ -186,8 +186,7 @@ class TestTemplateLoading(BaseTestCase):
         '''
         trytond.tests.test_tryton.install_module('nereid_test')
 
-        with Transaction().start(DB_NAME, USER, CONTEXT) as txn:
-            Website = POOL.get('nereid.website')
+        with Transaction().start(DB_NAME, USER, CONTEXT) as txn:  # noqa
             # Add nereid_test also to list of modules installed so
             # that it is also added to the templates path
 
