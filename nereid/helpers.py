@@ -99,13 +99,16 @@ class permissions_required(object):
     Decorator helper to check if the specified permissions
     rest with the user
     """
-    def __init__(self, permissions):
-        self.permissions = frozenset(permissions)
+    def __init__(self, perm_all=None, perm_any=None):
+        self.perm_all = frozenset(perm_all if perm_all else [])
+        self.perm_any = frozenset(perm_any if perm_any else [])
 
     def __call__(self, function):
         @wraps(function)
         def wrapper(*args, **kwargs):
-            if request.nereid_user.has_permissions(self.permissions):
+            if request.nereid_user.has_permissions(
+                    self.perm_all, self.perm_any
+            ):
                 return function(*args, **kwargs)
             abort(403)
         return wrapper
