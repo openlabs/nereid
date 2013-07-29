@@ -3,15 +3,8 @@ python:
   - "2.6"
   - "2.7"
 install: 
-# Install CCY separately because there seems to be an issue
-# in their setup.py which prevents installation as dependency
   - pip install flake8
-  - pip install ccy
-  - pip install pycountry
-  - pip install mock
   - python setup.py install
-# Install trytond-nereid from github (only on develop)
-  - pip install git+https://github.com/openlabs/trytond-nereid.git@develop
 script:
   - python setup.py test
   - flake8 .
