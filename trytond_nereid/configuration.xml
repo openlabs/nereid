@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+        This file is part of Tryton & Nereid. The COPYRIGHT file at the
+        top level of this repository contains the full copyright notices
+        and license terms.
+    -->
+<tryton>
+    <data>
+        <record model="res.group" id="group_nereid_admin">
+            <field name="name">Nereid Administration</field>
+        </record>
+        <record model="res.user-res.group" id="user_admin_group_nereid_admin">
+            <field name="user" ref="res.user_admin"/>
+            <field name="group" ref="group_nereid_admin"/>
+        </record>
+
+        <menuitem name="Nereid" id="menu_nereid" />
+        <record model="ir.ui.menu-res.group" id="menu_group_nereid_admin">
+          <field name="menu" ref="menu_nereid"/>
+          <field name="group" ref="group_nereid_admin"/>
+        </record>
+
+        <menuitem name="Configuration" sequence="10"
+                  id="menu_nereid_configuration" parent="menu_nereid" />
+
+        <record model="ir.ui.view" id="lang_view_tree">
+            <field name="model">ir.lang</field>
+            <field name="type">tree</field>
+            <field name="inherit" ref="ir.lang_view_tree"/>
+            <field name="arch" type="xml">
+                <![CDATA[
+                  <data>
+                    <xpath expr="/tree/field[@name='active']" position="after">
+                        <field name="default_currency"/>
+                    </xpath>
+                  </data>
+                ]]>
+            </field>
+        </record>
+
+        <!-- Routing -->
+        <menuitem name="Routing" id="menu_nereid_routing"
+            sequence="10" parent="menu_nereid_configuration" />
+        <record model="ir.ui.view" id="website_view_form">
+            <field name="model">nereid.website</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <![CDATA[
+                <form string="Web Site">
+                    <label name="name" />
+                    <field name="name" />
+                    <label name="url_map" />
+                    <field name="url_map" />
+                    <label name="active" />
+                    <field name="active" />
+                    <label name="company"/>
+                    <field name="company"/>
+                    <label name="default_language"/>
+                    <field name="default_language"/>
+                    <label name="application_user"/>
+                    <field name="application_user"/>
+                    <label name="guest_user"/>
+                    <field name="guest_user"/>
+                    <label name="timezone"/>
+                    <field name="timezone"/>
+                    <notebook colspan="4">
+                      <page id="Countries" string="Countries">
+                        <field name="countries"/>
+                      </page>
+                      <page string="Configuration" id="configuration">
+                      </page>
+                    </notebook>
+                </form>
+                ]]>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="website_view_tree">
+            <field name="model">nereid.website</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <![CDATA[
+                <tree string="Web Sites">
+                    <field name="name" />
+                    <field name="url_map" />
+                    <field name="active" />
+                </tree>
+                ]]>
+            </field>
+        </record>
+        <record model="ir.action.act_window" id="act_website_form">
+            <field name="name">Web Sites</field>
+            <field name="res_model">nereid.website</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_website_form_view1">
+            <field name="sequence" eval="10" />
+            <field name="view" ref="website_view_tree" />
+            <field name="act_window" ref="act_website_form" />
+        </record>
+        <record model="ir.action.act_window.view" id="act_website_form_view2">
+            <field name="sequence" eval="20" />
+            <field name="view" ref="website_view_form" />
+            <field name="act_window" ref="act_website_form" />
+        </record>
+        <menuitem parent="menu_nereid_configuration" action="act_website_form"
+            id="menu_website_form" sequence="5"/>
+
+        <!--  URL Map  -->
+        <record model="ir.ui.view" id="url_map_view_form">
+            <field name="model">nereid.url_map</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <![CDATA[
+                <form string="URL Map">
+                    <label name="name" />
+                    <field name="name" />
+                    <label name="default_subdomain" />
+                    <field name="default_subdomain" />
+                    <label name="active" />
+                    <field name="active" />
+                    <notebook colspan="4">
+                        <page string="Rules" id="rules">
+                            <field name="rules" colspan="4" />
+                        </page>
+                        <page string="Advanced" id="advanced">
+                            <label name="charset" />
+                            <field name="charset" />
+                            <label name="strict_slashes" />
+                            <field name="strict_slashes" />
+                            <label name="unique_urls" />
+                            <field name="unique_urls" />
+                        </page>
+                    </notebook>
+                </form>
+                ]]>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="url_map_view_tree">
+            <field name="model">nereid.url_map</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <![CDATA[
+                <tree string="URL Map">
+                    <field name="name" />
+                    <field name="default_subdomain" />
+                    <field name="charset" />
+                    <field name="active" />
+                </tree>
+                ]]>
+            </field>
+        </record>
+        <record model="ir.action.act_window" id="act_url_map_form">
+            <field name="name">URL Map</field>
+            <field name="res_model">nereid.url_map</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_url_map_form_view1">
+            <field name="sequence" eval="10" />
+            <field name="view" ref="url_map_view_tree" />
+            <field name="act_window" ref="act_url_map_form" />
+        </record>
+        <record model="ir.action.act_window.view" id="act_url_map_form_view2">
+            <field name="sequence" eval="20" />
+            <field name="view" ref="url_map_view_form" />
+            <field name="act_window" ref="act_url_map_form" />
+        </record>
+        <menuitem parent="menu_nereid_routing" action="act_url_map_form"
+            id="menu_url_map_form" />
+
+        <!--  URL Rule  -->
+        <record model="ir.ui.view" id="url_rule_view_form">
+            <field name="model">nereid.url_rule</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <![CDATA[
+                <form string="URL Rule">
+                    <label name="rule" />
+                    <field name="rule" />
+                    <label name="endpoint" />
+                    <field name="endpoint" />
+                    <label name="active" />
+                    <field name="active" />
+                    <label name="url_map" />
+                    <field name="url_map" />
+                    <notebook colspan="4">
+                        <page string="Defaults" id="defaults">
+                            <field name="defaults" colspan="4"/>
+                        </page>
+                        <page string="Advanced" id="advanced">
+                            <group col="10" colspan="4" id="methods">
+                                <label name="http_method_get" />
+                                <field name="http_method_get" />
+                                <label name="http_method_post" />
+                                <field name="http_method_post" />
+                                <label name="http_method_patch" />
+                                <field name="http_method_patch" />
+                                <label name="http_method_put" />
+                                <field name="http_method_put" />
+                                <label name="http_method_delete" />
+                                <field name="http_method_delete" />
+                            </group>
+                            <label name="only_for_genaration" />
+                            <field name="only_for_genaration" />
+                            <label name="redirect_to" />
+                            <field name="redirect_to" />
+                            <label name="sequence" />
+                            <field name="sequence" />
+                        </page>
+                    </notebook>
+                </form>
+                ]]>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="url_rule_view_tree">
+            <field name="model">nereid.url_rule</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <![CDATA[
+                <tree string="URL Rules">
+                    <field name="rule" />
+                    <field name="endpoint" />
+                    <field name="active" />
+                    <field name="http_method_get" />
+                    <field name="http_method_post" />
+                    <field name="http_method_patch" />
+                    <field name="http_method_put" />
+                    <field name="http_method_delete" />
+                </tree>
+                ]]>
+            </field>
+        </record>
+        <record model="ir.action.act_window" id="act_url_rule_form">
+            <field name="name">URL Rules</field>
+            <field name="res_model">nereid.url_rule</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_url_rule_form_view1">
+            <field name="sequence" eval="10" />
+            <field name="view" ref="url_rule_view_tree" />
+            <field name="act_window" ref="act_url_rule_form" />
+        </record>
+        <record model="ir.action.act_window.view" id="act_url_rule_form_view2">
+            <field name="sequence" eval="20" />
+            <field name="view" ref="url_rule_view_form" />
+            <field name="act_window" ref="act_url_rule_form" />
+        </record>
+        <menuitem parent="menu_nereid_routing" action="act_url_rule_form"
+            id="menu_url_rule_form" />
+
+        <!--  URL Rule Defaults -->
+        <record model="ir.ui.view" id="url_rule_defaults_view_tree">
+            <field name="model">nereid.url_rule_defaults</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <![CDATA[
+                <tree string="URL Rules Defaults" editable="bottom">
+                    <field name="key" />
+                    <field name="value" />
+                    <field name="rule" />
+                </tree>
+                ]]>
+            </field>
+        </record>
+        <record model="ir.action.act_window" id="act_url_rule_defaults_tree">
+            <field name="name">URL Rule Defaults</field>
+            <field name="res_model">nereid.url_rule_defaults</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_url_rule_defaults_tree_view2">
+            <field name="sequence" eval="20" />
+            <field name="view" ref="url_rule_defaults_view_tree" />
+            <field name="act_window" ref="act_url_rule_defaults_tree" />
+        </record>
+
+        <!-- Context processors -->
+        <record model="nereid.template.context_processor" id="ctx_processor_currency">
+            <field name="method">currency.currency.context_processor</field>
+        </record>
+    </data>
+</tryton>
+

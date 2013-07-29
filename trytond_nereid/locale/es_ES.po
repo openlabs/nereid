@@ -1,0 +1,769 @@
+# 
+msgid ""
+msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+msgctxt "error:nereid.permission:"
+msgid "Permissions must be unique by value"
+msgstr "Los permisos deben ser únicos por valor"
+
+msgctxt "error:nereid.static.file:"
+msgid ""
+"Invalid file name:\n"
+"                (1) '..' in file name (OR)\n"
+"                (2) file name contains '/'"
+msgstr ""
+"Nombre del directorio no es correcto:\n"
+"                (1) '.' en el nombre del directorio (OR)\n"
+"                (2) el nombre del directorio debe empezar por '/'"
+
+msgctxt "error:nereid.static.file:"
+msgid "The Name of the Static File must be unique in a folder.!"
+msgstr "El nombre del fichero estático debe ser único en el directorio."
+
+msgctxt "error:nereid.static.folder:"
+msgid "Folder name cannot be changed"
+msgstr "El nombre del directorio no se puede cambiar"
+
+msgctxt "error:nereid.static.folder:"
+msgid "Folder name needs to be unique"
+msgstr "El nombre del directorio debe ser único"
+
+msgctxt "error:nereid.static.folder:"
+msgid ""
+"Invalid folder name:\n"
+"                (1) '.' in folder name (OR)\n"
+"                (2) folder name begins with '/'"
+msgstr ""
+"Nombre del directorio no es correcto:\n"
+"                (1) '.' en el nombre del directorio (OR)\n"
+"                (2) el nombre del directorio debe empezar por '/'"
+
+msgctxt "error:nereid.user:"
+msgid "Email must be unique in a company"
+msgstr "El correo electrónico debe ser único por compañía"
+
+msgctxt "error:nereid.website:"
+msgid "Another site with the same name already exists!"
+msgstr "Otro sitio web con el mismo nombre ya existe."
+
+msgctxt "field:ir.lang,default_currency:"
+msgid "Default Currency"
+msgstr "Moneda por defecto"
+
+msgctxt "field:nereid.permission,create_date:"
+msgid "Create Date"
+msgstr "Fecha creación"
+
+msgctxt "field:nereid.permission,create_uid:"
+msgid "Create User"
+msgstr "Usuario creación"
+
+msgctxt "field:nereid.permission,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.permission,name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.permission,nereid_users:"
+msgid "Nereid Users"
+msgstr "Usuarios"
+
+msgctxt "field:nereid.permission,rec_name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.permission,value:"
+msgid "Value"
+msgstr "Valor"
+
+msgctxt "field:nereid.permission,write_date:"
+msgid "Write Date"
+msgstr "Fecha modificación"
+
+msgctxt "field:nereid.permission,write_uid:"
+msgid "Write User"
+msgstr "Usuario modificación"
+
+msgctxt "field:nereid.permission-nereid.user,create_date:"
+msgid "Create Date"
+msgstr "Fecha creación"
+
+msgctxt "field:nereid.permission-nereid.user,create_uid:"
+msgid "Create User"
+msgstr "Usuario creación"
+
+msgctxt "field:nereid.permission-nereid.user,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.permission-nereid.user,nereid_user:"
+msgid "User"
+msgstr "Usuario"
+
+msgctxt "field:nereid.permission-nereid.user,permission:"
+msgid "Permission"
+msgstr "Permisos"
+
+msgctxt "field:nereid.permission-nereid.user,rec_name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.permission-nereid.user,write_date:"
+msgid "Write Date"
+msgstr "Fecha modificación"
+
+msgctxt "field:nereid.permission-nereid.user,write_uid:"
+msgid "Write User"
+msgstr "Usuario modificación"
+
+msgctxt "field:nereid.static.file,create_date:"
+msgid "Create Date"
+msgstr "Fecha creación"
+
+msgctxt "field:nereid.static.file,create_uid:"
+msgid "Create User"
+msgstr "Usuario creación"
+
+msgctxt "field:nereid.static.file,file_binary:"
+msgid "File"
+msgstr "Archivo"
+
+msgctxt "field:nereid.static.file,file_path:"
+msgid "File Path"
+msgstr "Ruta fichero"
+
+msgctxt "field:nereid.static.file,folder:"
+msgid "Folder"
+msgstr "Directorio"
+
+msgctxt "field:nereid.static.file,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.static.file,name:"
+msgid "File Name"
+msgstr "Nombre del fichero"
+
+msgctxt "field:nereid.static.file,rec_name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.static.file,remote_path:"
+msgid "Remote File"
+msgstr "Fichero remoto"
+
+msgctxt "field:nereid.static.file,type:"
+msgid "File Type"
+msgstr "Tipo de fichero"
+
+msgctxt "field:nereid.static.file,url:"
+msgid "URL"
+msgstr "URL"
+
+msgctxt "field:nereid.static.file,write_date:"
+msgid "Write Date"
+msgstr "Fecha modificación"
+
+msgctxt "field:nereid.static.file,write_uid:"
+msgid "Write User"
+msgstr "Usuario modificación"
+
+msgctxt "field:nereid.static.folder,create_date:"
+msgid "Create Date"
+msgstr "Fecha creación"
+
+msgctxt "field:nereid.static.folder,create_uid:"
+msgid "Create User"
+msgstr "Usuario creación"
+
+msgctxt "field:nereid.static.folder,description:"
+msgid "Description"
+msgstr "Descripción"
+
+msgctxt "field:nereid.static.folder,files:"
+msgid "Files"
+msgstr "Ficheros"
+
+msgctxt "field:nereid.static.folder,folder_name:"
+msgid "Folder Name"
+msgstr "Nombre del directorio"
+
+msgctxt "field:nereid.static.folder,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.static.folder,rec_name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.static.folder,write_date:"
+msgid "Write Date"
+msgstr "Fecha modificación"
+
+msgctxt "field:nereid.static.folder,write_uid:"
+msgid "Write User"
+msgstr "Usuario modificación"
+
+msgctxt "field:nereid.template.context_processor,create_date:"
+msgid "Create Date"
+msgstr "Fecha creación"
+
+msgctxt "field:nereid.template.context_processor,create_uid:"
+msgid "Create User"
+msgstr "Usuario creación"
+
+msgctxt "field:nereid.template.context_processor,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.template.context_processor,method:"
+msgid "Method"
+msgstr "Método"
+
+msgctxt "field:nereid.template.context_processor,model:"
+msgid "Model"
+msgstr "Modelo"
+
+msgctxt "field:nereid.template.context_processor,rec_name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.template.context_processor,write_date:"
+msgid "Write Date"
+msgstr "Fecha modificación"
+
+msgctxt "field:nereid.template.context_processor,write_uid:"
+msgid "Write User"
+msgstr "Usuario modificación"
+
+msgctxt "field:nereid.url_map,active:"
+msgid "Active"
+msgstr "Activo"
+
+msgctxt "field:nereid.url_map,charset:"
+msgid "Char Set"
+msgstr "Codificación de caracteres"
+
+msgctxt "field:nereid.url_map,create_date:"
+msgid "Create Date"
+msgstr "Fecha creación"
+
+msgctxt "field:nereid.url_map,create_uid:"
+msgid "Create User"
+msgstr "Usuario creación"
+
+msgctxt "field:nereid.url_map,default_subdomain:"
+msgid "Default Subdomain"
+msgstr "Subdominio"
+
+msgctxt "field:nereid.url_map,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.url_map,name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.url_map,rec_name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.url_map,rules:"
+msgid "Rules"
+msgstr "Reglas"
+
+msgctxt "field:nereid.url_map,strict_slashes:"
+msgid "Strict Slashes"
+msgstr "Barras estrictas"
+
+msgctxt "field:nereid.url_map,unique_urls:"
+msgid "Unique URLs"
+msgstr "URLs únicas"
+
+msgctxt "field:nereid.url_map,write_date:"
+msgid "Write Date"
+msgstr "Fecha modificación"
+
+msgctxt "field:nereid.url_map,write_uid:"
+msgid "Write User"
+msgstr "Usuario modificación"
+
+msgctxt "field:nereid.url_rule,active:"
+msgid "Active"
+msgstr "Activo"
+
+msgctxt "field:nereid.url_rule,create_date:"
+msgid "Create Date"
+msgstr "Fecha creación"
+
+msgctxt "field:nereid.url_rule,create_uid:"
+msgid "Create User"
+msgstr "Usuario creación"
+
+msgctxt "field:nereid.url_rule,defaults:"
+msgid "Defaults"
+msgstr "Valores por defecto"
+
+msgctxt "field:nereid.url_rule,endpoint:"
+msgid "Endpoint"
+msgstr "Método"
+
+msgctxt "field:nereid.url_rule,http_method_delete:"
+msgid "DELETE"
+msgstr "ELIMINAR"
+
+msgctxt "field:nereid.url_rule,http_method_get:"
+msgid "GET"
+msgstr "GET"
+
+msgctxt "field:nereid.url_rule,http_method_patch:"
+msgid "PATCH"
+msgstr "PATCH"
+
+msgctxt "field:nereid.url_rule,http_method_post:"
+msgid "POST"
+msgstr "POST"
+
+msgctxt "field:nereid.url_rule,http_method_put:"
+msgid "PUT"
+msgstr "PUT"
+
+msgctxt "field:nereid.url_rule,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.url_rule,only_for_genaration:"
+msgid "Only for Generation"
+msgstr "Sólo para generar"
+
+msgctxt "field:nereid.url_rule,rec_name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.url_rule,redirect_to:"
+msgid "Redirect To"
+msgstr "Redireccionar a"
+
+msgctxt "field:nereid.url_rule,rule:"
+msgid "Rule"
+msgstr "Regla"
+
+msgctxt "field:nereid.url_rule,sequence:"
+msgid "Sequence"
+msgstr "Secuencia"
+
+msgctxt "field:nereid.url_rule,url_map:"
+msgid "URL Map"
+msgstr "Mapa URL"
+
+msgctxt "field:nereid.url_rule,write_date:"
+msgid "Write Date"
+msgstr "Fecha modificación"
+
+msgctxt "field:nereid.url_rule,write_uid:"
+msgid "Write User"
+msgstr "Usuario modificación"
+
+msgctxt "field:nereid.url_rule_defaults,create_date:"
+msgid "Create Date"
+msgstr "Fecha creación"
+
+msgctxt "field:nereid.url_rule_defaults,create_uid:"
+msgid "Create User"
+msgstr "Usuario creación"
+
+msgctxt "field:nereid.url_rule_defaults,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.url_rule_defaults,key:"
+msgid "Key"
+msgstr "Clave"
+
+msgctxt "field:nereid.url_rule_defaults,rec_name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.url_rule_defaults,rule:"
+msgid "Rule"
+msgstr "Regla"
+
+msgctxt "field:nereid.url_rule_defaults,value:"
+msgid "Value"
+msgstr "Valor"
+
+msgctxt "field:nereid.url_rule_defaults,write_date:"
+msgid "Write Date"
+msgstr "Fecha modificación"
+
+msgctxt "field:nereid.url_rule_defaults,write_uid:"
+msgid "Write User"
+msgstr "Usuario modificación"
+
+msgctxt "field:nereid.user,activation_code:"
+msgid "Unique Activation Code"
+msgstr "Código activación único"
+
+msgctxt "field:nereid.user,company:"
+msgid "Company"
+msgstr "Empresa"
+
+msgctxt "field:nereid.user,create_date:"
+msgid "Create Date"
+msgstr "Fecha creación"
+
+msgctxt "field:nereid.user,create_uid:"
+msgid "Create User"
+msgstr "Usuario creación"
+
+msgctxt "field:nereid.user,display_name:"
+msgid "Display Name"
+msgstr "Nombre a mostrar"
+
+msgctxt "field:nereid.user,email:"
+msgid "e-Mail"
+msgstr "Email"
+
+msgctxt "field:nereid.user,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.user,party:"
+msgid "Party"
+msgstr "Tercero"
+
+msgctxt "field:nereid.user,password:"
+msgid "Password"
+msgstr "Contraseña"
+
+msgctxt "field:nereid.user,permissions:"
+msgid "Permissions"
+msgstr "Permisos"
+
+msgctxt "field:nereid.user,rec_name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.user,salt:"
+msgid "Salt"
+msgstr "Sal"
+
+msgctxt "field:nereid.user,timezone:"
+msgid "Timezone"
+msgstr "Zona horaria"
+
+msgctxt "field:nereid.user,write_date:"
+msgid "Write Date"
+msgstr "Fecha modificación"
+
+msgctxt "field:nereid.user,write_uid:"
+msgid "Write User"
+msgstr "Usuario modificación"
+
+msgctxt "field:nereid.website,active:"
+msgid "Active"
+msgstr "Activo"
+
+msgctxt "field:nereid.website,application_user:"
+msgid "Application User"
+msgstr "Usuario del sistema"
+
+msgctxt "field:nereid.website,company:"
+msgid "Company"
+msgstr "Empresa"
+
+msgctxt "field:nereid.website,countries:"
+msgid "Countries Available"
+msgstr "Países disponibles"
+
+msgctxt "field:nereid.website,create_date:"
+msgid "Create Date"
+msgstr "Fecha creación"
+
+msgctxt "field:nereid.website,create_uid:"
+msgid "Create User"
+msgstr "Usuario creación"
+
+msgctxt "field:nereid.website,currencies:"
+msgid "Currencies Available"
+msgstr "Monedas disponibles"
+
+msgctxt "field:nereid.website,default_language:"
+msgid "Default Language"
+msgstr "Idioma"
+
+msgctxt "field:nereid.website,guest_user:"
+msgid "Guest user"
+msgstr "Usuario anónimo"
+
+msgctxt "field:nereid.website,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.website,name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.website,rec_name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.website,timezone:"
+msgid "Timezone"
+msgstr "Zona horaria"
+
+msgctxt "field:nereid.website,url_map:"
+msgid "URL Map"
+msgstr "Mapa URL"
+
+msgctxt "field:nereid.website,write_date:"
+msgid "Write Date"
+msgstr "Fecha modificación"
+
+msgctxt "field:nereid.website,write_uid:"
+msgid "Write User"
+msgstr "Usuario modificación"
+
+msgctxt "field:nereid.website-country.country,country:"
+msgid "Country"
+msgstr "País"
+
+msgctxt "field:nereid.website-country.country,create_date:"
+msgid "Create Date"
+msgstr "Fecha creación"
+
+msgctxt "field:nereid.website-country.country,create_uid:"
+msgid "Create User"
+msgstr "Usuario creación"
+
+msgctxt "field:nereid.website-country.country,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.website-country.country,rec_name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.website-country.country,website:"
+msgid "Website"
+msgstr "Sitio web"
+
+msgctxt "field:nereid.website-country.country,write_date:"
+msgid "Write Date"
+msgstr "Fecha modificación"
+
+msgctxt "field:nereid.website-country.country,write_uid:"
+msgid "Write User"
+msgstr "Usuario modificación"
+
+msgctxt "field:nereid.website-currency.currency,create_date:"
+msgid "Create Date"
+msgstr "Fecha creación"
+
+msgctxt "field:nereid.website-currency.currency,create_uid:"
+msgid "Create User"
+msgstr "Usuario creación"
+
+msgctxt "field:nereid.website-currency.currency,currency:"
+msgid "Currency"
+msgstr "Moneda"
+
+msgctxt "field:nereid.website-currency.currency,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.website-currency.currency,rec_name:"
+msgid "Name"
+msgstr "Nombre"
+
+msgctxt "field:nereid.website-currency.currency,website:"
+msgid "Website"
+msgstr "Sitio web"
+
+msgctxt "field:nereid.website-currency.currency,write_date:"
+msgid "Write Date"
+msgstr "Fecha modificación"
+
+msgctxt "field:nereid.website-currency.currency,write_uid:"
+msgid "Write User"
+msgstr "Usuario modificación"
+
+msgctxt "field:party.address,email:"
+msgid "Email"
+msgstr "Email"
+
+msgctxt "field:party.address,phone:"
+msgid "Phone"
+msgstr "Teléfono"
+
+msgctxt "field:party.party,nereid_users:"
+msgid "Nereid Users"
+msgstr "Usuarios"
+
+msgctxt "help:nereid.template.context_processor,method:"
+msgid "Context processor method in <model>.<method>"
+msgstr ""
+
+msgctxt "help:nereid.template.context_processor,model:"
+msgid "This will restrict the loading when URLs with the model are called"
+msgstr ""
+"Esto restringirá la carga cuando las direcciones URL con el modelo que se "
+"llame"
+
+msgctxt "model:ir.action,name:act_url_map_form"
+msgid "URL Map"
+msgstr "Mapas URL"
+
+msgctxt "model:ir.action,name:act_url_rule_defaults_tree"
+msgid "URL Rule Defaults"
+msgstr "Reglas URL por defecto"
+
+msgctxt "model:ir.action,name:act_url_rule_form"
+msgid "URL Rules"
+msgstr "Reglas URL"
+
+msgctxt "model:ir.action,name:act_website_form"
+msgid "Web Sites"
+msgstr "Sitios web"
+
+msgctxt "model:ir.action,name:action_nereid_static_file_view"
+msgid "Nereid Static Files"
+msgstr "Ficheros estáticos"
+
+msgctxt "model:ir.action,name:action_nereid_static_folder_view"
+msgid "Nereid Static Folders"
+msgstr "Directorios estáticos"
+
+msgctxt "model:ir.action,name:action_nereid_user_view"
+msgid "Nereid User"
+msgstr "Usuario Nereid"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid"
+msgid "Nereid"
+msgstr "Nereid"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid_config_static_file"
+msgid "Static Files"
+msgstr "Ficheros estáticos"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid_config_static_folder"
+msgid "Static Folders"
+msgstr "Directorios estáticos"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid_configuration"
+msgid "Configuration"
+msgstr "Configuración"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid_routing"
+msgid "Routing"
+msgstr "Rutas"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid_static"
+msgid "Static"
+msgstr "Estático"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid_user"
+msgid "Users"
+msgstr "Usuarios"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid_user1"
+msgid "Nereid Users"
+msgstr "Usuarios"
+
+msgctxt "model:ir.ui.menu,name:menu_url_map_form"
+msgid "URL Map"
+msgstr "Mapas URL"
+
+msgctxt "model:ir.ui.menu,name:menu_url_rule_form"
+msgid "URL Rules"
+msgstr "Reglas URL"
+
+msgctxt "model:ir.ui.menu,name:menu_website_form"
+msgid "Web Sites"
+msgstr "Sitios web"
+
+msgctxt "model:nereid.permission,name:"
+msgid "Nereid Permissions"
+msgstr "Permisos"
+
+msgctxt "model:nereid.permission-nereid.user,name:"
+msgid "Nereid User Permissions"
+msgstr "Permisos de usuario"
+
+msgctxt "model:nereid.static.file,name:"
+msgid "Static files for Nereid"
+msgstr "Ficheros estáticos para Nereid"
+
+msgctxt "model:nereid.static.folder,name:"
+msgid "Static folder for Nereid"
+msgstr "Directorios estáticos para Nereid"
+
+msgctxt "model:nereid.template.context_processor,name:"
+msgid "Temlate Context Processor Registry"
+msgstr ""
+
+msgctxt "model:nereid.url_map,name:"
+msgid "URL Map"
+msgstr "Mapa URL"
+
+msgctxt "model:nereid.url_rule,name:"
+msgid "URL Rule"
+msgstr "Regla URL"
+
+msgctxt "model:nereid.url_rule_defaults,name:"
+msgid "Defaults for the URL"
+msgstr "Valores por defecto por la URL"
+
+msgctxt "model:nereid.user,name:"
+msgid "Nereid Users"
+msgstr "Usuarios"
+
+msgctxt "model:nereid.website,name:"
+msgid "One of the most powerful features of Nereid is the ability to"
+msgstr "Una de las mejores funcionalidades de Nereid es la disponibilidad de"
+
+msgctxt "model:nereid.website-country.country,name:"
+msgid "Website Country Relations"
+msgstr "Relación países y sitios web"
+
+msgctxt "model:nereid.website-currency.currency,name:"
+msgid "Currencies to be made available on website"
+msgstr "Monedas disponibles en los sitios web"
+
+msgctxt "model:res.group,name:group_nereid_admin"
+msgid "Nereid Administration"
+msgstr "Administración"
+
+msgctxt "selection:nereid.static.file,type:"
+msgid "Local File"
+msgstr "Fichero local"
+
+msgctxt "selection:nereid.static.file,type:"
+msgid "Remote File"
+msgstr "Fichero remoto"
+
+msgctxt "view:nereid.url_map:"
+msgid "Advanced"
+msgstr "Avanzado"
+
+msgctxt "view:nereid.url_map:"
+msgid "Rules"
+msgstr "Reglas"
+
+msgctxt "view:nereid.url_rule:"
+msgid "Advanced"
+msgstr "Avanzado"
+
+msgctxt "view:nereid.url_rule:"
+msgid "Defaults"
+msgstr "Por defecto"
+
+msgctxt "view:nereid.website:"
+msgid "Configuration"
+msgstr "Configuración"
+
+msgctxt "view:nereid.website:"
+msgid "Countries"
+msgstr "Países"
