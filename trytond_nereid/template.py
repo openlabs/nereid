@@ -11,11 +11,15 @@ class ContextProcessors(ModelSQL, ModelView):
     __name__ = 'nereid.template.context_processor'
     _rec_name = 'method'
 
-    method = fields.Char('Method', required=True, 
-        help="Context processor method in <model>.<method>")
-    model = fields.Char('Model', 
+    method = fields.Char(
+        'Method', required=True,
+        help="Context processor method in <model>.<method>"
+    )
+    model = fields.Char(
+        'Model',
         help="This will restrict the loading when URLs with"
-        " the model are called")
+        " the model are called"
+    )
 
     @classmethod
     def get_processors(cls):
@@ -23,7 +27,7 @@ class ContextProcessors(ModelSQL, ModelView):
         Return the list of processors. Separate function
         since its important to have caching on this
         """
-        result = { }
+        result = {}
         ctx_processors = cls.search([])
         for ctx_proc in ctx_processors:
             model, method = ctx_proc.method.rsplit('.', 1)

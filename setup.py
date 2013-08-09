@@ -67,11 +67,15 @@ install_requires = [
 
 for dep in info.get('depends', []):
     if not re.match(r'(ir|res|webdav)(\W|$)', dep):
-        install_requires.append('trytond_%s >= %s.%s, < %s.%s' %
-                (dep, major_version, minor_version, major_version,
-                    minor_version + 1))
-install_requires.append('trytond >= %s.%s, < %s.%s' %
-        (major_version, minor_version, major_version, minor_version + 1))
+        install_requires.append(
+            'trytond_%s >= %s.%s, < %s.%s' %
+            (dep, major_version, minor_version, major_version,
+                minor_version + 1)
+        )
+install_requires.append(
+    'trytond >= %s.%s, < %s.%s' %
+    (major_version, minor_version, major_version, minor_version + 1)
+)
 
 
 setup(
@@ -109,11 +113,11 @@ setup(
         'trytond.modules.nereid': 'trytond_nereid',
         'trytond.modules.nereid.tests': 'trytond_nereid/tests',
     },
-    package_data = {
-        'trytond.modules.nereid': info.get('xml', []) \
-                + ['tryton.cfg', 'locale/*.po', 'tests/*.rst']
-                + ['i18n/*.pot', 'i18n/pt_BR/LC_MESSAGES/*']
-                + ['templates/*.*', 'templates/tests/*.*'],
+    package_data={
+        'trytond.modules.nereid': info.get('xml', [])
+        + ['tryton.cfg', 'locale/*.po', 'tests/*.rst']
+        + ['i18n/*.pot', 'i18n/pt_BR/LC_MESSAGES/*']
+        + ['templates/*.*', 'templates/tests/*.*'],
     },
     zip_safe=False,
     platforms='any',
