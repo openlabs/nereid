@@ -111,7 +111,7 @@ def suite():
     test_suite = unittest.TestSuite()
     test_suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestI18N)
-        )
+    )
     return test_suite
 
 

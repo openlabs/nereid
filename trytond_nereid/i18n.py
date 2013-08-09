@@ -61,7 +61,7 @@ def gettext(string, **variables):
 
 
 def ngettext(singular, plural, n, **variables):
-    """Translates a string with the current locale and passes it to the 
+    """Translates a string with the current locale and passes it to the
     ngettext API of the translations object
     """
     t = get_translations()
@@ -69,6 +69,7 @@ def ngettext(singular, plural, n, **variables):
     if t is None:
         return (plural if n > 1 else singular) % variables
     return t.ungettext(singular, plural, n) % variables
+
 
 def make_lazy_gettext(lookup_func):
     """Creates a lazy gettext function dispatches to a gettext
