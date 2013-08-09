@@ -147,10 +147,10 @@ class TestStaticFile(NereidTestCase):
                         static_file_id=file_id,
                     )
                 home_func = functools.partial(home_func, file_id=file.id)
-                c.application.view_functions['nereid.website.home'] = \
-                    new.instancemethod(
-                        home_func, self.nereid_website_obj
-                    )
+                c.application.view_functions[
+                    'nereid.website.home'] = new.instancemethod(
+                    home_func, self.nereid_website_obj
+                )
                 self.nereid_website_obj.home = new.instancemethod(
                     home_func, self.nereid_website_obj
                 )
@@ -188,10 +188,10 @@ class TestStaticFile(NereidTestCase):
                         static_file_id=file_id,
                     )
                 home_func = functools.partial(home_func, file_id=file.id)
-                c.application.view_functions['nereid.website.home'] = \
-                    new.instancemethod(
-                        home_func, self.nereid_website_obj
-                    )
+                c.application.view_functions[
+                    'nereid.website.home'] = new.instancemethod(
+                    home_func, self.nereid_website_obj
+                )
                 self.nereid_website_obj.home = new.instancemethod(
                     home_func, self.nereid_website_obj
                 )
