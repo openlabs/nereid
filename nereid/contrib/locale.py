@@ -1,7 +1,7 @@
 #This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
 #this repository contains the full copyright notices and license terms.
-import flaskext.babel
-from flaskext.babel import Babel  # noqa
+import flask.ext.babel
+from flask.ext.babel import Babel  # noqa
 from babel import support, Locale
 from pytz import timezone
 from nereid.globals import _request_ctx_stack
@@ -25,7 +25,7 @@ def get_translations():
     return translations
 
 
-flaskext.babel.get_translations = get_translations
+flask.ext.babel.get_translations = get_translations
 
 
 def get_locale():
@@ -53,7 +53,7 @@ def get_locale():
         ctx.babel_locale = locale
     return locale
 
-flaskext.babel.get_locale = get_locale
+flask.ext.babel.get_locale = get_locale
 
 
 def get_timezone():
@@ -82,4 +82,4 @@ def get_timezone():
         ctx.babel_tzinfo = tzinfo
     return tzinfo
 
-flaskext.babel.get_timezone = get_timezone
+flask.ext.babel.get_timezone = get_timezone

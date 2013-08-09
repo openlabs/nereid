@@ -62,7 +62,7 @@ install_requires = [
     'wtforms-recaptcha',
     'babel',
     'speaklater',
-    'Flask-Babel',
+    'Flask-Babel>=0.9',
 ]
 
 for dep in info.get('depends', []):
