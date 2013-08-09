@@ -36,7 +36,7 @@ setup(
         'wtforms-recaptcha',
         'babel',
         'speaklater',
-        'Flask-Babel',
+        'Flask-Babel>=0.9',
     ],
     packages=[
         'nereid',
