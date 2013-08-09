@@ -3,5 +3,5 @@
 from warnings import warn
 warn(DeprecationWarning("Use nereid.sessions instead"))
 
-from .sessions import Session, NullSession, MemcachedSessionStore, \
-    NereidSessionInterface
+from .sessions import (Session, NullSession, MemcachedSessionStore,  # noqa
+    NereidSessionInterface)

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+        This file is part of Tryton & Nereid. The COPYRIGHT file at the
+        top level of this repository contains the full copyright notices
+        and license terms.
+    -->
+<tryton>
+  <data> 
+    <!-- Static Bank -->
+    <record id="nereid_static_folder_form" model="ir.ui.view">
+        <field name="model">nereid.static.folder</field>
+        <field name="type">form</field>
+        <field name="arch" type="xml">
+            <![CDATA[
+            <form string="Static Folder">
+                <label name="folder_name" />
+                <field name="folder_name" />
+                <label name="description" />
+                <field name="description" />
+                <notebook>
+                    <page string="Files" id="files">
+                        <field name="files" colspan="4" />
+                    </page>
+                </notebook>
+            </form>
+            ]]>
+        </field>
+    </record>
+
+    <record id="nereid_static_folder_tree" model="ir.ui.view">
+        <field name="model">nereid.static.folder</field>
+        <field name="type">tree</field>
+        <field name="arch" type="xml">
+            <![CDATA[
+            <tree>
+                <field name="folder_name" />
+            </tree>
+            ]]>
+        </field>
+    </record>
+
+    <record model="ir.action.act_window" id="action_nereid_static_folder_view">
+        <field name="name">Nereid Static Folders</field>
+        <field name="res_model">nereid.static.folder</field>
+    </record>
+    <record model="ir.action.act_window.view" id="act_nereid_static_folder_view1">
+        <field name="sequence" eval="10" />
+        <field name="view" ref="nereid_static_folder_tree" />
+        <field name="act_window" ref="action_nereid_static_folder_view" />
+    </record>
+    <record model="ir.action.act_window.view" id="act_nereid_static_folder_view2">
+        <field name="sequence" eval="20" />
+        <field name="view" ref="nereid_static_folder_form" />
+        <field name="act_window" ref="action_nereid_static_folder_view" />
+    </record>
+    
+    <menuitem id="menu_nereid_static" parent="menu_nereid" name="Static" />
+
+    <menuitem name="Static Folders" sequence="20" 
+        id="menu_nereid_config_static_folder" 
+        action="action_nereid_static_folder_view"
+        parent="menu_nereid_static" />
+
+    <record id="nereid_static_file_form" model="ir.ui.view">
+        <field name="model">nereid.static.file</field>
+        <field name="type">form</field>
+        <field name="arch" type="xml">
+            <![CDATA[
+            <form>
+                <label name="name" />
+                <field name="name" />
+                <label name="folder" />
+                <field name="folder" />
+                <label name="type" />
+                <field name="type" />
+                <separator colspan="4" id="paths" string="Paths"/>
+                <label name="remote_path" />
+                <field name="remote_path" />
+                <label name="file_path" />
+                <field name="file_path" />
+                <separator string="Preview" 
+                    colspan="4" id="sepr_preview"/>
+                <field name="file_binary" widget="image" colspan="4"/>
+            </form>
+            ]]>
+        </field>
+    </record>
+
+    <record id="nereid_static_file_tree" model="ir.ui.view">
+        <field name="model">nereid.static.file</field>
+        <field name="type">tree</field>
+        <field name="arch" type="xml">
+            <![CDATA[
+            <tree>
+                <field name="name" />
+                <field name="folder" />
+            </tree>
+            ]]>
+        </field>
+    </record>
+
+    <record model="ir.action.act_window" id="action_nereid_static_file_view">
+        <field name="name">Nereid Static Files</field>
+        <field name="res_model">nereid.static.file</field>
+    </record>
+    <record model="ir.action.act_window.view" id="act_nereid_static_file_view1">
+        <field name="sequence" eval="10" />
+        <field name="view" ref="nereid_static_file_tree" />
+        <field name="act_window" ref="action_nereid_static_file_view" />
+    </record>
+    <record model="ir.action.act_window.view" id="act_nereid_static_file_view2">
+        <field name="sequence" eval="20" />
+        <field name="view" ref="nereid_static_file_form" />
+        <field name="act_window" ref="action_nereid_static_file_view" />
+    </record>
+
+    <menuitem id="menu_nereid_config_static_file"
+              parent="menu_nereid_static"
+              name="Static Files"
+              action="action_nereid_static_file_view" />
+  </data>
+</tryton>

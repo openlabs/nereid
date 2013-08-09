@@ -1,0 +1,156 @@
+# Portuguese (Brazil) translations for Nereid.
+# Copyright (C) 2012 ORGANIZATION
+# This file is distributed under the same license as the Nereid project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2012.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Nereid 0.3\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2012-03-29 09:11-0400\n"
+"PO-Revision-Date: 2012-03-29 09:27-0500\n"
+"Last-Translator: Esteban <esteban@dhtsglobal.com>\n"
+"Language-Team: pt_BR <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 0.9.6\n"
+
+#: party.py:39
+#: party.py:64
+msgid "Name"
+msgstr "Nome e Sombrenome"
+
+#: party.py:40
+#: routing.py:96
+msgid "e-mail"
+msgstr "e-mail"
+
+#: party.py:41
+#: party.py:83
+msgid "New Password"
+msgstr "Nova Senha"
+
+#: party.py:43
+#: party.py:85
+msgid "Passwords must match"
+msgstr "Senhas devem coincidir"
+
+#: party.py:44
+msgid "Confirm Password"
+msgstr "Confirme Sua Senha"
+
+#: party.py:65
+msgid "Street"
+msgstr "Endereco Completo"
+
+#: party.py:66
+msgid "Street (Bis)"
+msgstr "Bairro"
+
+#: party.py:67
+msgid "Post Code"
+msgstr "CEP"
+
+#: party.py:68
+msgid "City"
+msgstr "Cidade"
+
+#: party.py:69
+msgid "Country"
+msgstr "País"
+
+#: party.py:70
+msgid "State/County"
+msgstr "Estado"
+
+#: party.py:86
+msgid "Repeat Password"
+msgstr "Repetir Senha"
+
+#: party.py:99
+msgid "Old Password"
+msgstr "Senha Antiga"
+
+#: party.py:343
+msgid "A registration already exists with this email. Please contact customer care"
+msgstr "Um cadastro já existe com este email. Entre em contato com nosso central de atendimento"
+
+#: party.py:354
+msgid "Registration Complete. Check your email for activation"
+msgstr "Cadastro completo. Verifique seu e-mail para ativação"
+
+#: party.py:389
+#: party.py:429
+msgid "Your password has been successfully changed! Please login again"
+msgstr "Sua senha foi mudada com sucesso! Por favor, faça login novamente"
+
+#: party.py:395
+msgid "The current password you entered is invalid"
+msgstr "A senha digitada é inválida"
+
+#: party.py:446
+msgid "Invalid Activation Code"
+msgstr "Código de ativação inválido"
+
+#: party.py:457
+msgid "Your account has been activated"
+msgstr "Sua conta foi ativada"
+
+#: party.py:496
+msgid "Invalid email address"
+msgstr "Email inválido"
+
+#: party.py:500
+msgid "An email has been sent to your account for resetting your credentials"
+msgstr "Um email foi enviado para a sua conta para redefinir seus credenciais"
+
+#: party.py:535
+msgid "Your account has not been activated yet!"
+msgstr "Sua conta ainda não foi ativada!"
+
+#: routing.py:97
+msgid "Password"
+msgstr "Senha"
+
+#: routing.py:243
+#, python-format
+msgid "You are now logged in. Welcome %(name)s"
+msgstr "Você está conectado. Bem-vindo %(name)s"
+
+#: routing.py:256
+msgid "Invalid login credentials"
+msgstr "Credenciais de login inválidos"
+
+#: routing.py:270
+msgid "You have been logged out successfully. Thanks for visiting us"
+msgstr "Você saiu com sucesso. Obrigado por nos visitar"
+
+#: routing.py:327
+msgid "The currency has been successfully changed"
+msgstr "A moeda foi alterada com sucesso"
+
+#: routing.py:383
+msgid "Your language preference have been saved."
+msgstr "Sua preferência de idioma foi salva."
+
+#: routing.py:385
+msgid "Sorry! we do not speak your language yet!"
+msgstr "Desculpe! ainda não falamos seu idioma!"
+
+#: tests/test_i18n.py:50
+msgid "en_US"
+msgstr "pt_BR"
+
+#: tests/test_i18n.py:60
+#, python-format
+msgid "Hi %(name)s"
+msgstr "Oi %(name)s"
+
+#: tests/test_i18n.py:71
+#: tests/test_i18n.py:74
+#, python-format
+msgid "%(num)d apple"
+msgstr "%(num)d maçã"
+
