@@ -1,6 +1,5 @@
 # This file is part of Tryton.  The COPYRIGHT file at the top level of
 # this repository contains the full copyright notices and license terms.
-from ast import literal_eval
 
 import pytz
 from werkzeug import abort, redirect
@@ -11,7 +10,6 @@ from nereid.globals import session, request
 from nereid.helpers import login_required, key_from_list, get_flashed_messages
 from nereid.signals import login, failed_login, logout
 from trytond.model import ModelView, ModelSQL, fields
-from trytond.backend import TableHandler
 from trytond.transaction import Transaction
 from trytond.pool import Pool
 
@@ -42,7 +40,7 @@ class URLMap(ModelSQL, ModelView):
     :param charset: default value - utf-8
     :param strict_slashes: Boolean field if / in url map is taken seriously
     :param unique_urls: Enable `redirect_defaults` in the URL Map and
-                        redirects the defaults to the URL 
+                        redirects the defaults to the URL
     """
     __name__ = "nereid.url_map"
 
@@ -75,10 +73,10 @@ class URLMap(ModelSQL, ModelView):
     def get_rules_arguments(self):
         """
         Constructs a list of dictionary of arguments needed
-        for URL Rule construction. A wrapper around the 
+        for URL Rule construction. A wrapper around the
             URL RULE get_rule_arguments
         """
-        rule_args = [ ]
+        rule_args = []
         for rule in self.rules:
             rule_args.append(rule.get_rule_arguments())
         return rule_args
@@ -92,8 +90,8 @@ class LoginForm(Form):
 
 class WebSite(ModelSQL, ModelView):
     """
-    One of the most powerful features of Nereid is the ability to 
-    manage multiple websites from one back-end. A web site in nereid 
+    One of the most powerful features of Nereid is the ability to
+    manage multiple websites from one back-end. A web site in nereid
     represents a collection or URLs, settings.
 
     :param name: Name of the web site
@@ -112,7 +110,7 @@ class WebSite(ModelSQL, ModelView):
     #: other settings for the website. Needs to be unique
     name = fields.Char('Name', required=True, select=True)
 
-    #: The URLMap is made as a different object which functions as a 
+    #: The URLMap is made as a different object which functions as a
     #: collection of Rules. This will allow easy replication of sites
     #: which perform with same URL structures but different templates
     url_map = fields.Many2One('nereid.url_map', 'URL Map', required=True)
@@ -135,8 +133,10 @@ class WebSite(ModelSQL, ModelView):
         'website', 'currency', 'Currencies Available')
 
     #: Default language
-    default_language = fields.Many2One('ir.lang', 'Default Language',
-        required=True)
+    default_language = fields.Many2One(
+        'ir.lang', 'Default Language',
+        required=True
+    )
 
     #: The res.user with which the nereid application will be loaded
     #:  .. versionadded: 0.3
@@ -172,10 +172,10 @@ class WebSite(ModelSQL, ModelView):
         """
         Return the list of countries in JSON
         """
-        return jsonify(result = [
-            {'key': c.id, 'value': c.name} \
-                for c in request.nereid_website.countries
-            ])
+        return jsonify(result=[
+            {'key': c.id, 'value': c.name}
+            for c in request.nereid_website.countries
+        ])
 
     @staticmethod
     def subdivision_list():
@@ -189,11 +189,11 @@ class WebSite(ModelSQL, ModelView):
         Subdivision = Pool().get('country.subdivision')
         subdivisions = Subdivision.search([('country', '=', country)])
         return jsonify(
-            result = [{
+            result=[{
                 'id': s.id,
                 'name': s.name,
                 'code': s.code,
-                } for s in subdivisions
+            } for s in subdivisions
             ]
         )
 
@@ -240,12 +240,12 @@ class WebSite(ModelSQL, ModelView):
             # Result can be the following:
             # 1 - Browse record of User (successful login)
             # 2 - None - Login failure without message
-            # 3 - Any other false value (no message is shown. useful if you 
+            # 3 - Any other false value (no message is shown. useful if you
             #       want to handle the message shown to user)
             if result:
                 # NOTE: Translators leave %s as such
                 flash(_("You are now logged in. Welcome %(name)s",
-                    name=result.display_name))
+                        name=result.display_name))
                 session['user'] = result.id
                 login.send()
                 if request.is_xhr:
@@ -285,8 +285,8 @@ class WebSite(ModelSQL, ModelView):
         data into the context
         """
         return dict(
-            user = request.nereid_user,
-            party = request.nereid_user.party,
+            user=request.nereid_user,
+            party=request.nereid_user.party,
         )
 
     @classmethod
@@ -298,15 +298,15 @@ class WebSite(ModelSQL, ModelView):
         """Returns available currencies for current site
 
         .. note::
-            A special method is required so that the fetch can be speeded up, 
-            by pushing the categories to the central cache which cannot be 
+            A special method is required so that the fetch can be speeded up,
+            by pushing the categories to the central cache which cannot be
             done directly on a browse node.
         """
         cache_key = key_from_list([
             Transaction().cursor.dbname,
             Transaction().user,
             'nereid.website.get_currencies',
-            ])
+        ])
         # The website is automatically appended to the cache prefix
         rv = cache.get(cache_key)
         if rv is None:
@@ -314,8 +314,9 @@ class WebSite(ModelSQL, ModelView):
                 'id': c.id,
                 'name': c.name,
                 'symbol': c.symbol,
-                } for c in self.currencies]
-            cache.set(cache_key, rv, 60*60)
+            } for c in self.currencies
+            ]
+            cache.set(cache_key, rv, 60 * 60)
         return rv
 
     @staticmethod
@@ -344,7 +345,6 @@ class WebSite(ModelSQL, ModelView):
         Returns a JSON of the user_status
         """
         return jsonify(status=cls._user_status())
-
 
 
 class URLRule(ModelSQL, ModelView):
@@ -381,8 +381,8 @@ class URLRule(ModelSQL, ModelView):
 
     :param defaults: Defaults of the URL (O2M - URLRuleDefaults)
 
-    :param method: POST, GET, 
-    :param only_for_generation: URL will not be mapped, but can be used 
+    :param method: POST, GET,
+    :param only_for_generation: URL will not be mapped, but can be used
             for URL generation. Example for static pages, where content
             delivery is managed by apache, but URL generation is necessary
     :param redirect_to: (M2O self) Another URL to which the redirect has to
@@ -450,13 +450,13 @@ class URLRule(ModelSQL, ModelView):
             [(i.key, i.value) for i in self.defaults]
         )
         return {
-                'rule': self.rule,
-                'endpoint': self.endpoint,
-                'methods': self.get_http_methods(),
-                'build_only': self.only_for_genaration,
-                'defaults': defaults,
-                'redirect_to': self.redirect_to or None,
-            }
+            'rule': self.rule,
+            'endpoint': self.endpoint,
+            'methods': self.get_http_methods(),
+            'build_only': self.only_for_genaration,
+            'defaults': defaults,
+            'redirect_to': self.redirect_to or None,
+        }
 
 
 class URLRuleDefaults(ModelSQL, ModelView):
@@ -472,8 +472,10 @@ class URLRuleDefaults(ModelSQL, ModelView):
 
     key = fields.Char('Key', required=True, select=True)
     value = fields.Char('Value', required=True, select=True)
-    rule = fields.Many2One('nereid.url_rule', 'Rule', required=True, 
-        select=True)
+    rule = fields.Many2One(
+        'nereid.url_rule', 'Rule', required=True,
+        select=True
+    )
 
 
 class WebsiteCountry(ModelSQL):

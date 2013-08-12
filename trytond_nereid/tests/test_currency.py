@@ -121,7 +121,6 @@ class TestCurrency(NereidTestCase):
                     self.currency_obj.convert(Decimal('100')), Decimal('100')
                 )
 
-
     def test_0020_currency_from_language(self):
         """
         Set the currency for the language and check if the currency
@@ -151,7 +150,7 @@ def suite():
     test_suite = unittest.TestSuite()
     test_suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestCurrency)
-        )
+    )
     return test_suite
 
 
