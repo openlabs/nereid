@@ -49,10 +49,10 @@ class TestStaticFile(NereidTestCase):
 
         self.templates = {
             'home.jinja':
-                '''
-                {% set static_file = static_file_obj(static_file_id) %}
-                {{ static_file.url }}
-                ''',
+            '''
+            {% set static_file = static_file_obj(static_file_id) %}
+            {{ static_file.url }}
+            ''',
         }
 
     def setup_defaults(self):
@@ -149,7 +149,7 @@ class TestStaticFile(NereidTestCase):
                 home_func = functools.partial(home_func, file_id=file.id)
                 c.application.view_functions[
                     'nereid.website.home'] = new.instancemethod(
-                        home_func, self.nereid_website_obj
+                    home_func, self.nereid_website_obj
                 )
                 self.nereid_website_obj.home = new.instancemethod(
                     home_func, self.nereid_website_obj
@@ -190,7 +190,7 @@ class TestStaticFile(NereidTestCase):
                 home_func = functools.partial(home_func, file_id=file.id)
                 c.application.view_functions[
                     'nereid.website.home'] = new.instancemethod(
-                        home_func, self.nereid_website_obj
+                    home_func, self.nereid_website_obj
                 )
                 self.nereid_website_obj.home = new.instancemethod(
                     home_func, self.nereid_website_obj
@@ -207,7 +207,7 @@ def suite():
     test_suite = unittest.TestSuite()
     test_suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestStaticFile)
-        )
+    )
     return test_suite
 
 

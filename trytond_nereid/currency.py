@@ -5,6 +5,7 @@ from nereid import request
 
 __all__ = ['Currency', 'Language']
 
+
 class Currency(ModelSQL, ModelView):
     '''Currency Manipulation for core.'''
     __name__ = 'currency.currency'

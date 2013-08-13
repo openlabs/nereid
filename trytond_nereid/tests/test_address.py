@@ -40,15 +40,15 @@ class TestAddress(NereidTestCase):
         self.templates = {
             'home.jinja': '{{get_flashed_messages()}}',
             'login.jinja':
-                    '{{ login_form.errors }} {{get_flashed_messages()}}',
+            '{{ login_form.errors }} {{get_flashed_messages()}}',
             'registration.jinja':
-                    '{{ form.errors }} {{get_flashed_messages()}}',
+            '{{ form.errors }} {{get_flashed_messages()}}',
             'reset-password.jinja': '',
             'change-password.jinja':
-                    '{{ change_password_form.errors }}',
+            '{{ change_password_form.errors }}',
             'address-edit.jinja':
-                'Address Edit {% if address %}ID:{{ address.id }}{% endif %}'
-                '{{ form.errors }}',
+            'Address Edit {% if address %}ID:{{ address.id }}{% endif %}'
+            '{{ form.errors }}',
             'address.jinja': '',
             'account.jinja': '',
             'emails/activation-text.jinja': 'activation-email-text',
@@ -166,8 +166,7 @@ class TestAddress(NereidTestCase):
                 'phone': '1234567890',
                 'country': self.available_countries[0].id,
                 'subdivision': self.country_obj(
-                            self.available_countries[0]
-                        ).subdivisions[0].id,
+                    self.available_countries[0]).subdivisions[0].id,
             }
 
             with app.test_client() as c:
@@ -178,7 +177,7 @@ class TestAddress(NereidTestCase):
                         'password': 'password',
                     }
                 )
-                self.assertEqual(response.status_code, 302) # Login success
+                self.assertEqual(response.status_code, 302)  # Login success
 
                 # Assert that the user has only 1 address, which gets created
                 # automatically with the party
@@ -243,7 +242,7 @@ class TestAddress(NereidTestCase):
                         'password': 'password',
                     }
                 )
-                self.assertEqual(response.status_code, 302) # Login success
+                self.assertEqual(response.status_code, 302)  # Login success
 
                 # Assert that the user has only 1 address, which gets created
                 # automatically with the party
@@ -295,11 +294,11 @@ class TestAddress(NereidTestCase):
                         'password': 'password',
                     }
                 )
-                self.assertEqual(response.status_code, 302) # Login success
+                self.assertEqual(response.status_code, 302)  # Login success
 
             with app.test_client() as c:
                 response = c.get('/en_US/view-address')
-                self.assertEqual(response.status_code, 302) # Redir to login
+                self.assertEqual(response.status_code, 302)  # Redir to login
 
     def test_0040_country_list(self):
         """
@@ -310,7 +309,7 @@ class TestAddress(NereidTestCase):
             app = self.get_app()
             with app.test_client() as c:
                 response = c.get('/en_US/countries')
-                self.assertEqual(response.status_code, 200) # Login success
+                self.assertEqual(response.status_code, 200)  # Login success
                 self.assertEqual(len(json.loads(response.data)['result']), 5)
 
     def test_0050_subdivision_list(self):
@@ -336,7 +335,7 @@ def suite():
     test_suite = unittest.TestSuite()
     test_suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestAddress)
-        )
+    )
     return test_suite
 
 

@@ -82,13 +82,13 @@ class TestAuth(NereidTestCase):
         self.templates = {
             'home.jinja': '{{get_flashed_messages()}}',
             'login.jinja':
-                    '{{ login_form.errors }} {{get_flashed_messages()}}',
+            '{{ login_form.errors }} {{get_flashed_messages()}}',
             'registration.jinja':
-                    '{{ form.errors }} {{get_flashed_messages()}}',
+            '{{ form.errors }} {{get_flashed_messages()}}',
             'reset-password.jinja': '{{get_flashed_messages()}}',
             'change-password.jinja':
-                    '''{{ change_password_form.errors }}
-                    {{get_flashed_messages()}}''',
+            '''{{ change_password_form.errors }}
+            {{get_flashed_messages()}}''',
             'address-edit.jinja': 'Address Edit {{ form.errors }}',
             'address.jinja': '',
             'account.jinja': '',
@@ -119,7 +119,7 @@ class TestAuth(NereidTestCase):
 
             with app.test_client() as c:
                 response = c.get('/en_US/registration')
-                self.assertEqual(response.status_code, 200) # GET Request
+                self.assertEqual(response.status_code, 200)   # GET Request
 
                 data = {
                     'name': 'Registered User',
@@ -128,7 +128,7 @@ class TestAuth(NereidTestCase):
                 }
                 # Post with missing password
                 response = c.post('/en_US/registration', data=data)
-                self.assertEqual(response.status_code, 200) # Form rejected
+                self.assertEqual(response.status_code, 200)  # Form rejected
 
                 data['confirm'] = 'password'
                 response = c.post('/en_US/registration', data=data)
@@ -225,7 +225,7 @@ class TestAuth(NereidTestCase):
                 # Activate the account
                 response = c.get('/en_US/activate-account/%s/%s' % (
                     registered_user.id, registered_user.activation_code
-                    )
+                )
                 )
                 self.assertEqual(response.status_code, 302)
                 registered_user = self.nereid_user_obj(registered_user.id)
@@ -306,7 +306,8 @@ class TestAuth(NereidTestCase):
                 })
                 self.assertEqual(response.status_code, 200)
                 self.assertTrue(
-                    "The current password you entered is invalid" in response.data
+                    "The current password you entered is invalid"
+                    in response.data
                 )
 
                 response = c.post('/en_US/change-password', data={
@@ -318,7 +319,8 @@ class TestAuth(NereidTestCase):
                 response = c.get('/en_US')
 
                 # Login now using new password
-                response = c.post('/en_US/login',
+                response = c.post(
+                    '/en_US/login',
                     data={
                         'email': data['email'],
                         'password': 'new-password'
@@ -397,7 +399,8 @@ class TestAuth(NereidTestCase):
                 regd_user = self.nereid_user_obj(regd_user.id)
                 self.assertFalse(regd_user.activation_code)
 
-                response = c.post('/en_US/login',
+                response = c.post(
+                    '/en_US/login',
                     data={
                         'email': data['email'],
                         'password': 'wrong-password'
@@ -405,7 +408,8 @@ class TestAuth(NereidTestCase):
                 )
                 self.assertEqual(response.status_code, 200)     # Login rejected
 
-                response = c.post('/en_US/login',
+                response = c.post(
+                    '/en_US/login',
                     data={
                         'email': data['email'],
                         'password': 'reset-password'
@@ -509,6 +513,7 @@ class TestAuth(NereidTestCase):
             self.nereid_user_obj.write(
                 [self.guest_user], {'permissions': [('set', [perm_admin])]}
             )
+
             @permissions_required(['admin'])
             def test_permission_2():
                 return True
@@ -620,40 +625,40 @@ class TestAuth(NereidTestCase):
 
             # all = [p1, p2], any = [] == True
             self.assertTrue(self.guest_user.has_permissions(
-                perm_all = [p1.value, p2.value]
+                perm_all=[p1.value, p2.value]
             ))
 
             # all = [p1, p2], any = [p3, p4] == False
             self.assertFalse(self.guest_user.has_permissions(
-                perm_all = [p1.value, p2.value],
-                perm_any = [p3.value, p4.value]
+                perm_all=[p1.value, p2.value],
+                perm_any=[p3.value, p4.value]
             ))
 
             # all = [p1, p3], any = [] == False
             self.assertFalse(self.guest_user.has_permissions(
-                perm_all = [p1.value, p3.value],
+                perm_all=[p1.value, p3.value],
             ))
 
             # all = [p1, p3], any = [p1, p3, p4] == False
             self.assertFalse(self.guest_user.has_permissions(
-                perm_all = [p1.value, p3.value],
-                perm_any = [p1.value, p3.value, p4.value]
+                perm_all=[p1.value, p3.value],
+                perm_any=[p1.value, p3.value, p4.value]
             ))
 
             # all = [p1, p2], any = [p1, p3, p4] == True
             self.assertTrue(self.guest_user.has_permissions(
-                perm_all = [p1.value, p2.value],
-                perm_any = [p1.value, p3.value, p4.value]
+                perm_all=[p1.value, p2.value],
+                perm_any=[p1.value, p3.value, p4.value]
             ))
 
             # all = [], any = [p1, p2, p3] == True
             self.assertTrue(self.guest_user.has_permissions(
-                perm_any = [p1.value, p2.value, p3.value]
+                perm_any=[p1.value, p2.value, p3.value]
             ))
 
             # all = [], any = [p3, p4] == False
             self.assertFalse(self.guest_user.has_permissions(
-                perm_any = [p3.value, p4.value]
+                perm_any=[p3.value, p4.value]
             ))
 
 
@@ -662,7 +667,7 @@ def suite():
     test_suite = unittest.TestSuite()
     test_suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestAuth)
-        )
+    )
     return test_suite
 
 

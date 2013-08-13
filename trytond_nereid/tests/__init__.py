@@ -36,7 +36,6 @@ class TestNereid(unittest.TestCase):
         test_depends()
 
 
-
 def suite():
     test_suite = trytond.tests.test_tryton.suite()
     test_suite.addTests(

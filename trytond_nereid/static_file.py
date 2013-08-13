@@ -91,8 +91,9 @@ class NereidStaticFile(ModelSQL, ModelView):
     ], 'File Type')
 
     #: URL of the remote file if the :attr:`type` is remote
-    remote_path = fields.Char('Remote File', select=True, translate=True,
-        states = {
+    remote_path = fields.Char(
+        'Remote File', select=True, translate=True,
+        states={
             'required': Equal(Eval('type'), 'remote'),
             'invisible': Not(Equal(Eval('type'), 'remote'))
         }
@@ -110,7 +111,7 @@ class NereidStaticFile(ModelSQL, ModelView):
 
     #: URL that can be used to idenfity the resource. Note that the value
     #: of this field is available only when called within a request context.
-    #: In other words the URL is valid only when called in a nereid request. 
+    #: In other words the URL is valid only when called in a nereid request.
     url = fields.Function(fields.Char('URL'), 'get_url')
 
     @classmethod
@@ -211,10 +212,10 @@ class NereidStaticFile(ModelSQL, ModelView):
         :return: File path
         """
         return os.path.abspath(
-                os.path.join(
-                    self.get_nereid_base_path(),
-                    self.folder.folder_name, self.name
-                )) \
+            os.path.join(
+                self.get_nereid_base_path(),
+                self.folder.folder_name, self.name
+            )) \
             if self.type == 'local' else self.remote_path
 
     def check_file_name(self):
@@ -243,7 +244,7 @@ class NereidStaticFile(ModelSQL, ModelView):
         files = cls.search([
             ('folder.folder_name', '=', folder),
             ('name', '=', name)
-            ])
+        ])
         if not files:
             abort(404)
         return send_file(files[0].file_path)
