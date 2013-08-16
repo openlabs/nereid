@@ -10,7 +10,7 @@ from setuptools import setup
 
 setup(
     name='Nereid',
-    version='2.4.0.10',
+    version='2.4.0.11',
     url='http://nereid.openlabs.co.in/docs/',
     license='GPLv3',
     author='Openlabs Technologies & Consulting (P) Limited',
