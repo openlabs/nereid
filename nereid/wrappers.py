@@ -1,8 +1,10 @@
 #This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
 #this repository contains the full copyright notices and license terms.
+from werkzeug import redirect, abort
 from werkzeug.utils import cached_property
 from flask.wrappers import Request as RequestBase, Response as ResponseBase
 from flask.helpers import flash
+from .helpers import url_for
 from .globals import current_app, session
 
 
@@ -32,7 +34,14 @@ class Request(RequestBase):
         NereidUser = current_app.pool.get('nereid.user')
         if 'user' not in session:
             return NereidUser(self.nereid_website.guest_user.id)
-        return NereidUser(session['user'])
+
+        try:
+            nereid_user, = NereidUser.search([('id', '=', session['user'])])
+        except ValueError:
+            session.pop('user')
+            abort(redirect(url_for('nereid.website.login')))
+        else:
+            return nereid_user
 
     @cached_property
     def nereid_currency(self):
