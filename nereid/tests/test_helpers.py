@@ -10,7 +10,6 @@ from trytond.transaction import Transaction
 from nereid import url_for
 
 
-
 class TestURLfor(BaseTestCase):
     """
     Test the functionality of the url_for helper
@@ -51,7 +50,8 @@ class TestURLfor(BaseTestCase):
 
             with app.test_request_context('/'):
                 self.assertEqual(
-                    url_for('nereid.website.home', _external=True, _scheme='https'),
+                    url_for('nereid.website.home',
+                            _external=True, _scheme='https'),
                     'https://localhost/en_US/'
                 )
 

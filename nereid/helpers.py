@@ -17,7 +17,7 @@ from flask.helpers import (_PackageBoundObject, locked_cached_property,  # noqa
 from werkzeug import Headers, wrap_file, redirect, abort
 from werkzeug.exceptions import NotFound
 
-from .globals import session, _request_ctx_stack, current_app, request
+from .globals import session, current_app, request
 
 
 _SLUGIFY_STRIP_RE = re.compile(r'[^\w\s-]')
@@ -48,7 +48,6 @@ def url_for(endpoint, **values):
         values['_external'] = True
         values['_scheme'] = 'https'
         values.pop('_secure')
-
 
     if 'language' not in values:
         values['language'] = request.nereid_language.code
