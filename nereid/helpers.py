@@ -7,13 +7,13 @@ import mimetypes
 from time import time
 from zlib import adler32
 import re
-import urllib
+import warnings
 import unicodedata
 from functools import wraps
 from hashlib import md5
 
 from flask.helpers import (_PackageBoundObject, locked_cached_property,  # noqa
-        get_flashed_messages, flash)
+        get_flashed_messages, flash, url_for as flask_url_for)
 from werkzeug import Headers, wrap_file, redirect, abort
 from werkzeug.exceptions import NotFound
 
@@ -29,50 +29,31 @@ def url_for(endpoint, **values):
     Generates a URL to the given endpoint with the method provided.
     The endpoint is relative to the active module if modules are in use.
 
-    Here are some examples:
+    The functionality is documented in `flask.helpers.url_for`
 
-    ==================== ======================= =============================
-    Active Module        Target Endpoint         Target Function
-    ==================== ======================= =============================
-    `None`               ``'index'``             `index` of the application
-    `None`               ``'.index'``            `index` of the application
-    ``'admin'``          ``'index'``             `index` of the `admin` module
-    any                  ``'.index'``            `index` of the application
-    any                  ``'admin.index'``       `index` of the `admin` module
-    ==================== ======================= =============================
+    In addition to the arguments provided by flask, nereid allows the language
+    of the url to be generated to be specified using the language attribute.
+    The default value of language is the language of the current request.
 
-    Variable arguments that are unknown to the target endpoint are appended
-    to the generated URL as query arguments.
+    For example::
 
-    For more information, head over to the :ref:`Quickstart <url-building>`.
+        url_for('nereid.website.home', language='en_IN')
 
-    :param endpoint: the endpoint of the URL (name of the function)
-    :param values: the variable arguments of the URL rule
-    :param _external: if set to `True`, an absolute URL is generated.
-    :param _secure: if set to `True`, returns an absolute https URL.
-    :param _params: if specified as list of tuples or dict, additional url
-                    parameters. If params is specified then the default
-                    behaviour of appending_unknown paramters to URL generated
-                    is disabled.
     """
-    ctx = _request_ctx_stack.top
-    external = values.pop('_external', False)
+    if '_secure' in values and '_scheme' not in values:
+        warnings.warn(
+            "_secure argument will be deprecated in favor of _scheme",
+            DeprecationWarning, stacklevel=2
+        )
+        values['_external'] = True
+        values['_scheme'] = 'https'
+        values.pop('_secure')
 
-    secure = values.pop('_secure', False)
-    if secure:
-        # A secure url can only be generated on an external url
-        external = True
-
-    params = values.pop('_params', None)
 
     if 'language' not in values:
         values['language'] = request.nereid_language.code
-    rv = ctx.url_adapter.build(
-        endpoint, values, force_external=external, append_unknown=not params)
-    if params:
-        params = [(k, v.encode('UTF-8')) for k, v in params]
-        rv = u'%s?%s' % (rv, urllib.urlencode(params))
-    return (rv.replace('http://', 'https://') if secure else rv)
+
+    return flask_url_for(endpoint, **values)
 
 
 def secure(function):

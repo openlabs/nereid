@@ -303,7 +303,11 @@ epub_copyright = u'2012, Openlabs Technologies & Consulting (P) Limited'
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'http://docs.python.org/': None}
+intersphinx_mapping = {
+    'http://docs.python.org/': None,
+    'flask': ('http://flask.pocoo.org/docs/', None),
+
+}
 
 
 # --- Tryton specific configuration ----

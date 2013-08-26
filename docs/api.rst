@@ -21,6 +21,10 @@ Templating
 
 .. autofunction:: nereid.templating.render_template
 
+Helpers
+-------
+
+.. autofunction:: nereid.helpers.url_for
 
 Backend - Tryton Connection
 ---------------------------
