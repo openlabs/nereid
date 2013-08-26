@@ -16,7 +16,13 @@ Application Object
 Templating
 ----------
 
-.. autoclass:: nereid.templating.TrytonTemplateLoader
+.. autoclass:: nereid.templating.LazyRenderer
+   :members:
+
+.. autoclass:: nereid.templating.SiteNamePrefixLoader
+   :members:
+
+.. autoclass:: nereid.templating.ModuleTemplateLoader
    :members:
 
 .. autofunction:: nereid.templating.render_template
