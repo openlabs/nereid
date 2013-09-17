@@ -131,6 +131,7 @@ setup(
         'trytond_nereid_test>=2.8,<2.9',
         'mock',
         'pycountry',
+        'blinker',
     ],
     cmdclass={
         'audit': RunAudit,
