@@ -55,7 +55,7 @@ copyright = u'2012, Openlabs Technologies & Consulting (P) Limited'
 # The full version, including alpha/beta/rc tags.
 import pkg_resources
 try:
-    release = pkg_resources.get_distribution('Nereid').version
+    release = pkg_resources.get_distribution('trytond_nereid').version
 except pkg_resources.DistributionNotFound:
     print 'To build the documentation, The distribution information of Nereid'
     print 'Has to be available.  Either install the package into your'
