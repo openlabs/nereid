@@ -508,7 +508,6 @@ class Nereid(Flask):
         """
         return ModuleTemplateLoader(
             self.database_name, searchpath=self.template_folder,
-            prefix_website_name=self.template_prefix_website_name
         )
 
     def select_jinja_autoescape(self, filename):
