@@ -661,6 +661,41 @@ class TestAuth(NereidTestCase):
                 perm_any=[p3.value, p4.value]
             ))
 
+    def test_0110_user_management(self):
+        """
+        ensure that the cookie gets cleared if the user in session
+        is invalid.
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            party, = self.party_obj.create([{'name': 'Registered user'}])
+            data = {
+                'party': party,
+                'display_name': 'Registered User',
+                'email': 'email@example.com',
+                'password': 'password',
+                'company': self.company,
+            }
+            nereid_user, = self.nereid_user_obj.create([data.copy()])
+
+            with app.test_client() as c:
+                # Login and check again
+                response = c.post(
+                    '/en_US/login',
+                    data={'email': data['email'], 'password': data['password']}
+                )
+                response = c.get('/en_US/me')
+                self.assertEqual(response.data, data['display_name'])
+
+                # Delete the user
+                self.nereid_user_obj.delete([nereid_user])
+
+                response = c.get('/en_US/me')
+                self.assertEqual(response.status_code, 302)
+                print response.data
+
 
 def suite():
     "Nereid test suite"
