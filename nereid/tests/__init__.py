@@ -4,6 +4,7 @@ import unittest
 
 from .test_templates import TestTemplateLoading, TestLazyRendering
 from .test_helpers import TestURLfor
+from .test_signals import SignalsTestCase
 
 
 def suite():
@@ -13,5 +14,6 @@ def suite():
         unittest.TestLoader().loadTestsFromTestCase(TestTemplateLoading),
         unittest.TestLoader().loadTestsFromTestCase(TestLazyRendering),
         unittest.TestLoader().loadTestsFromTestCase(TestURLfor),
+        unittest.TestLoader().loadTestsFromTestCase(SignalsTestCase),
     ])
     return test_suite

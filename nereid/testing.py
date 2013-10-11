@@ -62,7 +62,10 @@ class NereidTestApp(Nereid):
             self.initialise()
 
         with self.request_context(environ):
-            response = self.full_dispatch_request()
+            try:
+                response = self.full_dispatch_request()
+            except Exception, e:
+                response = self.make_response(self.handle_exception(e))
             return response(environ, start_response)
 
 
