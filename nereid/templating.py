@@ -327,7 +327,7 @@ def render_email(
             )
             msg.attach(part)
 
-    msg['Subject'] = subject
+    msg['Subject'] = subject.encode("utf-8")
     msg['From'] = from_email
     msg['To'] = to
     msg['Cc'] = cc or ''
