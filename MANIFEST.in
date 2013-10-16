@@ -8,6 +8,7 @@ include LICENSE
 include Makefile
 include docs/*
 include trytond_nereid/*.xml
+include trytond_nereid/view/*.xml
 include trytond_nereid/*.odt
 include trytond_nereid/tryton.cfg
 include trytond_nereid/locale/*.po

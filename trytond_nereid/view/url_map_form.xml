@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
+this repository contains the full copyright notices and license terms. -->
+<form string="URL Map">
+    <label name="name" />
+    <field name="name" />
+    <label name="default_subdomain" />
+    <field name="default_subdomain" />
+    <label name="active" />
+    <field name="active" />
+    <notebook colspan="4">
+        <page string="Rules" id="rules">
+            <field name="rules" colspan="4" />
+        </page>
+        <page string="Advanced" id="advanced">
+            <label name="charset" />
+            <field name="charset" />
+            <label name="strict_slashes" />
+            <field name="strict_slashes" />
+            <label name="unique_urls" />
+            <field name="unique_urls" />
+        </page>
+    </notebook>
+</form>

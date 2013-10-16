@@ -27,15 +27,7 @@
             <field name="model">ir.lang</field>
             <field name="type">tree</field>
             <field name="inherit" ref="ir.lang_view_tree"/>
-            <field name="arch" type="xml">
-                <![CDATA[
-                  <data>
-                    <xpath expr="/tree/field[@name='active']" position="after">
-                        <field name="default_currency"/>
-                    </xpath>
-                  </data>
-                ]]>
-            </field>
+            <field name="name">lang_form</field>
         </record>
 
         <!-- Routing -->
@@ -44,48 +36,12 @@
         <record model="ir.ui.view" id="website_view_form">
             <field name="model">nereid.website</field>
             <field name="type">form</field>
-            <field name="arch" type="xml">
-                <![CDATA[
-                <form string="Web Site">
-                    <label name="name" />
-                    <field name="name" />
-                    <label name="url_map" />
-                    <field name="url_map" />
-                    <label name="active" />
-                    <field name="active" />
-                    <label name="company"/>
-                    <field name="company"/>
-                    <label name="default_language"/>
-                    <field name="default_language"/>
-                    <label name="application_user"/>
-                    <field name="application_user"/>
-                    <label name="guest_user"/>
-                    <field name="guest_user"/>
-                    <label name="timezone"/>
-                    <field name="timezone"/>
-                    <notebook colspan="4">
-                      <page id="Countries" string="Countries">
-                        <field name="countries"/>
-                      </page>
-                      <page string="Configuration" id="configuration">
-                      </page>
-                    </notebook>
-                </form>
-                ]]>
-            </field>
+            <field name="name">website_form</field>
         </record>
         <record model="ir.ui.view" id="website_view_tree">
             <field name="model">nereid.website</field>
             <field name="type">tree</field>
-            <field name="arch" type="xml">
-                <![CDATA[
-                <tree string="Web Sites">
-                    <field name="name" />
-                    <field name="url_map" />
-                    <field name="active" />
-                </tree>
-                ]]>
-            </field>
+            <field name="name">website_tree</field>
         </record>
         <record model="ir.action.act_window" id="act_website_form">
             <field name="name">Web Sites</field>
@@ -108,45 +64,12 @@
         <record model="ir.ui.view" id="url_map_view_form">
             <field name="model">nereid.url_map</field>
             <field name="type">form</field>
-            <field name="arch" type="xml">
-                <![CDATA[
-                <form string="URL Map">
-                    <label name="name" />
-                    <field name="name" />
-                    <label name="default_subdomain" />
-                    <field name="default_subdomain" />
-                    <label name="active" />
-                    <field name="active" />
-                    <notebook colspan="4">
-                        <page string="Rules" id="rules">
-                            <field name="rules" colspan="4" />
-                        </page>
-                        <page string="Advanced" id="advanced">
-                            <label name="charset" />
-                            <field name="charset" />
-                            <label name="strict_slashes" />
-                            <field name="strict_slashes" />
-                            <label name="unique_urls" />
-                            <field name="unique_urls" />
-                        </page>
-                    </notebook>
-                </form>
-                ]]>
-            </field>
+            <field name="name">url_map_form</field>
         </record>
         <record model="ir.ui.view" id="url_map_view_tree">
             <field name="model">nereid.url_map</field>
             <field name="type">tree</field>
-            <field name="arch" type="xml">
-                <![CDATA[
-                <tree string="URL Map">
-                    <field name="name" />
-                    <field name="default_subdomain" />
-                    <field name="charset" />
-                    <field name="active" />
-                </tree>
-                ]]>
-            </field>
+            <field name="name">url_map_tree</field>
         </record>
         <record model="ir.action.act_window" id="act_url_map_form">
             <field name="name">URL Map</field>
@@ -169,63 +92,12 @@
         <record model="ir.ui.view" id="url_rule_view_form">
             <field name="model">nereid.url_rule</field>
             <field name="type">form</field>
-            <field name="arch" type="xml">
-                <![CDATA[
-                <form string="URL Rule">
-                    <label name="rule" />
-                    <field name="rule" />
-                    <label name="endpoint" />
-                    <field name="endpoint" />
-                    <label name="active" />
-                    <field name="active" />
-                    <label name="url_map" />
-                    <field name="url_map" />
-                    <notebook colspan="4">
-                        <page string="Defaults" id="defaults">
-                            <field name="defaults" colspan="4"/>
-                        </page>
-                        <page string="Advanced" id="advanced">
-                            <group col="10" colspan="4" id="methods">
-                                <label name="http_method_get" />
-                                <field name="http_method_get" />
-                                <label name="http_method_post" />
-                                <field name="http_method_post" />
-                                <label name="http_method_patch" />
-                                <field name="http_method_patch" />
-                                <label name="http_method_put" />
-                                <field name="http_method_put" />
-                                <label name="http_method_delete" />
-                                <field name="http_method_delete" />
-                            </group>
-                            <label name="only_for_genaration" />
-                            <field name="only_for_genaration" />
-                            <label name="redirect_to" />
-                            <field name="redirect_to" />
-                            <label name="sequence" />
-                            <field name="sequence" />
-                        </page>
-                    </notebook>
-                </form>
-                ]]>
-            </field>
+            <field name="name">url_rule_form</field>
         </record>
         <record model="ir.ui.view" id="url_rule_view_tree">
             <field name="model">nereid.url_rule</field>
             <field name="type">tree</field>
-            <field name="arch" type="xml">
-                <![CDATA[
-                <tree string="URL Rules">
-                    <field name="rule" />
-                    <field name="endpoint" />
-                    <field name="active" />
-                    <field name="http_method_get" />
-                    <field name="http_method_post" />
-                    <field name="http_method_patch" />
-                    <field name="http_method_put" />
-                    <field name="http_method_delete" />
-                </tree>
-                ]]>
-            </field>
+            <field name="name">url_rule_tree</field>
         </record>
         <record model="ir.action.act_window" id="act_url_rule_form">
             <field name="name">URL Rules</field>
@@ -248,15 +120,7 @@
         <record model="ir.ui.view" id="url_rule_defaults_view_tree">
             <field name="model">nereid.url_rule_defaults</field>
             <field name="type">tree</field>
-            <field name="arch" type="xml">
-                <![CDATA[
-                <tree string="URL Rules Defaults" editable="bottom">
-                    <field name="key" />
-                    <field name="value" />
-                    <field name="rule" />
-                </tree>
-                ]]>
-            </field>
+            <field name="name">url_rule_defaults_tree</field>
         </record>
         <record model="ir.action.act_window" id="act_url_rule_defaults_tree">
             <field name="name">URL Rule Defaults</field>
