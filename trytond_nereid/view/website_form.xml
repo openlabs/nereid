@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
+this repository contains the full copyright notices and license terms. -->
+<form string="Web Site">
+    <label name="name" />
+    <field name="name" />
+    <label name="url_map" />
+    <field name="url_map" />
+    <label name="active" />
+    <field name="active" />
+    <label name="company"/>
+    <field name="company"/>
+    <label name="default_language"/>
+    <field name="default_language"/>
+    <label name="application_user"/>
+    <field name="application_user"/>
+    <label name="guest_user"/>
+    <field name="guest_user"/>
+    <label name="timezone"/>
+    <field name="timezone"/>
+    <notebook colspan="4">
+      <page id="Countries" string="Countries">
+        <field name="countries"/>
+      </page>
+      <page string="Configuration" id="configuration">
+      </page>
+    </notebook>
+</form>

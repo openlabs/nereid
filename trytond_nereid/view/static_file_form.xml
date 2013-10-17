@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!-- This file is part of Tryton.  The COPYRIGHT file at the top level of
+this repository contains the full copyright notices and license terms. -->
+<form>
+    <label name="name" />
+    <field name="name" />
+    <label name="folder" />
+    <field name="folder" />
+    <label name="type" />
+    <field name="type" />
+    <separator colspan="4" id="paths" string="Paths"/>
+    <label name="remote_path" />
+    <field name="remote_path" />
+    <label name="file_path" />
+    <field name="file_path" />
+    <separator string="Preview" 
+        colspan="4" id="sepr_preview"/>
+    <field name="file_binary" widget="image" colspan="4"/>
+</form>
