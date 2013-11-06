@@ -370,6 +370,7 @@ class NereidUser(ModelSQL, ModelView):
                 )
             else:
                 party = Party(name=registration_form.name.data)
+                party.addresses = []
                 party.save()
                 nereid_user = cls(**{
                     'party': party.id,
