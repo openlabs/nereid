@@ -10,8 +10,8 @@ this repository contains the full copyright notices and license terms. -->
     <field name="active" />
     <label name="company"/>
     <field name="company"/>
-    <label name="default_language"/>
-    <field name="default_language"/>
+    <label name="default_locale"/>
+    <field name="default_locale"/>
     <label name="application_user"/>
     <field name="application_user"/>
     <label name="guest_user"/>
@@ -19,6 +19,9 @@ this repository contains the full copyright notices and license terms. -->
     <label name="timezone"/>
     <field name="timezone"/>
     <notebook colspan="4">
+      <page id="locales" string="Locales">
+        <field name="locales"/>
+      </page>
       <page id="Countries" string="Countries">
         <field name="countries"/>
       </page>

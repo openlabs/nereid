@@ -156,7 +156,7 @@ class SignalsTestCase(BaseTestCase):
             flask.appcontext_popped.connect(record_pop, app)
             try:
                 with app.test_client() as c:
-                    rv = c.get('/')
+                    rv = c.get('/en_US/')
                     self.assertEqual(rv.data, b'Hello')
                     self.assertEqual(recorded, ['push'])
                 self.assertEqual(recorded, ['push', 'pop'])

@@ -26,6 +26,7 @@ class TestAddress(NereidTestCase):
         trytond.tests.test_tryton.install_module('nereid')
 
         self.nereid_website_obj = POOL.get('nereid.website')
+        self.nereid_website_locale_obj = POOL.get('nereid.website.locale')
         self.nereid_user_obj = POOL.get('nereid.user')
         self.url_map_obj = POOL.get('nereid.url_map')
         self.company_obj = POOL.get('company.company')
@@ -130,12 +131,19 @@ class TestAddress(NereidTestCase):
 
         url_map_id, = self.url_map_obj.search([], limit=1)
         en_us, = self.language_obj.search([('code', '=', 'en_US')])
+        currency, = self.currency_obj.search([('code', '=', 'USD')])
+        locale, = self.nereid_website_locale_obj.create([{
+            'code': 'en_US',
+            'language': en_us,
+            'currency': currency,
+        }])
         self.nereid_website_obj.create([{
             'name': 'localhost',
             'url_map': url_map_id,
             'company': self.company,
             'application_user': USER,
-            'default_language': en_us,
+            'default_locale': locale,
+            'locales': [('add', [locale.id])],
             'guest_user': self.guest_user,
             'countries': [('set', self.available_countries)],
         }])

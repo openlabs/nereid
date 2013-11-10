@@ -3,7 +3,6 @@
 from werkzeug import redirect, abort
 from werkzeug.utils import cached_property
 from flask.wrappers import Request as RequestBase, Response as ResponseBase
-from flask.helpers import flash
 from .helpers import url_for
 from .globals import current_app, session
 
@@ -47,23 +46,30 @@ class Request(RequestBase):
     def nereid_currency(self):
         """
         Return a browse record for the currency.
-        Currency is looked up first in the language. If it does not exist
-        in the language then the currency of the company is returned
         """
-        if self.nereid_language.default_currency:
-            return self.nereid_language.default_currency
-        return self.nereid_website.company.currency
+        return self.nereid_locale.currency
+
+    @cached_property
+    def nereid_locale(self):
+        """
+        Returns the active record of the current locale.
+        The locale could either be from the URL if the locale was specified
+        in the URL, or the default locale from the website.
+        """
+        if self.view_args and 'locale' in self.view_args:
+            for locale in self.nereid_website.locales:
+                if locale.code == self.view_args['locale']:
+                    return locale
+
+        # Return the default locale
+        return self.nereid_website.default_locale
 
     @cached_property
     def nereid_language(self):
-        """Return a browse record for the language."""
-        from trytond.transaction import Transaction
-        IRLanguage = current_app.pool.get('ir.lang')
-        languages = IRLanguage.search([('code', '=', Transaction().language)])
-        if not languages:
-            flash("We are sorry we don't speak your language yet!")
-            return self.nereid_website.default_language
-        return languages[0]
+        """
+        Return a active record for the language.
+        """
+        return self.nereid_locale.language
 
     @cached_property
     def is_guest_user(self):
