@@ -215,13 +215,15 @@ class Nereid(Flask):
         if self.tryton_configfile is not None:
             from trytond.config import CONFIG
             CONFIG.update_etc(self.tryton_configfile)
+            CONFIG.set_timezone()
 
-        from trytond.backend import Database
+        from trytond import backend
         from trytond.modules import register_classes
         register_classes()
         from trytond.pool import Pool
 
         # Load and initialise pool
+        Database = backend.get('Database')
         self._database = Database(self.database_name).connect()
         self._pool = Pool(self.database_name)
         self._pool.init()
