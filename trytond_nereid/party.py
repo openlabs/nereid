@@ -22,11 +22,13 @@ from nereid.globals import session, current_app
 from nereid.signals import registration
 from nereid.templating import render_email
 from trytond.model import ModelView, ModelSQL, fields
-from trytond.pool import Pool
+from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Eval, Bool, Not
 from trytond.transaction import Transaction
 from trytond.config import CONFIG
 from trytond.tools import get_smtp_server
+from trytond import backend
+from sql import As, Literal, Column
 
 from .i18n import _, get_translations
 
@@ -113,14 +115,60 @@ STATES = {
 }
 
 
-class Address(ModelSQL, ModelView):
+class Address:
     """Party Address"""
     __name__ = 'party.address'
+    __metaclass__ = PoolMeta
 
     registration_form = RegistrationForm
 
-    email = fields.Char('Email')
-    phone = fields.Char('Phone')
+    phone = fields.Function(fields.Char('Phone'), 'get_address_mechanism')
+    email = fields.Function(fields.Char('E-Mail'), 'get_address_mechanism')
+
+    @classmethod
+    def __register__(cls, module_name):
+        pool = Pool()
+        Party = pool.get('party.party')
+        ContactMechanism = pool.get('party.contact_mechanism')
+        TableHandler = backend.get('TableHandler')
+        cursor = Transaction().cursor
+        table = TableHandler(cursor, cls, module_name)
+        party = Party.__table__()
+        address = cls.__table__()
+        mechanism = ContactMechanism.__table__()
+
+        super(Address, cls).__register__(module_name)
+
+        # Migration from 2.8: move phone and email to contact mechanisms
+        for column in ['email', 'phone']:
+            if table.column_exist(column):
+                join = address.join(
+                    party, condition=(party.id == address.party)
+                )
+                select = join.select(
+                    address.create_date, address.create_uid,
+                    address.write_date, address.write_uid,
+                    As(Literal(column), 'type'),
+                    As(Column(address, column), 'value'), address.party,
+                    As(Literal(True), 'active'),
+                    where=(Column(address, column) != '')
+                )
+                insert = mechanism.insert(
+                    columns=[
+                            mechanism.create_date,
+                            mechanism.create_uid, mechanism.write_date,
+                            mechanism.write_uid, mechanism.type,
+                            mechanism.value, mechanism.party, mechanism.active,
+                    ], values=select)
+                cursor.execute(*insert)
+
+                table.column_rename(column, '%s_deprecated' % column)
+
+    def get_address_mechanism(self, name):
+        for mechanism in self.party.contact_mechanisms:
+            if mechanism.type == name:
+                return mechanism.value
+        return ''
 
     @classmethod
     @login_required
@@ -134,6 +182,8 @@ class Address(ModelSQL, ModelView):
 
         :param address: ID of the address
         """
+        pool = Pool()
+        ContactMechanism = pool.get('party.contact_mechanism')
         form = AddressForm(request.form, name=request.nereid_user.display_name)
         countries = [
             (c.id, c.name) for c in request.nereid_website.countries
@@ -142,6 +192,8 @@ class Address(ModelSQL, ModelView):
         if address not in (a.id for a in request.nereid_user.party.addresses):
             address = None
         if request.method == 'POST' and form.validate():
+            mechanisms = []
+            party = request.nereid_user.party
             if address is not None:
                 cls.write([cls(address)], {
                     'name': form.name.data,
@@ -151,8 +203,6 @@ class Address(ModelSQL, ModelView):
                     'city': form.city.data,
                     'country': form.country.data,
                     'subdivision': form.subdivision.data,
-                    'email': form.email.data,
-                    'phone': form.phone.data,
                 })
             else:
                 cls.create([{
@@ -163,10 +213,35 @@ class Address(ModelSQL, ModelView):
                     'city': form.city.data,
                     'country': form.country.data,
                     'subdivision': form.subdivision.data,
-                    'party': request.nereid_user.party.id,
-                    'email': form.email.data,
-                    'phone': form.phone.data,
+                    'party': party.id,
                 }])
+            if form.email.data:
+                if not ContactMechanism.search(
+                        [
+                            ('party', '=', party.id),
+                            ('type', '=', 'email'),
+                            ('value', '=', form.email.data),
+                        ]):
+                    mechanisms.append({
+                        'party': request.nereid_user.party.id,
+                        'type': 'email',
+                        'value': form.email.data,
+                    })
+            if form.phone.data:
+                if not ContactMechanism.search(
+                        [
+                            ('party', '=', party.id),
+                            ('type', '=', 'phone'),
+                            ('value', '=', form.phone.data),
+                        ]):
+                    mechanisms.append({
+                        'party': request.nereid_user.party.id,
+                        'type': 'phone',
+                        'value': form.phone.data,
+                    })
+
+            if len(mechanisms) > 0:
+                ContactMechanism.create(mechanisms)
             return redirect(url_for('party.address.view_address'))
         elif request.method == 'GET' and address:
             # Its an edit of existing address, prefill data
