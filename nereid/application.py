@@ -381,15 +381,6 @@ class Nereid(Flask):
             )
         self.template_context_processors.update(db_ctx_processors)
 
-    def make_response(self, rv):
-        """
-        Converts the return value from a view function to a real
-        response object that is an instance of :attr:`response_class`.
-        """
-        if isinstance(rv, LazyRenderer):
-            rv = unicode(rv)
-        return super(Nereid, self).make_response(rv)
-
     def wsgi_app(self, environ, start_response):
         """
         The actual WSGI application.  This is not implemented in
@@ -485,6 +476,10 @@ class Nereid(Flask):
                 model = Pool().get(rule.endpoint.rsplit('.', 1)[0])
                 i = model(req.view_args.pop('active_id'))
                 result = meth(i, **req.view_args)
+
+            if isinstance(result, LazyRenderer):
+                result = unicode(result)
+
             return result
 
     def create_jinja_environment(self):
