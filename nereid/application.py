@@ -11,7 +11,7 @@ from flask.config import ConfigAttribute
 from flask.globals import _request_ctx_stack
 from flask.helpers import locked_cached_property
 from jinja2 import MemcachedBytecodeCache
-from werkzeug.routing import Map
+from werkzeug.routing import Map, Submount, Rule
 from werkzeug import import_string
 
 from .wrappers import Request, Response
@@ -318,16 +318,15 @@ class Nereid(Flask):
         #            self.view_functions[url_kwargs['endpoint']] =
         #               self.get_method(url_kwargs['endpoint'])
 
-        url_maps = {}
+        url_map_rules = {}
         # Load all url maps first because many websites might reuse the same
         # URL map and it might be faster to load them just once
         for url_map in URLMap.search([]):
 
-            # Define a new map
-            map = Map()
+            rules = []
 
             # Add the static url
-            map.add(
+            rules.append(
                 self.url_rule_class(
                     self.static_url_path + '/<path:filename>',
                     endpoint='static'
@@ -337,7 +336,7 @@ class Nereid(Flask):
             for url in url_map.get_rules_arguments():
                 rule = self.url_rule_class(url.pop('rule'), **url)
                 rule.provide_automatic_options = True
-                map.add(rule)   # Add rule to map
+                rules.append(rule)   # Add rule to map
 
                 if (not url['build_only']) and not(url['redirect_to']):
                     # Add the method to the view_functions list if the
@@ -345,12 +344,22 @@ class Nereid(Flask):
                     self.view_functions[url['endpoint']] = self.get_method(
                         url['endpoint']
                     )
-            url_maps[url_map.id] = map
+            url_map_rules[url_map.id] = rules
 
         for website in Website.search([]):
+            if website.locales:
+                # Create the URL map with locale prefix
+                url_map = Map([
+                    Rule('/', redirect_to='/%s' % website.default_locale.code),
+                    Submount('/<locale>', url_map_rules[website.url_map.id])
+                ])
+            else:
+                # Create a new map with the given URLs
+                url_map = Map(url_map_rules[website.url_map.id])
+
             self.websites[website.name] = {
                 'id': website.id,
-                'url_map': url_maps[website.url_map.id],
+                'url_map': url_map,
                 'application_user': website.application_user.id,
                 'guest_user': website.guest_user.id,
                 'company': website.company.id,
@@ -372,15 +381,6 @@ class Nereid(Flask):
                 db_ctx_processors.pop(None)
             )
         self.template_context_processors.update(db_ctx_processors)
-
-    def make_response(self, rv):
-        """
-        Converts the return value from a view function to a real
-        response object that is an instance of :attr:`response_class`.
-        """
-        if isinstance(rv, LazyRenderer):
-            rv = unicode(rv)
-        return super(Nereid, self).make_response(rv)
 
     def wsgi_app(self, environ, start_response):
         """
@@ -460,10 +460,12 @@ class Nereid(Flask):
            and req.method == 'OPTIONS':
             return self.make_default_options_response()
 
-        language = req.view_args.pop(
-            'language', req.nereid_website.default_language.code
-        )
-        with Transaction().set_context(language=language):
+        with Transaction().set_context(
+                language=req.nereid_locale.language.code):
+
+            # pop locale if specified in the view_args
+            req.view_args.pop('locale', None)
+
             # otherwise dispatch to the handler for that endpoint
             meth = self.view_functions[rule.endpoint]
             if not hasattr(meth, 'im_self') or meth.im_self:
@@ -475,6 +477,10 @@ class Nereid(Flask):
                 model = Pool().get(rule.endpoint.rsplit('.', 1)[0])
                 i = model(req.view_args.pop('active_id'))
                 result = meth(i, **req.view_args)
+
+            if isinstance(result, LazyRenderer):
+                result = unicode(result)
+
             return result
 
     def create_jinja_environment(self):
@@ -491,7 +497,7 @@ class Nereid(Flask):
 
         rv.filters.update(**NEREID_TEMPLATE_FILTERS)
 
-        # add the language sensitive url_for of nereid
+        # add the locale sensitive url_for of nereid
         rv.globals.update(url_for=url_for)
 
         if self.cache:

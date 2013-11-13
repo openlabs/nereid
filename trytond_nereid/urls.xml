@@ -19,16 +19,8 @@
             <field name="url_map" ref="default_url_map" />
         </record>
 
-        <record id="home_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/</field>
-            <field name="endpoint">nereid.website.home</field>
-            <field name="sequence" eval="10" />
-            <field name="http_method_get" eval="True"/>
-            <field name="url_map" ref="default_url_map" />
-        </record>
-
         <record id="login_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/login</field>
+            <field name="rule">/login</field>
             <field name="endpoint">nereid.website.login</field>
             <field name="sequence" eval="20" />
             <field name="http_method_get" eval="True"/>
@@ -37,7 +29,7 @@
         </record>
 
         <record id="logout_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/logout</field>
+            <field name="rule">/logout</field>
             <field name="endpoint">nereid.website.logout</field>
             <field name="sequence" eval="30" />
             <field name="http_method_get" eval="True"/>
@@ -45,7 +37,7 @@
         </record>
 
         <record id="registration_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/registration</field>
+            <field name="rule">/registration</field>
             <field name="endpoint">nereid.user.registration</field>
             <field name="sequence" eval="40" />
             <field name="http_method_get" eval="True"/>
@@ -54,7 +46,7 @@
         </record>
 
         <record id="account_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/account</field>
+            <field name="rule">/account</field>
             <field name="endpoint">nereid.website.account</field>
             <field name="sequence" eval="50" />
             <field name="http_method_get" eval="True"/>
@@ -62,7 +54,7 @@
         </record>
 
         <record id="change_pass_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/change-password</field>
+            <field name="rule">/change-password</field>
             <field name="endpoint">nereid.user.change_password</field>
             <field name="sequence" eval="60" />
             <field name="http_method_get" eval="True"/>
@@ -71,7 +63,7 @@
         </record>
 
         <record id="new_pass_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/new-password</field>
+            <field name="rule">/new-password</field>
             <field name="endpoint">nereid.user.new_password</field>
             <field name="sequence" eval="65" />
             <field name="http_method_get" eval="True"/>
@@ -80,7 +72,7 @@
         </record>
 
         <record id="activate_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/activate-account/&lt;int:active_id&gt;/&lt;activation_code&gt;</field>
+            <field name="rule">/activate-account/&lt;int:active_id&gt;/&lt;activation_code&gt;</field>
             <field name="endpoint">nereid.user.activate</field>
             <field name="sequence" eval="70" />
             <field name="http_method_get" eval="True"/>
@@ -89,7 +81,7 @@
         </record>
 
         <record id="reset_account_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/reset-account</field>
+            <field name="rule">/reset-account</field>
             <field name="endpoint">nereid.user.reset_account</field>
             <field name="sequence" eval="80" />
             <field name="http_method_get" eval="True"/>
@@ -98,7 +90,7 @@
         </record>
 
         <record id="save_address_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/save-new-address</field>
+            <field name="rule">/save-new-address</field>
             <field name="endpoint">party.address.edit_address</field>
             <field name="sequence" eval="90" />
             <field name="http_method_get" eval="True"/>
@@ -108,7 +100,7 @@
 
 
         <record id="edit_address_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/edit-address/&lt;int:address&gt;</field>
+            <field name="rule">/edit-address/&lt;int:address&gt;</field>
             <field name="endpoint">party.address.edit_address</field>
             <field name="sequence" eval="90" />
             <field name="http_method_get" eval="True"/>
@@ -117,7 +109,7 @@
         </record>
 
         <record id="view_address_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/view-address</field>
+            <field name="rule">/view-address</field>
             <field name="endpoint">party.address.view_address</field>
             <field name="sequence" eval="100" />
             <field name="http_method_get" eval="True"/>
@@ -125,7 +117,7 @@
         </record>
 
         <record id="countries_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/countries</field>
+            <field name="rule">/countries</field>
             <field name="endpoint">nereid.website.country_list</field>
             <field name="sequence" eval="110" />
             <field name="http_method_get" eval="True"/>
@@ -133,7 +125,7 @@
         </record>
      
         <record id="subdivisions_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/subdivisions</field>
+            <field name="rule">/subdivisions</field>
             <field name="endpoint">nereid.website.subdivision_list</field>
             <field name="sequence" eval="120" />
             <field name="http_method_get" eval="True"/>
@@ -141,7 +133,7 @@
         </record> 
 
         <record id="static_file_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/static-file/&lt;folder&gt;/&lt;name&gt;</field>
+            <field name="rule">/static-file/&lt;folder&gt;/&lt;name&gt;</field>
             <field name="endpoint">nereid.static.file.send_static_file</field>
             <field name="sequence" eval="130" />
             <field name="http_method_get" eval="True"/>
@@ -149,14 +141,14 @@
         </record> 
 
         <record id="user_status" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/user_status</field>
+            <field name="rule">/user_status</field>
             <field name="endpoint">nereid.website.user_status</field>
             <field name="sequence" eval="150" />
             <field name="url_map" ref="nereid.default_url_map" />
         </record>
 
         <record id="add_contact_mechanism" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/contact-mechanisms/add</field>
+            <field name="rule">/contact-mechanisms/add</field>
             <field name="endpoint">party.contact_mechanism.add</field>
             <field name="sequence" eval="140" />
             <field name="http_method_post" eval="True"/>
@@ -164,7 +156,7 @@
         </record>
 
         <record id="remove_contact_mechanism" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/contact-mechanisms/remove</field>
+            <field name="rule">/contact-mechanisms/remove</field>
             <field name="endpoint">party.contact_mechanism.remove</field>
             <field name="sequence" eval="140" />
             <field name="http_method_post" eval="True"/>
@@ -172,7 +164,7 @@
         </record>
 
         <record id="user_profile" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/me</field>
+            <field name="rule">/me</field>
             <field name="endpoint">nereid.user.profile</field>
             <field name="sequence" eval="300" />
             <field name="http_method_get" eval="True"/>

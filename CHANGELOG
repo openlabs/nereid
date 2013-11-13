@@ -1,3 +1,11 @@
+Version 3.0.1.0
+===============
+
+  * Locale was introduced in lieu of language
+    See: https://github.com/openlabs/nereid/issues/65
+  * URLs do not require <language> placeholder anymore
+  * Sites can be without locales as well
+
 Version 2.6.0.2
 ===============
 

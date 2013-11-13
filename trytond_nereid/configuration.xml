@@ -23,13 +23,6 @@
         <menuitem name="Configuration" sequence="10"
                   id="menu_nereid_configuration" parent="menu_nereid" />
 
-        <record model="ir.ui.view" id="lang_view_tree">
-            <field name="model">ir.lang</field>
-            <field name="type">tree</field>
-            <field name="inherit" ref="ir.lang_view_tree"/>
-            <field name="name">lang_form</field>
-        </record>
-
         <!-- Routing -->
         <menuitem name="Routing" id="menu_nereid_routing"
             sequence="10" parent="menu_nereid_configuration" />
@@ -59,6 +52,34 @@
         </record>
         <menuitem parent="menu_nereid_configuration" action="act_website_form"
             id="menu_website_form" sequence="5"/>
+
+        <!--  Web Site Locale  -->
+        <record model="ir.ui.view" id="website_locale_view_form">
+            <field name="model">nereid.website.locale</field>
+            <field name="type">form</field>
+            <field name="name">website_locale_form</field>
+        </record>
+        <record model="ir.ui.view" id="website_locale_view_tree">
+            <field name="model">nereid.website.locale</field>
+            <field name="type">tree</field>
+            <field name="name">website_locale_tree</field>
+        </record>
+        <record model="ir.action.act_window" id="act_website_locale_form">
+            <field name="name">Web Sites Locale</field>
+            <field name="res_model">nereid.website.locale</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_website_locale_form_view1">
+            <field name="sequence" eval="10" />
+            <field name="view" ref="website_locale_view_tree" />
+            <field name="act_window" ref="act_website_locale_form" />
+        </record>
+        <record model="ir.action.act_window.view" id="act_website_locale_form_view2">
+            <field name="sequence" eval="20" />
+            <field name="view" ref="website_locale_view_form" />
+            <field name="act_window" ref="act_website_locale_form" />
+        </record>
+        <menuitem parent="menu_nereid_configuration" action="act_website_locale_form"
+            id="menu_website_locale_form" sequence="5"/>
 
         <!--  URL Map  -->
         <record model="ir.ui.view" id="url_map_view_form">

@@ -31,13 +31,13 @@ def url_for(endpoint, **values):
 
     The functionality is documented in `flask.helpers.url_for`
 
-    In addition to the arguments provided by flask, nereid allows the language
-    of the url to be generated to be specified using the language attribute.
-    The default value of language is the language of the current request.
+    In addition to the arguments provided by flask, nereid allows the locale
+    of the url to be generated to be specified using the locale attribute.
+    The default value of locale is the locale of the current request.
 
     For example::
 
-        url_for('nereid.website.home', language='en_IN')
+        url_for('nereid.website.home', locale='en-us')
 
     """
     if '_secure' in values and '_scheme' not in values:
@@ -49,8 +49,14 @@ def url_for(endpoint, **values):
         values['_scheme'] = 'https'
         values.pop('_secure')
 
-    if 'language' not in values:
-        values['language'] = request.nereid_language.code
+    if 'language' in values:
+        warnings.warn(
+            "language argument is deprecated in favor of locale",
+            DeprecationWarning, stacklevel=2
+        )
+
+    if 'locale' not in values:
+        values['locale'] = request.nereid_locale.code
 
     return flask_url_for(endpoint, **values)
 
