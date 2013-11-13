@@ -19,14 +19,6 @@
             <field name="url_map" ref="default_url_map" />
         </record>
 
-        <record id="home_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/</field>
-            <field name="endpoint">nereid.website.home</field>
-            <field name="sequence" eval="10" />
-            <field name="http_method_get" eval="True"/>
-            <field name="url_map" ref="default_url_map" />
-        </record>
-
         <record id="login_url" model="nereid.url_rule">
             <field name="rule">/login</field>
             <field name="endpoint">nereid.website.login</field>

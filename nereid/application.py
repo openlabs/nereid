@@ -11,7 +11,7 @@ from flask.config import ConfigAttribute
 from flask.globals import _request_ctx_stack
 from flask.helpers import locked_cached_property
 from jinja2 import MemcachedBytecodeCache
-from werkzeug.routing import Map, Submount
+from werkzeug.routing import Map, Submount, Rule
 from werkzeug import import_string
 
 from .wrappers import Request, Response
@@ -350,6 +350,7 @@ class Nereid(Flask):
             if website.locales:
                 # Create the URL map with locale prefix
                 url_map = Map([
+                    Rule('/', redirect_to='/%s' % website.default_locale.code),
                     Submount('/<locale>', url_map_rules[website.url_map.id])
                 ])
             else:
