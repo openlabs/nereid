@@ -128,7 +128,9 @@ setup(
     test_suite='tests.suite',
     test_loader='trytond.test_loader:Loader',
     tests_require=[
-        'trytond_nereid_test>=2.8,<2.9',
+        'trytond_nereid_test >= %s.%s, < %s.%s' %
+            (major_version, minor_version, major_version,
+                minor_version + 1),
         'mock',
         'pycountry',
         'blinker',
