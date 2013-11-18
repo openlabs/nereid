@@ -55,7 +55,7 @@ def url_for(endpoint, **values):
             DeprecationWarning, stacklevel=2
         )
 
-    if 'locale' not in values:
+    if 'locale' not in values and request.nereid_website.locales:
         values['locale'] = request.nereid_locale.code
 
     return flask_url_for(endpoint, **values)
