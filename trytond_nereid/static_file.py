@@ -30,9 +30,6 @@ class NereidStaticFolder(ModelSQL, ModelView):
     @classmethod
     def __setup__(cls):
         super(NereidStaticFolder, cls).__setup__()
-        cls._constraints += [
-            ('check_folder_name', 'invalid_folder_name'),
-        ]
         cls._sql_constraints += [
             ('unique_folder', 'UNIQUE(folder_name)',
              'Folder name needs to be unique')
@@ -53,6 +50,17 @@ class NereidStaticFolder(ModelSQL, ModelView):
                 self['folder_name'] = slugify(self['name'])
             return self['folder_name']
 
+    @classmethod
+    def validate(cls, folders):
+        """
+        Validates the records.
+
+        :param folders: active record list of folders
+        """
+        super(NereidStaticFolder, cls).validate(folders)
+        for folder in folders:
+            folder.check_folder_name()
+
     def check_folder_name(self):
         '''
         Check the validity of folder name
@@ -60,8 +68,7 @@ class NereidStaticFolder(ModelSQL, ModelView):
         eventually lead to previlege escalation
         '''
         if ('.' in self.folder_name) or (self.folder_name.startswith('/')):
-            return False
-        return True
+            self.raise_user_error('invalid_folder_name')
 
     @classmethod
     def write(cls, folders, vals):
@@ -117,9 +124,6 @@ class NereidStaticFile(ModelSQL, ModelView):
     @classmethod
     def __setup__(cls):
         super(NereidStaticFile, cls).__setup__()
-        cls._constraints += [
-            ('check_file_name', 'invalid_file_name'),
-        ]
         cls._sql_constraints += [
             ('name_folder_uniq', 'UNIQUE(name, folder)',
                 'The Name of the Static File must be unique in a folder.!'),
@@ -218,6 +222,17 @@ class NereidStaticFile(ModelSQL, ModelView):
             )) \
             if self.type == 'local' else self.remote_path
 
+    @classmethod
+    def validate(cls, files):
+        """
+        Validates the records.
+
+        :param files: active record list of static files
+        """
+        super(NereidStaticFile, cls).validate(files)
+        for file in files:
+            file.check_file_name()
+
     def check_file_name(self):
         '''
         Check the validity of folder name
@@ -225,8 +240,7 @@ class NereidStaticFile(ModelSQL, ModelView):
         eventually lead to previlege escalation
         '''
         if ('..' in self.name) or ('/' in self.name):
-            return False
-        return True
+            self.raise_user_error("invalid_file_name")
 
     @classmethod
     def send_static_file(cls, folder, name):
