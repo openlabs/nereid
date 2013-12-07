@@ -157,6 +157,22 @@
         <record model="nereid.template.context_processor" id="ctx_processor_currency">
             <field name="method">currency.currency.context_processor</field>
         </record>
+
+        <!-- Nereid Configuration wizard -->
+        <record model="ir.ui.view" id="website_config_start_view_form">
+            <field name="model">nereid.website.config.start</field>
+            <field name="type">form</field>
+            <field name="name">website_config_start_form</field>
+        </record>
+        <record model="ir.action.wizard" id="act_nereid_config">
+            <field name="name">Configure Nereid</field>
+            <field name="wiz_name">nereid.website.config</field>
+        </record>
+        <record model="ir.module.module.config_wizard.item"
+            id="config_wizard_item_nereid">
+            <field name="action" ref="act_nereid_config"/>
+        </record>
+
     </data>
 </tryton>
 
