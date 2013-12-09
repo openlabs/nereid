@@ -9,6 +9,7 @@ from .routing import URLMap, WebSite, WebSiteLocale, URLRule, URLRuleDefaults, \
 from .static_file import NereidStaticFolder, NereidStaticFile
 from .currency import Currency
 from .template import ContextProcessors
+from .configuration import NereidConfigStart, NereidConfig
 
 
 def register():
@@ -31,5 +32,10 @@ def register():
         NereidStaticFile,
         Currency,
         ContextProcessors,
+        NereidConfigStart,
         module='nereid', type_='model'
+    )
+    Pool.register(
+        NereidConfig,
+        module='nereid', type_='wizard'
     )
