@@ -14,6 +14,10 @@ this repository contains the full copyright notices and license terms. -->
     <field name="password"/>
     <label name="timezone" />
     <field name="timezone" />
+    <label name="email_verified"/>
+    <field name="email_verified"/>
+    <label name="active"/>
+    <field name="active"/>
     <notebook colspan="4">
     <page string="Permissions" id="permissions">
         <field name="permissions" colspan="4"/>

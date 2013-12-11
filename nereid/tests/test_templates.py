@@ -110,6 +110,8 @@ class BaseTestCase(NereidTestCase):
                 os.path.join(os.path.dirname(__file__), 'templates')
             )
         )
+        if 'SECRET_KEY' not in options:
+            options['SECRET_KEY'] = 'secret-key'
         app.config['TEMPLATE_PREFIX_WEBSITE_NAME'] = False
         app.config.update(options)
         app.config['DATABASE_NAME'] = DB_NAME

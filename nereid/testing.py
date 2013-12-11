@@ -79,6 +79,8 @@ class NereidTestCase(unittest.TestCase):
 
     def get_app(self, **options):
         app = NereidTestApp()
+        if 'SECRET_KEY' not in options:
+            options['SECRET_KEY'] = 'secret-key'
         app.config.update(options)
         from trytond.tests.test_tryton import DB_NAME
         app.config['DATABASE_NAME'] = DB_NAME
