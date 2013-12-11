@@ -149,6 +149,10 @@ class Nereid(Flask):
         initialisation of the class in the __init__ method. This is
         now separated into this function.
         """
+        #: Check if the secret key is defined, if not raise an
+        #: exception since it is required
+        assert self.secret_key, 'Secret Key is not defined in config'
+
         #: Load the cache
         self.load_cache()
 
