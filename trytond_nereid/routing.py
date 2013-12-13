@@ -331,7 +331,7 @@ class WebSite(ModelSQL, ModelView):
         This method could be inherited and components could be added
         """
         rv = {
-            'messages': get_flashed_messages()
+            'messages': map(unicode, get_flashed_messages()),
         }
         if request.is_guest_user:
             rv.update({

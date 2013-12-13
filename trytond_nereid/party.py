@@ -438,7 +438,7 @@ class NereidUser(ModelSQL, ModelView):
         """
         return self._signer.sign(self._serializer.dumps(self.id, salt=salt))
 
-    def get_email_verification_link(self):
+    def get_email_verification_link(self, **options):
         """
         Returns an email verification link for the user
         """
@@ -446,9 +446,10 @@ class NereidUser(ModelSQL, ModelView):
             'nereid.user.verify_email',
             sign=self._get_sign('verification'),
             active_id=self.id,
+            **options
         )
 
-    def get_activation_link(self):
+    def get_activation_link(self, **options):
         """
         Returns an activation link for the user
         """
@@ -456,9 +457,10 @@ class NereidUser(ModelSQL, ModelView):
             'nereid.user.activate',
             sign=self._get_sign('activation'),
             active_id=self.id,
+            **options
         )
 
-    def get_reset_password_link(self):
+    def get_reset_password_link(self, **options):
         """
         Returns a password reset link for the user
         """
@@ -466,6 +468,7 @@ class NereidUser(ModelSQL, ModelView):
             'nereid.user.new_password',
             sign=self._get_sign('reset-password'),
             active_id=self.id,
+            **options
         )
 
     def verify_email(self, sign, max_age=24 * 60 * 60):
@@ -490,7 +493,7 @@ class NereidUser(ModelSQL, ModelView):
                 flash(_("Your email has been verified!"))
             else:
                 flash(_("The verification token is invalid!"))
-        return redirect('nereid.website.home')
+        return redirect(url_for('nereid.website.home'))
 
     @staticmethod
     def get_registration_form():
@@ -639,7 +642,7 @@ class NereidUser(ModelSQL, ModelView):
             return redirect(url_for('nereid.website.login'))
 
         return render_template(
-            'new-password.jinja', password_form=form, sign=sign
+            'new-password.jinja', password_form=form, sign=sign, user=self
         )
 
     def activate(self, sign, max_age=24 * 60 * 60):
