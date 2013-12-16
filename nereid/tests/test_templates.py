@@ -99,7 +99,6 @@ class BaseTestCase(NereidTestCase):
             'company': self.company,
             'application_user': USER,
             'default_locale': locale,
-            'locales': [('add', [locale.id])],
             'guest_user': self.guest_user,
             'countries': [('set', self.available_countries)],
         }])
@@ -303,7 +302,7 @@ class TestLazyRendering(BaseTestCase):
             app = self.get_app()
 
             with app.test_client() as c:
-                response = c.get('/en_US/registration')
+                response = c.get('/registration')
                 self.assertEqual(response.status_code, 200)
 
 
