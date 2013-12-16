@@ -84,7 +84,6 @@ class TestAuth(NereidTestCase):
             'company': self.company,
             'application_user': USER,
             'default_locale': locale,
-            'locales': [('add', [locale.id])],
             'guest_user': self.guest_user,
         }])
         self.templates = {
@@ -126,7 +125,7 @@ class TestAuth(NereidTestCase):
             app = self.get_app()
 
             with app.test_client() as c:
-                response = c.get('/en_US/registration')
+                response = c.get('/registration')
                 self.assertEqual(response.status_code, 200)   # GET Request
 
                 data = {
@@ -135,11 +134,11 @@ class TestAuth(NereidTestCase):
                     'password': 'password'
                 }
                 # Post with missing password
-                response = c.post('/en_US/registration', data=data)
+                response = c.post('/registration', data=data)
                 self.assertEqual(response.status_code, 200)  # Form rejected
 
                 data['confirm'] = 'password'
-                response = c.post('/en_US/registration', data=data)
+                response = c.post('/registration', data=data)
                 self.assertEqual(response.status_code, 302)
 
                 self.assertEqual(
@@ -211,7 +210,7 @@ class TestAuth(NereidTestCase):
                     'confirm': 'password',
                 }
                 data['confirm'] = 'password'
-                response = c.post('/en_US/registration', data=data)
+                response = c.post('/registration', data=data)
                 self.assertEqual(response.status_code, 302)
 
                 with Transaction().set_context(active_test=False):
@@ -223,7 +222,7 @@ class TestAuth(NereidTestCase):
                 # Verify the email with invaild code
                 invalid_code = "thisisinvalidcode"
                 response = c.get(
-                    'en_US/verify-email/%s/%s' %
+                    '/verify-email/%s/%s' %
                     (registered_user.id, invalid_code)
                 )
                 self.assertEqual(response.status_code, 302)
@@ -252,7 +251,7 @@ class TestAuth(NereidTestCase):
                     'confirm': 'password',
                 }
                 data['confirm'] = 'password'
-                response = c.post('/en_US/registration', data=data)
+                response = c.post('/registration', data=data)
                 self.assertEqual(response.status_code, 302)
 
                 with Transaction().set_context(active_test=False):
@@ -263,7 +262,7 @@ class TestAuth(NereidTestCase):
 
                 # Login should fail since there is activation code
                 response = c.post(
-                    '/en_US/login',
+                    '/login',
                     data={
                         'email': data['email'],
                         'password': data['password'],
@@ -286,7 +285,7 @@ class TestAuth(NereidTestCase):
 
                 # Login should work
                 response = c.post(
-                    '/en_US/login',
+                    '/login',
                     data={
                         'email': data['email'],
                         'password': data['password'],
@@ -315,11 +314,11 @@ class TestAuth(NereidTestCase):
 
             with app.test_client() as c:
                 # try the page without login
-                response = c.get('/en_US/change-password')
+                response = c.get('/change-password')
                 self.assertEqual(response.status_code, 302)
 
                 # try the post without login
-                response = c.post('/en_US/change-password', data={
+                response = c.post('/change-password', data={
                     'password': data['password'],
                     'confirm': data['password']
                 })
@@ -327,7 +326,7 @@ class TestAuth(NereidTestCase):
 
                 # Login now
                 response = c.post(
-                    '/en_US/login',
+                    '/login',
                     data={
                         'email': data['email'],
                         'password': data['password']
@@ -335,7 +334,7 @@ class TestAuth(NereidTestCase):
                 self.assertEqual(response.status_code, 302)
 
                 # send wrong password confirm
-                response = c.post('/en_US/change-password', data={
+                response = c.post('/change-password', data={
                     'password': 'new-password',
                     'confirm': 'password'
                 })
@@ -343,14 +342,14 @@ class TestAuth(NereidTestCase):
                 self.assertTrue("Passwords must match" in response.data)
 
                 # send correct password confirm but not old password
-                response = c.post('/en_US/change-password', data={
+                response = c.post('/change-password', data={
                     'password': 'new-password',
                     'confirm': 'new-password'
                 })
                 self.assertEqual(response.status_code, 200)
 
                 # send correct password confirm but not old password
-                response = c.post('/en_US/change-password', data={
+                response = c.post('/change-password', data={
                     'old_password': 'passw',
                     'password': 'new-password',
                     'confirm': 'new-password'
@@ -361,17 +360,17 @@ class TestAuth(NereidTestCase):
                     in response.data
                 )
 
-                response = c.post('/en_US/change-password', data={
+                response = c.post('/change-password', data={
                     'old_password': data['password'],
                     'password': 'new-password',
                     'confirm': 'new-password'
                 })
                 self.assertEqual(response.status_code, 302)
-                response = c.get('/en_US')
+                response = c.get('/')
 
                 # Login now using new password
                 response = c.post(
-                    '/en_US/login',
+                    '/login',
                     data={
                         'email': data['email'],
                         'password': 'new-password'
@@ -399,11 +398,11 @@ class TestAuth(NereidTestCase):
             with app.test_client() as c:
 
                 # Try reset without login and page should render
-                response = c.get('/en_US/reset-account')
+                response = c.get('/reset-account')
                 self.assertEqual(response.status_code, 200)
 
                 # Try resetting password through email
-                response = c.post('/en_US/reset-account', data={
+                response = c.post('/reset-account', data={
                     'email': data['email'],
                 })
                 self.assertEqual(response.status_code, 302)
@@ -411,7 +410,7 @@ class TestAuth(NereidTestCase):
                 # A successful login after requesting activation code should
                 # not do anything but just allow login
                 response = c.post(
-                    '/en_US/login',
+                    '/login',
                     data={
                         'email': data['email'],
                         'password': data['password'],
@@ -421,7 +420,7 @@ class TestAuth(NereidTestCase):
 
             with app.test_client() as c:
                 # Try to reset again - with good intentions
-                response = c.post('/en_US/reset-account', data={
+                response = c.post('/reset-account', data={
                     'email': data['email'],
                 })
                 self.assertEqual(response.status_code, 302)
@@ -429,7 +428,7 @@ class TestAuth(NereidTestCase):
                 # Try to reset password with invalid code
                 invalid_code = 'thisistheinvalidcode'
                 response = c.post(
-                    'en_US/new-password/%s/%s' % (regd_user.id, invalid_code),
+                    '/new-password/%s/%s' % (regd_user.id, invalid_code),
                     data={
                         'password': 'reset-password',
                         'confirm': 'reset-password'
@@ -438,7 +437,7 @@ class TestAuth(NereidTestCase):
                 self.assertEqual(response.status_code, 302)
 
                 response = c.post(
-                    '/en_US/login',
+                    '/login',
                     data={
                         'email': data['email'],
                         'password': 'reset-password'
@@ -456,7 +455,7 @@ class TestAuth(NereidTestCase):
                 regd_user = self.nereid_user_obj(regd_user.id)
 
                 response = c.post(
-                    '/en_US/login',
+                    '/login',
                     data={
                         'email': data['email'],
                         'password': 'wrong-password'
@@ -465,7 +464,7 @@ class TestAuth(NereidTestCase):
                 self.assertEqual(response.status_code, 200)     # Login rejected
 
                 response = c.post(
-                    '/en_US/login',
+                    '/login',
                     data={
                         'email': data['email'],
                         'password': 'reset-password'
@@ -477,11 +476,11 @@ class TestAuth(NereidTestCase):
                 # Try to reset again - with bad intentions
 
                 # Bad request because there is no email
-                response = c.post('/en_US/reset-account', data={})
+                response = c.post('/reset-account', data={})
                 self.assertEqual(response.status_code, 400)
 
                 # Bad request because there is empty email
-                response = c.post('/en_US/reset-account', data={'email': ''})
+                response = c.post('/reset-account', data={'email': ''})
                 self.assertEqual(response.status_code, 200)
                 self.assertTrue(
                     'Invalid email address' in response.data
@@ -499,7 +498,7 @@ class TestAuth(NereidTestCase):
                 # Bad request because there is empty email
                 # this is a special case where there is an user
                 # with empty email
-                response = c.post('/en_US/reset-account', data={'email': ''})
+                response = c.post('/reset-account', data={'email': ''})
                 self.assertEqual(response.status_code, 200)
                 self.assertTrue(
                     'Invalid email address' in response.data
@@ -524,23 +523,23 @@ class TestAuth(NereidTestCase):
             self.nereid_user_obj.create([data.copy()])
 
             with app.test_client() as c:
-                response = c.get("/en_US/account")
+                response = c.get("/account")
                 self.assertEqual(response.status_code, 302)
 
                 # Login and check again
                 response = c.post(
-                    '/en_US/login',
+                    '/login',
                     data={'email': data['email'], 'password': data['password']}
                 )
                 self.assertEqual(response.status_code, 302)
 
-                response = c.get("/en_US/account")
+                response = c.get("/account")
                 self.assertEqual(response.status_code, 200)
 
-                response = c.get("/en_US/logout")
+                response = c.get("/logout")
                 self.assertEqual(response.status_code, 302)
 
-                response = c.get("/en_US/account")
+                response = c.get("/account")
                 self.assertEqual(response.status_code, 302)
 
     def test_0060_has_perm(self):
@@ -604,7 +603,7 @@ class TestAuth(NereidTestCase):
             """
 
             with app.test_client() as c:
-                response = c.get('/en_US/')
+                response = c.get('/')
                 self.assertTrue(
                     'http://www.gravatar.com/avatar/' in response.data
                 )
@@ -628,20 +627,20 @@ class TestAuth(NereidTestCase):
             self.nereid_user_obj.create([data.copy()])
 
             with app.test_client() as c:
-                response = c.get('/en_US/me')
+                response = c.get('/me')
                 self.assertEqual(response.status_code, 302)
 
                 # Login and check again
                 response = c.post(
-                    '/en_US/login',
+                    '/login',
                     data={'email': data['email'], 'password': data['password']}
                 )
-                response = c.get('/en_US/me')
+                response = c.get('/me')
                 self.assertEqual(response.data, data['display_name'])
 
                 # Change the display name of the user
                 response = c.post(
-                    '/en_US/me', data={
+                    '/me', data={
                         'display_name': 'Regd User',
                         'timezone': 'UTC',
                         'email': 'cannot@openlabs.co.in',
@@ -649,10 +648,10 @@ class TestAuth(NereidTestCase):
                 )
                 self.assertEqual(response.status_code, 302)
                 self.assertTrue(
-                    '/en_US/me' in response.data
+                    '/me' in response.data
                 )
 
-                response = c.get('/en_US/me')
+                response = c.get('/me')
                 self.assertEqual(response.data, 'Regd User')
 
     def test_0100_has_permission(self):
@@ -739,16 +738,16 @@ class TestAuth(NereidTestCase):
             with app.test_client() as c:
                 # Login and check again
                 response = c.post(
-                    '/en_US/login',
+                    '/login',
                     data={'email': data['email'], 'password': data['password']}
                 )
-                response = c.get('/en_US/me')
+                response = c.get('/me')
                 self.assertEqual(response.data, data['display_name'])
 
                 # Delete the user
                 self.nereid_user_obj.delete([nereid_user])
 
-                response = c.get('/en_US/me')
+                response = c.get('/me')
                 self.assertEqual(response.status_code, 302)
                 print response.data
 

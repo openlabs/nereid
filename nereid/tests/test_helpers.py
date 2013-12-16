@@ -24,7 +24,7 @@ class TestURLfor(BaseTestCase):
             app = self.get_app()
 
             with app.test_request_context('/'):
-                self.assertEqual(url_for('nereid.website.home'), '/en_US/')
+                self.assertEqual(url_for('nereid.website.home'), '/')
 
     def test_0020_external(self):
         """
@@ -37,7 +37,7 @@ class TestURLfor(BaseTestCase):
             with app.test_request_context('/'):
                 self.assertEqual(
                     url_for('nereid.website.home', _external=True),
-                    'http://localhost/en_US/'
+                    'http://localhost/'
                 )
 
     def test_0030_schema(self):
@@ -52,7 +52,7 @@ class TestURLfor(BaseTestCase):
                 self.assertEqual(
                     url_for('nereid.website.home',
                             _external=True, _scheme='https'),
-                    'https://localhost/en_US/'
+                    'https://localhost/'
                 )
 
             with app.test_request_context('/'):
@@ -60,7 +60,7 @@ class TestURLfor(BaseTestCase):
                 with warnings.catch_warnings(record=True) as w:
                     self.assertEqual(
                         url_for('nereid.website.home', _secure=True),
-                        'https://localhost/en_US/'
+                        'https://localhost/'
                     )
                     self.assertEqual(len(w), 1)
 

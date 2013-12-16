@@ -47,7 +47,7 @@ class SignalsTestCase(BaseTestCase):
 
             flask.template_rendered.connect(record, app)
             try:
-                app.test_client().get('/en_US/')
+                app.test_client().get('/')
                 self.assertEqual(len(recorded), 1)
                 template, context = recorded[0]
                 self.assertEqual(template.name, 'home.jinja')
@@ -94,7 +94,7 @@ class SignalsTestCase(BaseTestCase):
             flask.request_finished.connect(after_request_signal, app)
 
             try:
-                rv = app.test_client().get('/en_US/')
+                rv = app.test_client().get('/')
                 self.assertEqual(rv.data, b'stuff')
 
                 self.assertEqual(calls, ['before-signal', 'before-handler',
@@ -129,7 +129,7 @@ class SignalsTestCase(BaseTestCase):
             flask.got_request_exception.connect(record, app)
             try:
                 self.assertEqual(
-                    app.test_client().get('/en_US/').status_code, 500
+                    app.test_client().get('/').status_code, 500
                 )
                 self.assertEqual(len(recorded), 1)
                 assert isinstance(recorded[0], ZeroDivisionError)
@@ -156,7 +156,7 @@ class SignalsTestCase(BaseTestCase):
             flask.appcontext_popped.connect(record_pop, app)
             try:
                 with app.test_client() as c:
-                    rv = c.get('/en_US/')
+                    rv = c.get('/')
                     self.assertEqual(rv.data, b'Hello')
                     self.assertEqual(recorded, ['push'])
                 self.assertEqual(recorded, ['push', 'pop'])
@@ -193,7 +193,7 @@ class SignalsTestCase(BaseTestCase):
             try:
                 client = app.test_client()
                 with client.session_transaction():
-                    client.get('/en_US/')
+                    client.get('/')
                     self.assertEqual(len(recorded), 1)
                     message, category = recorded[0]
                     self.assertEqual(message, 'This is a flash message')
