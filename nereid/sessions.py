@@ -4,7 +4,7 @@ from datetime import datetime  # noqa
 
 from flask.sessions import SessionInterface, SessionMixin
 from werkzeug.contrib.sessions import Session as SessionBase, SessionStore
-
+from trytond.transaction import Transaction
 from flask.globals import current_app
 
 
@@ -82,9 +82,11 @@ class NereidSessionInterface(SessionInterface):
 
         :param request: an instance of :attr:`request_class`.
         """
-        sid = request.cookies.get(request.nereid_website.name, None)
-        if sid:
-            return self.session_store.get(sid)
+        if Transaction().cursor and request.nereid_website and \
+                request.cookies.get(request.nereid_website.name, None):
+            return self.session_store.get(
+                request.cookies.get(request.nereid_website.name, None)
+            )
         else:
             return self.session_store.new()
 

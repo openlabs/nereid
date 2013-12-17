@@ -7,25 +7,18 @@ from .helpers import url_for
 from .globals import current_app, session
 
 
-def _get_website_name(host):
-    """
-    The host could have the host_name and port number. This will try
-    to get the best possible guess of the website name from the host name
-    """
-    #XXX: Needs improvement
-    return host.split(':')[0]
-
-
 class Request(RequestBase):
     "Request Object"
 
     @cached_property
     def nereid_website(self):
         """Fetch the Browse Record of current website."""
+        if self.url_rule is None:
+            return None
+        if self.url_rule.host is None:
+            return None
         Website = current_app.pool.get('nereid.website')
-        return Website.search([
-            ('name', '=', _get_website_name(self.host))]
-        )[0]
+        return Website.search([('name', '=', self.url_rule.host)])[0]
 
     @cached_property
     def nereid_user(self):
