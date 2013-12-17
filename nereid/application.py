@@ -11,7 +11,7 @@ from flask.config import ConfigAttribute
 from flask.globals import _request_ctx_stack
 from flask.helpers import locked_cached_property
 from jinja2 import MemcachedBytecodeCache
-from werkzeug.routing import Map, Submount, Rule
+from werkzeug.routing import Submount, Map
 from werkzeug import import_string
 
 from .wrappers import Request, Response
@@ -19,7 +19,9 @@ from .backend import TransactionManager
 from .session import NereidSessionInterface
 from .templating import nereid_default_template_ctx_processor, \
     NEREID_TEMPLATE_FILTERS, ModuleTemplateLoader, LazyRenderer
-from .helpers import get_website_from_host, url_for
+from .helpers import url_for
+from .ctx import RequestContext
+from .exceptions import WebsiteNotFound
 
 
 class Nereid(Flask):
@@ -128,6 +130,10 @@ class Nereid(Flask):
         The import_name is forced into `Nereid`
         """
         super(Nereid, self).__init__('nereid', **config)
+
+        # Create the Map again because we do not want the static URL that
+        # flask creates which is website agnostic.
+        self.url_map = Map()
 
         # Update the defaults for config attributes introduced by nereid
         self.config.update({
@@ -246,29 +252,6 @@ class Nereid(Flask):
         """
         return self._database
 
-    def transaction(self, http_host):
-        """
-        Allows the use of the transaction as a context manager.
-        The transaction created loads the user from the known websites
-        which is identified through the http_host
-        """
-        website_name = get_website_from_host(http_host)
-        try:
-            website = self.websites[website_name]
-        except KeyError:
-            raise RuntimeError(
-                "Error in parsing host name or unknown website\n" +
-                "HTTP_HOST: %s\n" % http_host +
-                "Parsed Website Name: %s" % website_name
-            )
-        else:
-            context = {
-                'company': website['company'],
-            }
-            return TransactionManager(
-                self.database_name, website['application_user'], context
-            )
-
     @property
     def root_transaction(self):
         """
@@ -303,67 +286,51 @@ class Nereid(Flask):
         in database for quick connection to the website
         """
         Website = self.pool.get("nereid.website")
-        URLMap = self.pool.get('nereid.url_map')
 
-        #master_url_map = Map(host_matching=True)
-
-        #for website in Website.search([]):
-        #    for url_kwargs in website.url_map.get_rules_arguments():
-        #        url_kwargs['host'] = website.name
-        #        rule = self.url_rule_class(
-        #           url_kwargs.pop('rule'), **url_kwargs
-        #        )
-        #        rule.provide_automatic_options = True
-        #        master_url_map.add(rule)   # Add rule to map
-        #        if (not url_kwargs['build_only']) \
-        #                and not(url_kwargs['redirect_to']):
-                    # Add the method to the view_functions list if the
-                    # endpoint was not a build_only url
-        #            self.view_functions[url_kwargs['endpoint']] =
-        #               self.get_method(url_kwargs['endpoint'])
-
-        url_map_rules = {}
-        # Load all url maps first because many websites might reuse the same
-        # URL map and it might be faster to load them just once
-        for url_map in URLMap.search([]):
-
-            rules = []
+        for website in Website.search([]):
+            url_rules = []
 
             # Add the static url
-            rules.append(
+            url_rules.append(
                 self.url_rule_class(
                     self.static_url_path + '/<path:filename>',
-                    endpoint='static'
+                    endpoint='static',
+                    host=website.name,
                 )
             )
 
-            for url in url_map.get_rules_arguments():
-                rule = self.url_rule_class(url.pop('rule'), **url)
+            for url_kwargs in website.url_map.get_rules_arguments():
+                rule = self.url_rule_class(
+                    url_kwargs.pop('rule'),
+                    host=website.name,
+                    **url_kwargs
+                )
                 rule.provide_automatic_options = True
-                rules.append(rule)   # Add rule to map
-
-                if (not url['build_only']) and not(url['redirect_to']):
+                url_rules.append(rule)   # Add rule to map
+                if (not url_kwargs['build_only']) \
+                        and not(url_kwargs['redirect_to']):
                     # Add the method to the view_functions list if the
                     # endpoint was not a build_only url
-                    self.view_functions[url['endpoint']] = self.get_method(
-                        url['endpoint']
-                    )
-            url_map_rules[url_map.id] = rules
+                    self.view_functions[url_kwargs['endpoint']] = \
+                        self.get_method(url_kwargs['endpoint'])
 
-        for website in Website.search([]):
             if website.locales:
                 # Create the URL map with locale prefix
-                url_map = Map([
-                    Rule('/', redirect_to='/%s' % website.default_locale.code),
-                    Submount('/<locale>', url_map_rules[website.url_map.id])
-                ])
+                self.url_map.add(
+                    self.url_rule_class(
+                        '/',
+                        redirect_to='/%s' % website.default_locale.code,
+                        host=website.name
+                    ),
+                )
+                self.url_map.add(Submount('/<locale>', url_rules))
             else:
                 # Create a new map with the given URLs
-                url_map = Map(url_map_rules[website.url_map.id])
+                map(self.url_map.add, url_rules)
 
             self.websites[website.name] = {
                 'id': website.id,
-                'url_map': url_map,
+                'name': website.name,
                 'application_user': website.application_user.id,
                 'guest_user': website.guest_user.id,
                 'company': website.company.id,
@@ -386,63 +353,49 @@ class Nereid(Flask):
             )
         self.template_context_processors.update(db_ctx_processors)
 
-    def wsgi_app(self, environ, start_response):
+    def request_context(self, environ):
+        return RequestContext(self, environ)
+
+    def full_dispatch_request(self):
         """
-        The actual WSGI application.  This is not implemented in
-        `__call__` so that middlewares can be applied without losing a
-        reference to the class.  So instead of doing this::
-
-            app = MyMiddleware(app)
-
-        It's a better idea to do this instead::
-
-            app.wsgi_app = MyMiddleware(app.wsgi_app)
-
-        Then you still have the original application object around and
-        can continue to call methods on it.
-
-        In Nereid the transaction is introduced after the request_context
-        is loaded.
-
-        :param environ: a WSGI environment
-        :param start_response: a callable accepting a status code,
-                               a list of headers and an optional
-                               exception context to start the response
+        Ensure that the full_dispatch_request is handled around a transaction
         """
-        if not self.initialised:
-            self.initialise()
+        from trytond.transaction import Transaction
+        from trytond.pool import Pool
 
-        with self.transaction(environ['HTTP_HOST']) as txn:
-            with self.request_context(environ):
-                try:
-                    response = self.full_dispatch_request()
-                    txn.cursor.commit()
-                except Exception, e:
-                    response = self.make_response(self.handle_exception(e))
-                    txn.cursor.rollback()
-                return response(environ, start_response)
+        req = _request_ctx_stack.top.request
+        if req.routing_exception is not None:
+            self.raise_routing_exception(req)
 
-    def create_url_adapter(self, request):
-        """
-        Return the URL adapter for the website instead of the standard
-        operation of just binding the environ to the url_map
-        """
-        if request is None:
-            # When the application context is prepared the value of request is
-            # None
-            return
+        try:
+            with Transaction().start(
+                self.database_name, 0, readonly=True
+            ):
+                # TODO: Make finding website faster by using a cache ?
+                Website = Pool().get('nereid.website')
+                website, = Website.search([('name', '=', req.url_rule.host)])
+                # Construct a dictionary since Active records are not
+                # usable outside the transaction
+                website = {
+                    'id': website.id,
+                    'application_user': website.application_user.id,
+                    'company': website.company.id,
+                }
+        except ValueError:
+            raise WebsiteNotFound()
 
-        website = get_website_from_host(request.environ['HTTP_HOST'])
-        if request is not None:
-            return self.websites[website]['url_map'].bind_to_environ(
-                request.environ, server_name=self.config['SERVER_NAME']
-            )
-        if self.config['SERVER_NAME'] is not None:
-            return self.websites[website]['url_map'].bind(
-                self.CONFIG['SERVER_NAME'],
-                script_name=self.config['APPLICATION_ROOT'] or '/',
-                url_SCHEME=self.config['PREFERRED_URL_SCHEME']
-            )
+        with Transaction().start(
+                self.database_name,
+                website['application_user'],
+                context={'company': website['company']}) as txn:
+            try:
+                rv = super(Nereid, self).full_dispatch_request()
+                txn.cursor.commit()
+            except Exception:
+                txn.cursor.rollback()
+                raise
+            else:
+                return rv
 
     def dispatch_request(self):
         """
@@ -464,8 +417,13 @@ class Nereid(Flask):
            and req.method == 'OPTIONS':
             return self.make_default_options_response()
 
-        with Transaction().set_context(
-                language=req.nereid_locale.language.code):
+        language = 'en_US'
+        if req.nereid_website:
+            # If this is a request specific to a website
+            # then take the locale from the website
+            language = req.nereid_locale.language.code
+
+        with Transaction().set_context(language=language):
 
             # pop locale if specified in the view_args
             req.view_args.pop('locale', None)
