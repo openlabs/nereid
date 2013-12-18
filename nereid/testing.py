@@ -9,6 +9,7 @@ from nereid.contrib.locale import Babel
 from werkzeug.contrib.sessions import FilesystemSessionStore
 
 from nereid import Nereid
+from flask import Flask
 
 
 class NereidTestApp(Nereid):
@@ -16,6 +17,7 @@ class NereidTestApp(Nereid):
     A Nereid app which works by removing transaction handling around the wsgi
     app
     """
+
     @property
     def root_transaction(self):
         """
@@ -35,38 +37,11 @@ class NereidTestApp(Nereid):
         self._database = DB
         self._pool = POOL
 
-    def wsgi_app(self, environ, start_response):
+    def full_dispatch_request(self):
         """
-        The actual WSGI application.  This is not implemented in
-        `__call__` so that middlewares can be applied without losing a
-        reference to the class.  So instead of doing this::
-
-            app = MyMiddleware(app)
-
-        It's a better idea to do this instead::
-
-            app.wsgi_app = MyMiddleware(app.wsgi_app)
-
-        Then you still have the original application object around and
-        can continue to call methods on it.
-
-        In Nereid the transaction is introduced after the request_context
-        is loaded.
-
-        :param environ: a WSGI environment
-        :param start_response: a callable accepting a status code,
-                               a list of headers and an optional
-                               exception context to start the response
+        Skip the transaction handling and call the full_dispatch_request
         """
-        if not self.initialised:
-            self.initialise()
-
-        with self.request_context(environ):
-            try:
-                response = self.full_dispatch_request()
-            except Exception, e:
-                response = self.make_response(self.handle_exception(e))
-            return response(environ, start_response)
+        return Flask.full_dispatch_request(self)
 
 
 class NereidTestCase(unittest.TestCase):
