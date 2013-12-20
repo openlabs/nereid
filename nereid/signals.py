@@ -20,3 +20,7 @@ logout = _signals.signal('logout')
 #: Registration
 #: Triggered when a user registers
 registration = _signals.signal('registration')
+
+
+transaction_start = _signals.signal('nereid.transaction.start')
+transaction_stop = _signals.signal('nereid.transaction.stop')

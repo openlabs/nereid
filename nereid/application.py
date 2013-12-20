@@ -22,6 +22,7 @@ from .templating import nereid_default_template_ctx_processor, \
 from .helpers import url_for
 from .ctx import RequestContext
 from .exceptions import WebsiteNotFound
+from .signals import transaction_start, transaction_stop
 
 
 class Nereid(Flask):
@@ -258,6 +259,9 @@ class Nereid(Flask):
         Allows the use of the transaction as a context manager with the
         root user.
 
+        This is separately maintained so that the testing module can nullify
+        the effect by an empty decorator.
+
         .. versionadded::0.3
         """
         return TransactionManager(self.database_name, 0, None)
@@ -356,46 +360,33 @@ class Nereid(Flask):
     def request_context(self, environ):
         return RequestContext(self, environ)
 
-    def full_dispatch_request(self):
+    def get_website_from_request(self, req):
         """
-        Ensure that the full_dispatch_request is handled around a transaction
+        Return a dictionary with the website specific details identified from
+        the request.
+
+        :param req: Request object for the current request
         """
         from trytond.transaction import Transaction
         from trytond.pool import Pool
 
-        req = _request_ctx_stack.top.request
-        if req.routing_exception is not None:
-            self.raise_routing_exception(req)
-
-        try:
-            with Transaction().start(
-                self.database_name, 0, readonly=True
-            ):
-                # TODO: Make finding website faster by using a cache ?
-                Website = Pool().get('nereid.website')
-                website, = Website.search([('name', '=', req.url_rule.host)])
+        with Transaction().start(self.database_name, 0, readonly=True):
+            # TODO: Make finding website faster by using a cache ?
+            Website = Pool().get('nereid.website')
+            try:
+                website, = Website.search([
+                    ('name', '=', req.url_rule.host)
+                ])
+            except ValueError:
+                raise WebsiteNotFound()
+            else:
                 # Construct a dictionary since Active records are not
                 # usable outside the transaction
-                website = {
+                return {
                     'id': website.id,
                     'application_user': website.application_user.id,
                     'company': website.company.id,
                 }
-        except ValueError:
-            raise WebsiteNotFound()
-
-        with Transaction().start(
-                self.database_name,
-                website['application_user'],
-                context={'company': website['company']}) as txn:
-            try:
-                rv = super(Nereid, self).full_dispatch_request()
-                txn.cursor.commit()
-            except Exception:
-                txn.cursor.rollback()
-                raise
-            else:
-                return rv
 
     def dispatch_request(self):
         """
@@ -403,8 +394,11 @@ class Nereid(Flask):
         return value of the view or error handler.  This does not have to
         be a response object.
         """
-        from trytond.pool import Pool
         from trytond.transaction import Transaction
+        from trytond.config import CONFIG
+        from trytond import backend
+
+        DatabaseOperationalError = backend.get('DatabaseOperationalError')
 
         req = _request_ctx_stack.top.request
         if req.routing_exception is not None:
@@ -416,6 +410,41 @@ class Nereid(Flask):
         if getattr(rule, 'provide_automatic_options', False) \
            and req.method == 'OPTIONS':
             return self.make_default_options_response()
+
+        website = self.get_website_from_request(req)
+
+        for count in range(int(CONFIG['retry']), -1, -1):
+            with Transaction().start(
+                    self.database_name,
+                    website['application_user'],
+                    context={'company': website['company']}) as txn:
+                try:
+                    transaction_start.send(self)
+                    rv = self._dispatch_request(req)
+                    txn.cursor.commit()
+                except DatabaseOperationalError:
+                    # Strict transaction handling may cause this.
+                    # Rollback and Retry the whole transaction if within
+                    # max retries, or raise exception and quit.
+                    txn.cursor.rollback()
+                    if count:
+                        continue
+                    raise
+                except Exception:
+                    # Rollback and raise any other exception
+                    txn.cursor.rollback()
+                    raise
+                else:
+                    return rv
+                finally:
+                    transaction_stop.send(self)
+
+    def _dispatch_request(self, req):
+        """
+        Implement the nereid specific _dispatch
+        """
+        from trytond.pool import Pool
+        from trytond.transaction import Transaction
 
         language = 'en_US'
         if req.nereid_website:
@@ -429,14 +458,14 @@ class Nereid(Flask):
             req.view_args.pop('locale', None)
 
             # otherwise dispatch to the handler for that endpoint
-            meth = self.view_functions[rule.endpoint]
+            meth = self.view_functions[req.url_rule.endpoint]
             if not hasattr(meth, 'im_self') or meth.im_self:
                 # static or class method
                 result = meth(**req.view_args)
             else:
                 # instance method, extract active_id from the url
                 # arguments and pass the model instance as first argument
-                model = Pool().get(rule.endpoint.rsplit('.', 1)[0])
+                model = Pool().get(req.url_rule.endpoint.rsplit('.', 1)[0])
                 i = model(req.view_args.pop('active_id'))
                 result = meth(i, **req.view_args)
 
