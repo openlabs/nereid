@@ -9,7 +9,7 @@ from nereid.contrib.locale import Babel
 from werkzeug.contrib.sessions import FilesystemSessionStore
 
 from nereid import Nereid
-from flask import Flask
+from flask.globals import _request_ctx_stack
 
 
 class NereidTestApp(Nereid):
@@ -37,11 +37,22 @@ class NereidTestApp(Nereid):
         self._database = DB
         self._pool = POOL
 
-    def full_dispatch_request(self):
+    def dispatch_request(self):
         """
-        Skip the transaction handling and call the full_dispatch_request
+        Skip the transaction handling and call the _dispatch_request
         """
-        return Flask.full_dispatch_request(self)
+        req = _request_ctx_stack.top.request
+        if req.routing_exception is not None:
+            self.raise_routing_exception(req)
+
+        rule = req.url_rule
+        # if we provide automatic options for this URL and the
+        # request came with the OPTIONS method, reply automatically
+        if getattr(rule, 'provide_automatic_options', False) \
+           and req.method == 'OPTIONS':
+            return self.make_default_options_response()
+
+        return self._dispatch_request(req)
 
 
 class NereidTestCase(unittest.TestCase):
