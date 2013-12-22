@@ -227,3 +227,14 @@ class TranslationSet:
                         })
         if to_create:
             Translation.create(to_create)
+
+
+class TranslationUpdate:
+    __name__ = "ir.translation.update"
+
+    @classmethod
+    def __setup__(cls):
+        super(TranslationUpdate, cls).__setup__()
+        for value in ['nereid_template', 'nereid']:
+            if not value in cls._src_types:
+                cls._src_types.append(value)
