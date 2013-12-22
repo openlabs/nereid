@@ -10,6 +10,7 @@ from .static_file import NereidStaticFolder, NereidStaticFile
 from .currency import Currency
 from .template import ContextProcessors
 from .configuration import NereidConfigStart, NereidConfig
+from .i18n import Translation, TranslationSet
 
 
 def register():
@@ -33,9 +34,11 @@ def register():
         Currency,
         ContextProcessors,
         NereidConfigStart,
+        Translation,
         module='nereid', type_='model'
     )
     Pool.register(
         NereidConfig,
+        TranslationSet,
         module='nereid', type_='wizard'
     )
