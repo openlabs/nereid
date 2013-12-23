@@ -43,6 +43,7 @@
     <record model="ir.action.act_window" id="action_nereid_user_view">
         <field name="name">Nereid User</field>
         <field name="res_model">nereid.user</field>
+        <field name="context">{'active_test': False}</field>
     </record>
     <record model="ir.action.act_window.view" id="act_nereid_user_view1">
         <field name="sequence" eval="10" />
@@ -53,6 +54,18 @@
         <field name="sequence" eval="20" />
         <field name="view" ref="nereid_user_form2" />
         <field name="act_window" ref="action_nereid_user_view" />
+    </record>
+    <record model="ir.action.act_window.domain" id="action_nereid_user_view_domain_active">
+        <field name="name">Active</field>
+        <field name="sequence" eval="10"/>
+        <field name="domain">[('active', '=', True)]</field>
+        <field name="act_window" ref="action_nereid_user_view"/>
+    </record>
+    <record model="ir.action.act_window.domain" id="action_nereid_user_view_domain_disabled">
+        <field name="name">Disabled</field>
+        <field name="sequence" eval="10"/>
+        <field name="domain">[('active', '=', False)]</field>
+        <field name="act_window" ref="action_nereid_user_view"/>
     </record>
 
     <menuitem id="menu_nereid_user"

@@ -18,6 +18,7 @@ from werkzeug import redirect, abort
 
 from nereid import request, url_for, render_template, login_required, flash, \
     jsonify
+from nereid.ctx import has_request_context
 from nereid.globals import session, current_app
 from nereid.signals import registration
 from nereid.templating import render_email
@@ -29,6 +30,8 @@ from trytond.config import CONFIG
 from trytond.tools import get_smtp_server
 from trytond import backend
 from sql import As, Literal, Column
+from itsdangerous import URLSafeSerializer, TimestampSigner, SignatureExpired, \
+    BadSignature
 
 from .i18n import _, get_translations
 
@@ -316,10 +319,6 @@ class NereidUser(ModelSQL, ModelView):
     #: stored. Needed for
     salt = fields.Char('Salt', size=8)
 
-    #: A unique activation code required to match the user's request
-    #: for activation of the account.
-    activation_code = fields.Char('Unique Activation Code')
-
     # The company of the website(s) to which the user is affiliated. This
     # allows websites of the same company to share authentication/users. It
     # does not make business or technical sense to have website of multiple
@@ -337,6 +336,44 @@ class NereidUser(ModelSQL, ModelView):
         'nereid.permission-nereid.user',
         'nereid_user', 'permission', 'Permissions'
     )
+
+    email_verified = fields.Boolean("Email Verified")
+    active = fields.Boolean('Active')
+
+    @staticmethod
+    def default_email_verified():
+        return False
+
+    @staticmethod
+    def default_active():
+        """
+        If the user gets created from the web the activation should happen
+        through the activation link. However, users created from tryton
+        interface are activated by default
+        """
+        if has_request_context():
+            return False
+        return True
+
+    @classmethod
+    def __register__(cls, module_name):
+        TableHandler = backend.get("TableHandler")
+        table = TableHandler(Transaction().cursor, cls, module_name)
+        user = cls.__table__()
+
+        super(NereidUser, cls).__register__(module_name)
+
+        # Migrations
+        if table.column_exist('activation_code'):
+            # Migration for activation_code field
+            # Set the email_verification and active based on activation code
+            user.update(
+                columns=[user.active, user.email_verified],
+                values=[True, True],
+                where=(user.activation_code == None)
+            )
+            # Finally drop the column
+            table.drop_column('activation_code', exception=True)
 
     def get_permissions(self):
         """
@@ -386,20 +423,77 @@ class NereidUser(ModelSQL, ModelView):
                 'Email must be unique in a company'),
         ]
 
-    def _activate(self, activation_code):
-        """
-        Activate the User account
+    @property
+    def _signer(self):
+        return TimestampSigner(current_app.secret_key)
 
-        .. note::
-            This method will raise an assertion error if the activation_code is
-            not valid.
+    @property
+    def _serializer(self):
+        return URLSafeSerializer(current_app.secret_key)
 
-        :param activation_code: The activation code used
-        :return: True if the activation code was correct
+    def _get_sign(self, salt):
         """
-        assert self.activation_code == activation_code, \
-            'Invalid Activation Code'
-        return self.write([self], {'activation_code': None})
+        Returns a timestampsigned, url_serialized sign  with a salt
+        'verification'.
+        """
+        return self._signer.sign(self._serializer.dumps(self.id, salt=salt))
+
+    def get_email_verification_link(self, **options):
+        """
+        Returns an email verification link for the user
+        """
+        return url_for(
+            'nereid.user.verify_email',
+            sign=self._get_sign('verification'),
+            active_id=self.id,
+            **options
+        )
+
+    def get_activation_link(self, **options):
+        """
+        Returns an activation link for the user
+        """
+        return url_for(
+            'nereid.user.activate',
+            sign=self._get_sign('activation'),
+            active_id=self.id,
+            **options
+        )
+
+    def get_reset_password_link(self, **options):
+        """
+        Returns a password reset link for the user
+        """
+        return url_for(
+            'nereid.user.new_password',
+            sign=self._get_sign('reset-password'),
+            active_id=self.id,
+            **options
+        )
+
+    def verify_email(self, sign, max_age=24 * 60 * 60):
+        """
+        Verifies the email and redirects to home page. This is a method in
+        addition to the activate method which activates the account in addition
+        to verifying the email.
+        """
+        try:
+            unsigned = self._serializer.loads(
+                self._signer.unsign(sign, max_age=max_age),
+                salt='verification'
+            )
+        except SignatureExpired:
+            flash(_("The verification link has expired"))
+        except BadSignature:
+            flash(_("The verification token is invalid!"))
+        else:
+            if self.id == unsigned:
+                self.email_verified = True
+                self.save()
+                flash(_("Your email has been verified!"))
+            else:
+                flash(_("The verification token is invalid!"))
+        return redirect(url_for('nereid.website.home'))
 
     @staticmethod
     def get_registration_form():
@@ -456,7 +550,6 @@ class NereidUser(ModelSQL, ModelView):
                 }
                 )
                 nereid_user.save()
-                nereid_user.create_act_code()
                 registration.send(nereid_user)
                 nereid_user.send_activation_email()
                 flash(
@@ -517,85 +610,70 @@ class NereidUser(ModelSQL, ModelView):
             'change-password.jinja', change_password_form=form
         )
 
-    @classmethod
-    @login_required
-    def new_password(cls):
+    def new_password(self, sign, max_age=24 * 60 * 60):
         """Create a new password
 
-        .. tip::
-
-            Unlike change password this does not demand the old password.
-            And hence this method will check in the session for a parameter
-            called allow_new_password which has to be True. This acts as a
-            security against attempts to POST to this method and changing
-            password.
-
-            The allow_new_password flag is popped on successful saving
-
         This is intended to be used when a user requests for a password reset.
+        The link sent out to reset the password will be a timestamped sign
+        which is validated for max_age before allowing the user to set the
+        new password.
         """
         form = NewPasswordForm(request.form)
 
         if request.method == 'POST' and form.validate():
-            if not session.get('allow_new_password', False):
-                current_app.logger.debug('New password not allowed in session')
-                abort(403)
+            try:
+                unsigned = self._serializer.loads(
+                    self._signer.unsign(sign, max_age=max_age),
+                    salt='reset-password'
+                )
+            except SignatureExpired:
+                flash(_("The password reset link has expired"))
+            except BadSignature:
+                flash(_('Invalid reset password code'))
+            else:
+                if not self.id == unsigned:
+                    current_app.logger.debug('Invalid reset password code')
+                    abort(403)
 
-            cls.write(
-                [request.nereid_user],
-                {'password': form.password.data}
-            )
-            session.pop('allow_new_password')
-            flash(_(
-                'Your password has been successfully changed! '
-                'Please login again'))
-            session.pop('user')
+                self.write([self], {'password': form.password.data})
+                flash(_(
+                    'Your password has been successfully changed! '
+                    'Please login again'))
             return redirect(url_for('nereid.website.login'))
 
-        return render_template('new-password.jinja', password_form=form)
+        return render_template(
+            'new-password.jinja', password_form=form, sign=sign, user=self
+        )
 
-    def activate(self, activation_code):
-        """A web request handler for activation
+    def activate(self, sign, max_age=24 * 60 * 60):
+        """A web request handler for activation of the user account. This
+        method verifies the email and if it succeeds, activates the account.
 
-        :param activation_code: A 12 character activation code indicates reset
-            while 16 character activation code indicates a new registration
+        If your workflow requires a manual approval of every account, override
+        this to not activate an account, or make a no op out of this method.
+
+        If all what you require is verification of email, `verify_email` method
+        could be used.
         """
         try:
-            self._activate(activation_code)
-        except AssertionError:
-            flash(_('Invalid Activation Code'))
+            unsigned = self._serializer.loads(
+                self._signer.unsign(sign, max_age=max_age),
+                salt='activation'
+            )
+        except SignatureExpired:
+            flash(_("The activation link has expired"))
+        except BadSignature:
+            flash(_("The activation token is invalid!"))
         else:
-            # Log the user in since the activation code is correct
-            session['user'] = self.id
-
-            # Redirect the user to the correct location according to the type
-            # of activation code.
-            if len(activation_code) == 12:
-                session['allow_new_password'] = True
-                return redirect(url_for('nereid.user.new_password'))
-            elif len(activation_code) == 16:
-                flash(_('Your account has been activated'))
-                return redirect(url_for('nereid.website.home'))
+            if self.id == unsigned:
+                self.active = True
+                self.email_verified = True
+                self.save()
+                flash(_('Your account has been activated. Please login now.'))
+            else:
+                flash(_('Invalid Activation Code'))
 
         return redirect(url_for('nereid.website.login'))
-
-    def create_act_code(self, code_type="new"):
-        """Create activation code
-
-        A 12 character activation code indicates reset while 16
-        character activation code indicates a new registration
-
-        :param user_id: ID of the User
-        :param code_type:   "new" for new activation code
-                            "reset" for resetting existing account
-        """
-        assert code_type in ("new", "reset")
-        length = 16 if code_type == "new" else 12
-
-        act_code = ''.join(
-            random.sample(string.letters + string.digits, length)
-        )
-        return self.write([self], {'activation_code': act_code})
 
     @classmethod
     def reset_account(cls):
@@ -620,8 +698,6 @@ class NereidUser(ModelSQL, ModelView):
                 return render_template('reset-password.jinja')
 
             nereid_user, = user_ids
-
-            nereid_user.create_act_code("reset")
             nereid_user.send_reset_email()
             flash(_('An email has been sent to your account for resetting'
                     ' your credentials'))
@@ -676,10 +752,11 @@ class NereidUser(ModelSQL, ModelView):
             False: Account is inactive
         """
 
-        users = cls.search([
-            ('email', '=', request.form['email']),
-            ('company', '=', request.nereid_website.company.id),
-        ])
+        with Transaction().set_context(active_test=False):
+            users = cls.search([
+                ('email', '=', request.form['email']),
+                ('company', '=', request.nereid_website.company.id),
+            ])
 
         if not users:
             current_app.logger.debug("No user with email %s" % email)
@@ -690,17 +767,13 @@ class NereidUser(ModelSQL, ModelView):
             return None
 
         user, = users
-        if user.activation_code and len(user.activation_code) == 16:
+        if not user.active:
             # A new account with activation pending
             current_app.logger.debug('%s not activated' % email)
             flash(_("Your account has not been activated yet!"))
             return False  # False so to avoid `invalid credentials` flash
 
         if user.match_password(password):
-            # Reset any reset activation code that might be there since its a
-            # successful login with the old password
-            if user.activation_code:
-                cls.write([user], {'activation_code': None})
             return user
 
         return None

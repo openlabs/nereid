@@ -99,7 +99,6 @@ class BaseTestCase(NereidTestCase):
             'company': self.company,
             'application_user': USER,
             'default_locale': locale,
-            'locales': [('add', [locale.id])],
             'guest_user': self.guest_user,
             'countries': [('set', self.available_countries)],
         }])
@@ -110,6 +109,8 @@ class BaseTestCase(NereidTestCase):
                 os.path.join(os.path.dirname(__file__), 'templates')
             )
         )
+        if 'SECRET_KEY' not in options:
+            options['SECRET_KEY'] = 'secret-key'
         app.config['TEMPLATE_PREFIX_WEBSITE_NAME'] = False
         app.config.update(options)
         app.config['DATABASE_NAME'] = DB_NAME
@@ -301,7 +302,7 @@ class TestLazyRendering(BaseTestCase):
             app = self.get_app()
 
             with app.test_client() as c:
-                response = c.get('/en_US/registration')
+                response = c.get('/registration')
                 self.assertEqual(response.status_code, 200)
 
 

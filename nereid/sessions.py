@@ -4,7 +4,6 @@ from datetime import datetime  # noqa
 
 from flask.sessions import SessionInterface, SessionMixin
 from werkzeug.contrib.sessions import Session as SessionBase, SessionStore
-
 from flask.globals import current_app
 
 
@@ -82,7 +81,7 @@ class NereidSessionInterface(SessionInterface):
 
         :param request: an instance of :attr:`request_class`.
         """
-        sid = request.cookies.get(request.nereid_website.name, None)
+        sid = request.cookies.get(app.session_cookie_name, None)
         if sid:
             return self.session_store.get(sid)
         else:
@@ -108,6 +107,6 @@ class NereidSessionInterface(SessionInterface):
                 # only reason why a cookie should be set again is if that
                 # has changed
                 response.set_cookie(
-                    request.nereid_website.name, session.sid,
+                    app.session_cookie_name, session.sid,
                     expires=expires, httponly=False, domain=domain
                 )

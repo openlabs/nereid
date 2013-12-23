@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<form string="Create Nereid Website" col="2">
+    <image name="tryton-dialog-information" xexpand="0" xfill="0"/>
+    <label string="You can now add nereid website into the system." id="add"
+        yalign="0.0" xalign="0.0" xexpand="1"/>
+</form>
