@@ -81,12 +81,9 @@ class NereidSessionInterface(SessionInterface):
 
         :param request: an instance of :attr:`request_class`.
         """
-        from trytond.transaction import Transaction
-        if Transaction().cursor and request.nereid_website and \
-                request.cookies.get(request.nereid_website.name, None):
-            return self.session_store.get(
-                request.cookies.get(request.nereid_website.name, None)
-            )
+        sid = request.cookies.get(app.session_cookie_name, None)
+        if sid:
+            return self.session_store.get(sid)
         else:
             return self.session_store.new()
 
@@ -110,6 +107,6 @@ class NereidSessionInterface(SessionInterface):
                 # only reason why a cookie should be set again is if that
                 # has changed
                 response.set_cookie(
-                    request.nereid_website.name, session.sid,
+                    app.session_cookie_name, session.sid,
                     expires=expires, httponly=False, domain=domain
                 )
