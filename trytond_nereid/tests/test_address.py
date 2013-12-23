@@ -329,7 +329,10 @@ class TestAddress(NereidTestCase):
             app = self.get_app()
 
             # Set in :meth:`setup_defaults`
-            country = self.available_countries[1]
+            countries = filter(
+                lambda c: c.subdivisions, self.available_countries
+            )
+            country = countries[0]
 
             with app.test_client() as c:
                 response = c.get('/en_US/subdivisions?country=%d' % country)
