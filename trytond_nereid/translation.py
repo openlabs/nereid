@@ -275,11 +275,11 @@ class TranslationSet:
                 # and from it lookup the directory. From here, its just
                 # another searchpath for the loader.
                 f = file_open(os.path.join(package.name, 'tryton.cfg'))
-                template_dir = os.path.dirname(f.name)
+                module_dir = os.path.dirname(f.name)
             else:
-                template_dir = os.path.join(MODULES_PATH, package.name)
+                module_dir = os.path.join(MODULES_PATH, package.name)
 
-            yield package.name, template_dir
+            yield package.name, module_dir
 
     @classmethod
     def _get_nereid_template_messages(cls):
