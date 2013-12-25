@@ -10,7 +10,8 @@ from .static_file import NereidStaticFolder, NereidStaticFile
 from .currency import Currency
 from .template import ContextProcessors
 from .configuration import NereidConfigStart, NereidConfig
-from .i18n import Translation, TranslationSet, TranslationUpdate
+from .translation import Translation, TranslationSet, TranslationUpdate, \
+    TranslationClean
 
 
 def register():
@@ -41,5 +42,6 @@ def register():
         NereidConfig,
         TranslationSet,
         TranslationUpdate,
+        TranslationClean,
         module='nereid', type_='wizard'
     )

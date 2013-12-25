@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+        This file is part of Tryton & Nereid. The COPYRIGHT file at the
+        top level of this repository contains the full copyright notices
+        and license terms.
+    -->
+<tryton>
+    <data>
+        <record model="ir.ui.view" id="translation_view_form">
+            <field name="model">ir.translation</field>
+            <field name="inherit" ref="ir.translation_view_form"/>
+            <field name="name">translation_form</field>
+        </record>
+    </data>
+</tryton>
