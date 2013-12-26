@@ -397,6 +397,7 @@ class Nereid(Flask):
         from trytond.transaction import Transaction
         from trytond.config import CONFIG
         from trytond import backend
+        from trytond.cache import Cache
 
         DatabaseOperationalError = backend.get('DatabaseOperationalError')
 
@@ -412,6 +413,7 @@ class Nereid(Flask):
             return self.make_default_options_response()
 
         website = self.get_website_from_request(req)
+        Cache.clean(self.database_name)
 
         for count in range(int(CONFIG['retry']), -1, -1):
             with Transaction().start(
