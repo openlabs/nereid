@@ -23,6 +23,7 @@ from trytond.model import fields
 from trytond.wizard import Wizard
 from trytond.transaction import Transaction
 from trytond.pool import Pool, PoolMeta
+from trytond.cache import Cache
 from trytond.tools import file_open
 from trytond.const import RECORD_CACHE_SIZE
 
@@ -221,6 +222,60 @@ class Translation:
             translations_to_delete = all_translations - translations
             cls.delete(list(translations_to_delete))
         return len(translations)
+
+    _nereid_translation_cache = Cache(
+        'ir.translation', size_limit=10240, context=False
+    )
+
+    @classmethod
+    def get_translation_4_nereid(cls, module, ttype, lang, source):
+        "Return translation for source"
+        ttype = unicode(ttype)
+        lang = unicode(lang)
+        source = unicode(source)
+
+        cache_key = (lang, ttype, source, module)
+
+        trans = cls._nereid_translation_cache.get(cache_key, -1)
+        if trans != -1:
+            return trans
+
+        cursor = Transaction().cursor
+        table = cls.__table__()
+        where = (
+            (table.lang == lang)
+            & (table.type == ttype)
+            & (table.value != '')
+            & (table.value != None)
+            & (table.fuzzy == False)
+            & (table.src == source)
+        )
+        if module is not None:
+            where &= (table.module == module)
+
+        cursor.execute(*table.select(table.value, where=where))
+        res = cursor.fetchone()
+        if res:
+            cls._nereid_translation_cache.set(cache_key, res[0])
+            return res[0]
+        else:
+            cls._nereid_translation_cache.set(cache_key, False)
+            return None
+
+    @classmethod
+    def delete(cls, translations):
+        cls._nereid_translation_cache.clear()
+        return super(Translation, cls).delete(translations)
+
+    @classmethod
+    def create(cls, vlist):
+        cls._nereid_translation_cache.clear()
+        return super(Translation, cls).create(vlist)
+
+    @classmethod
+    def write(cls, translations, values):
+        cls._nereid_translation_cache.clear()
+        return super(Translation, cls).write(translations, values)
 
 
 class TranslationSet:

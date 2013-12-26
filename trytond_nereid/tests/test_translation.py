@@ -227,7 +227,7 @@ class TestTranslation(NereidTestCase):
             translation, = IRTranslation.search([
                 ('type', '=', 'nereid_template'),
                 ('module', '=', 'nereid_test'),
-                ('src', '=', 'Hola %(user)s!'),
+                ('src', '=', 'Hello %(username)s!'),
             ])
             self.assertEqual(
                 translation.comments, 'Translation with trans tag'
@@ -253,7 +253,7 @@ class TestTranslation(NereidTestCase):
             translation, = IRTranslation.search([
                 ('type', '=', 'nereid_template'),
                 ('module', '=', 'nereid_test'),
-                ('src', '=', 'Hello %(user)s!')
+                ('src', '=', 'Hello %(name)s!')
             ])
             self.assertEqual(
                 translation.comments, 'Translation with an expression'
@@ -284,7 +284,7 @@ class TestTranslation(NereidTestCase):
             translation, = IRTranslation.search([
                 ('type', '=', 'nereid_template'),
                 ('module', '=', 'nereid_test'),
-                ('src', 'ilike', '%There is %(count)s %(name)s object.%'),
+                ('src', 'ilike', '%There is %(count)s %(objname)s object.%'),
             ])
             self.assertEqual(
                 translation.comments, 'trans tag with pluralisation'
@@ -295,7 +295,7 @@ class TestTranslation(NereidTestCase):
             translation, = IRTranslation.search([
                 ('type', '=', 'nereid_template'),
                 ('module', '=', 'nereid_test'),
-                ('src', 'ilike', '%There are %(count)s %(name)s objects.%'),
+                ('src', 'ilike', '%There are %(count)s %(objname)s objects.%'),
             ])
             self.assertEqual(
                 translation.comments, 'trans tag with pluralisation'

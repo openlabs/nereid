@@ -390,6 +390,12 @@ class Nereid(Flask):
             rv.fragment_cache = self.cache
             rv.fragment_cache_prefix = self.cache_key_prefix + "-frag-"
 
+        # Install the gettext callables
+        from .contrib.locale import TrytonTranslations
+        translations = TrytonTranslations(module=None, ttype='nereid_template')
+        rv.install_gettext_callables(
+            translations.gettext, translations.ngettext
+        )
         return rv
 
     @locked_cached_property
