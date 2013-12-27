@@ -65,9 +65,9 @@ management, account management etc to the existing Tryton modules.
 Which version of Tryton does nereid use ?
 `````````````````````````````````````````
 
-Nereid is available for version 2.0, 2.4, 2.6 and 2.8.
+Nereid is available for version 2.0, 2.4, 2.6, 2.8 and 3.0.
 
-All versions other than 2.8 are mainteinance only releases.
+All versions other than 3.0 are mainteinance only releases.
 
 Now that brings us to how versioning is done
 
