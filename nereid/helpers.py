@@ -14,6 +14,7 @@ from hashlib import md5
 
 from flask.helpers import (_PackageBoundObject, locked_cached_property,  # noqa
         get_flashed_messages, flash, url_for as flask_url_for)
+from nereid import jsonify
 from werkzeug import Headers, wrap_file, redirect, abort
 from werkzeug.exceptions import NotFound
 
@@ -75,6 +76,11 @@ def login_required(function):
     @wraps(function)
     def decorated_function(*args, **kwargs):
         if 'user' not in session:
+            if request.is_xhr:
+                return jsonify({
+                    'error': True,
+                    'reason': 'This request can only be completed after login',
+                }), 401
             return redirect(url_for('nereid.website.login', next=request.url))
         return function(*args, **kwargs)
     return decorated_function
