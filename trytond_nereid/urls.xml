@@ -96,6 +96,8 @@
             <field name="url_map" ref="default_url_map" />
         </record>
 
+        <!-- This URL is due for deprecation and should point
+             to party.address.create_address from 3.2.X -->
         <record id="save_address_url" model="nereid.url_rule">
             <field name="rule">/save-new-address</field>
             <field name="endpoint">party.address.edit_address</field>
@@ -105,6 +107,14 @@
             <field name="url_map" ref="default_url_map" />
         </record>
 
+        <record id="create_address_url" model="nereid.url_rule">
+            <field name="rule">/create-address</field>
+            <field name="endpoint">party.address.create_address</field>
+            <field name="sequence" eval="90" />
+            <field name="http_method_get" eval="True"/>
+            <field name="http_method_post" eval="True"/>
+            <field name="url_map" ref="default_url_map" />
+        </record>
 
         <record id="edit_address_url" model="nereid.url_rule">
             <field name="rule">/edit-address/&lt;int:address&gt;</field>

@@ -154,6 +154,7 @@ class TestAddress(NereidTestCase):
         """
         return self.templates.get(name)
 
+    # XXX: Due for deprecation in 3.2.X
     def test_0010_add_address(self):
         """
         Add an address for the user
@@ -194,6 +195,74 @@ class TestAddress(NereidTestCase):
 
                 # POST and a new address must be created
                 response = c.post('/en_US/save-new-address', data=address_data)
+                self.assertEqual(response.status_code, 302)
+
+                # Re browse the record
+                registered_user = self.nereid_user_obj(
+                    self.registered_user.id
+                )
+                # Check if the user has two addresses now
+                self.assertEqual(len(registered_user.party.addresses), 2)
+                for address in registered_user.party.addresses:
+                    if address != existing_address:
+                        break
+                else:
+                    self.fail("New address not found")
+
+                self.assertEqual(address.name, address_data['name'])
+                self.assertEqual(address.street, address_data['street'])
+                self.assertEqual(address.streetbis, address_data['streetbis'])
+                self.assertEqual(address.zip, address_data['zip'])
+                self.assertEqual(address.city, address_data['city'])
+                self.assertEqual(address.email, address_data['email'])
+                self.assertEqual(address.phone, address_data['phone'])
+                self.assertEqual(address.country.id, address_data['country'])
+                self.assertEqual(
+                    address.subdivision.id, address_data['subdivision']
+                )
+
+    def test_0015_add_address(self):
+        """
+        Add an address for the user.
+
+        The create_address method was introduced in 3.0.3.0
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            registered_user = self.registered_user
+
+            address_data = {
+                'name': 'Name',
+                'street': 'Street',
+                'streetbis': 'StreetBis',
+                'zip': 'zip',
+                'city': 'City',
+                'email': 'email@example.com',
+                'phone': '1234567890',
+                'country': self.available_countries[0].id,
+                'subdivision': self.country_obj(
+                    self.available_countries[0]).subdivisions[0].id,
+            }
+
+            with app.test_client() as c:
+                response = c.post(
+                    '/en_US/login',
+                    data={
+                        'email': 'email@example.com',
+                        'password': 'password',
+                    }
+                )
+                self.assertEqual(response.status_code, 302)  # Login success
+
+                # Assert that the user has only 1 address, which gets created
+                # automatically with the party
+                self.assertEqual(len(registered_user.party.addresses), 1)
+                existing_address, = registered_user.party.addresses
+
+                # POST and a new address must be created
+                response = c.post('/en_US/create-address', data=address_data)
                 self.assertEqual(response.status_code, 302)
 
                 # Re browse the record
