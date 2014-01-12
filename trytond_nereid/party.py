@@ -3,6 +3,7 @@
 import random
 import string
 import urllib
+import warnings
 
 try:
     import hashlib
@@ -15,6 +16,7 @@ from wtforms import Form, TextField, IntegerField, SelectField, validators, \
     PasswordField
 from wtfrecaptcha.fields import RecaptchaField
 from werkzeug import redirect, abort
+from jinja2 import TemplateNotFound
 
 from nereid import request, url_for, render_template, login_required, flash, \
     jsonify
@@ -174,81 +176,15 @@ class Address:
         return ''
 
     @classmethod
-    @login_required
-    def edit_address(cls, address=None):
+    def get_address_form(cls, address=None):
         """
-        Create/Edit an Address
+        Return an initialised Address form that can be validated and used to
+        create/update addresses
 
-        POST will create a new address or update and existing address depending
-        on the value of address.
-        GET will return a new address/existing address edit form
-
-        :param address: ID of the address
+        :param address: If an active record is provided it is used to autofill
+                        the form.
         """
-        pool = Pool()
-        ContactMechanism = pool.get('party.contact_mechanism')
-        form = AddressForm(request.form, name=request.nereid_user.display_name)
-        countries = [
-            (c.id, c.name) for c in request.nereid_website.countries
-        ]
-        form.country.choices = countries
-        if address not in (a.id for a in request.nereid_user.party.addresses):
-            address = None
-        if request.method == 'POST' and form.validate():
-            mechanisms = []
-            party = request.nereid_user.party
-            if address is not None:
-                cls.write([cls(address)], {
-                    'name': form.name.data,
-                    'street': form.street.data,
-                    'streetbis': form.streetbis.data,
-                    'zip': form.zip.data,
-                    'city': form.city.data,
-                    'country': form.country.data,
-                    'subdivision': form.subdivision.data,
-                })
-            else:
-                cls.create([{
-                    'name': form.name.data,
-                    'street': form.street.data,
-                    'streetbis': form.streetbis.data,
-                    'zip': form.zip.data,
-                    'city': form.city.data,
-                    'country': form.country.data,
-                    'subdivision': form.subdivision.data,
-                    'party': party.id,
-                }])
-            if form.email.data:
-                if not ContactMechanism.search(
-                        [
-                            ('party', '=', party.id),
-                            ('type', '=', 'email'),
-                            ('value', '=', form.email.data),
-                        ]):
-                    mechanisms.append({
-                        'party': request.nereid_user.party.id,
-                        'type': 'email',
-                        'value': form.email.data,
-                    })
-            if form.phone.data:
-                if not ContactMechanism.search(
-                        [
-                            ('party', '=', party.id),
-                            ('type', '=', 'phone'),
-                            ('value', '=', form.phone.data),
-                        ]):
-                    mechanisms.append({
-                        'party': request.nereid_user.party.id,
-                        'type': 'phone',
-                        'value': form.phone.data,
-                    })
-
-            if len(mechanisms) > 0:
-                ContactMechanism.create(mechanisms)
-            return redirect(url_for('party.address.view_address'))
-        elif request.method == 'GET' and address:
-            # Its an edit of existing address, prefill data
-            address = cls(address)
+        if address:
             form = AddressForm(
                 name=address.name,
                 street=address.street,
@@ -260,7 +196,133 @@ class Address:
                 email=address.email,
                 phone=address.phone
             )
-            form.country.choices = countries
+        else:
+            form = AddressForm(
+                request.form, name=request.nereid_user.display_name
+            )
+
+        # Prefill the available countries
+        countries = [
+            (c.id, c.name) for c in request.nereid_website.countries
+        ]
+        form.country.choices = countries
+
+        return form
+
+    @classmethod
+    @login_required
+    def create_address(cls):
+        """
+        Create an address for the current nereid_user
+
+        GET
+        ~~~
+
+        Return an address creation form
+
+        POST
+        ~~~~
+
+        Creates an address and redirects to the address view. If a next_url
+        is provided, redirects there.
+
+        .. version_added: 3.0.3.0
+        """
+        form = cls.get_address_form()
+
+        if request.method == 'POST' and form.validate():
+            party = request.nereid_user.party
+            address, = cls.create([{
+                'name': form.name.data,
+                'street': form.street.data,
+                'streetbis': form.streetbis.data,
+                'zip': form.zip.data,
+                'city': form.city.data,
+                'country': form.country.data,
+                'subdivision': form.subdivision.data,
+                'party': party.id,
+            }])
+            if form.email.data:
+                party.add_contact_mechanism_if_not_exists(
+                    'email', form.email.data
+                )
+            if form.phone.data:
+                party.add_contact_mechanism_if_not_exists(
+                    'phone', form.phone.data
+                )
+            return redirect(url_for('party.address.view_address'))
+
+        try:
+            return render_template('address-add.jinja', form=form)
+        except TemplateNotFound:
+            # The address-add template was introduced in 3.0.3.0
+            # so just raise a deprecation warning till 3.2.X and then
+            # expect the use of address-add template
+            warnings.warn(
+                "address-add.jinja template not found. "
+                "Will be required in future versions",
+                DeprecationWarning
+            )
+            return render_template('address-edit.jinja', form=form)
+
+    @classmethod
+    @login_required
+    def edit_address(cls, address=None):
+        """
+        Edit an Address
+
+        POST will update an existing address.
+        GET will return a existing address edit form.
+
+        .. version_changed:: 3.0.3.0
+
+            For creating new address use the create_address handled instead of
+            this one. The functionality would be deprecated in 3.2.X
+
+        :param address: ID of the address
+        """
+        if address is None:
+            warnings.warn(
+                "Address creation will be deprecated from edit_address handler."
+                " Use party.address.create_address instead",
+                DeprecationWarning
+            )
+            return cls.create_address()
+
+        form = cls.get_address_form()
+
+        if address not in (a.id for a in request.nereid_user.party.addresses):
+            # Check if the address is in the list of addresses of the
+            # current user's party
+            abort(403)
+
+        address = cls(address)
+
+        if request.method == 'POST' and form.validate():
+            party = request.nereid_user.party
+            cls.write([address], {
+                'name': form.name.data,
+                'street': form.street.data,
+                'streetbis': form.streetbis.data,
+                'zip': form.zip.data,
+                'city': form.city.data,
+                'country': form.country.data,
+                'subdivision': form.subdivision.data,
+            })
+            if form.email.data:
+                party.add_contact_mechanism_if_not_exists(
+                    'email', form.email.data
+                )
+            if form.phone.data:
+                party.add_contact_mechanism_if_not_exists(
+                    'phone', form.phone.data
+                )
+            return redirect(url_for('party.address.view_address'))
+
+        elif request.method == 'GET' and address:
+            # Its an edit of existing address, prefill data
+            form = cls.get_address_form(address)
+
         return render_template('address-edit.jinja', form=form, address=address)
 
     @classmethod
@@ -275,6 +337,27 @@ class Party(ModelSQL, ModelView):
     __name__ = 'party.party'
 
     nereid_users = fields.One2Many('nereid.user', 'party', 'Nereid Users')
+
+    def add_contact_mechanism_if_not_exists(self, type, value):
+        """
+        Adds a contact mechanism to the party if it does not exist
+
+        :return: The created contact mechanism or the one which existed
+        """
+        ContactMechanism = Pool().get('party.contact_mechanism')
+
+        mechanisms = ContactMechanism.search([
+            ('party', '=', self.id),
+            ('type', '=', type),
+            ('value', '=', value),
+        ])
+        if not mechanisms:
+            mechanisms = ContactMechanism.create([{
+                'party': self.id,
+                'type': type,
+                'value': value,
+            }])
+        return mechanisms[0]
 
 
 class ProfileForm(Form):
