@@ -186,6 +186,7 @@ class Address:
         """
         if address:
             form = AddressForm(
+                request.form,
                 name=address.name,
                 street=address.street,
                 streetbis=address.streetbis,
