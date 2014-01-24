@@ -134,7 +134,7 @@ class Nereid(Flask):
 
         # Create the Map again because we do not want the static URL that
         # flask creates which is website agnostic.
-        self.url_map = Map()
+        self.url_map = Map(host_matching=True)
 
         # Update the defaults for config attributes introduced by nereid
         self.config.update({
