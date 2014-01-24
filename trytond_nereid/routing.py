@@ -3,15 +3,18 @@
 
 import pytz
 from werkzeug import abort, redirect
+from werkzeug.routing import Map, Submount
 from wtforms import Form, TextField, PasswordField, validators
 
 from nereid import jsonify, flash, render_template, url_for, cache
 from nereid.globals import session, request
+from nereid.exceptions import WebsiteNotFound
 from nereid.helpers import login_required, key_from_list, get_flashed_messages
 from nereid.signals import login, failed_login, logout
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
 from trytond.pool import Pool
+from trytond.cache import Cache
 
 from .i18n import _
 
@@ -350,6 +353,79 @@ class WebSite(ModelSQL, ModelView):
         Returns a JSON of the user_status
         """
         return jsonify(status=cls._user_status())
+
+    @classmethod
+    def get_from_host(cls, host, silent=False):
+        """
+        Returns the website with name as given host
+
+        If not silent a website not found error is raised.
+        """
+        try:
+            website, = cls.search([('name', '=', host)])
+        except ValueError:
+            if not silent:
+                raise WebsiteNotFound()
+        else:
+            return website
+
+    _url_adapter_cache = Cache('nereid.website.url_adapter', context=False)
+
+    @classmethod
+    def clear_url_adapter_cache(cls, *args):
+        """
+        A method which conveniently clears the cache
+        """
+        cls._url_adapter_cache.clear()
+
+    def get_url_adapter(self, app):
+        """
+        Returns the URL adapter for the website
+        """
+        cache_rv = self._url_adapter_cache.get(self.id)
+
+        if cache_rv is not None:
+            return cache_rv
+
+        url_rules = []
+
+        # Add the static url
+        url_rules.append(
+            app.url_rule_class(
+                app.static_url_path + '/<path:filename>',
+                endpoint='static',
+            )
+        )
+
+        for url_kwargs in self.url_map.get_rules_arguments():
+            rule = app.url_rule_class(
+                url_kwargs.pop('rule'),
+                **url_kwargs
+            )
+            rule.provide_automatic_options = True
+            url_rules.append(rule)   # Add rule to map
+
+        url_map = Map()
+        if self.locales:
+            # Create the URL map with locale prefix
+            url_map.add(
+                app.url_rule_class(
+                    '/', redirect_to='/%s' % self.default_locale.code,
+                ),
+            )
+            url_map.add(Submount('/<locale>', url_rules))
+        else:
+            # Create a new map with the given URLs
+            map(url_map.add, url_rules)
+
+        # Add the rules from the application's url map filled through the
+        # route decorator or otherwise
+        for rule in app.url_map._rules:
+            url_map.add(rule.empty())
+
+        self._url_adapter_cache.set(self.id, url_map)
+
+        return url_map
 
 
 class WebSiteLocale(ModelSQL, ModelView):

@@ -387,3 +387,27 @@ def make_crumbs(browse_record, endpoint, add_home=True, max_depth=10,
     items.reverse()
 
     return items
+
+
+def root_transaction_if_required(function):
+    """
+    Starts a root transaction if one is not there. This behavior is used when
+    run from tests cases which manage the transaction on its own.
+    """
+    @wraps(function)
+    def decorated_function(self, *args, **kwargs):
+        from trytond.transaction import Transaction
+
+        transaction = None
+        if Transaction().cursor is None:
+            # Start transaction since cursor is None
+            transaction = Transaction().start(
+                self.database_name, 0, readonly=True
+            )
+        try:
+            return function(self, *args, **kwargs)
+        finally:
+            if transaction is not None:
+                Transaction().stop()
+
+    return decorated_function

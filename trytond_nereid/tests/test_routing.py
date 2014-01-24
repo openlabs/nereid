@@ -130,6 +130,7 @@ class TestRouting(NereidTestCase):
             # Change the default locale to es_ES and then check
             self.nereid_website.default_locale = self.locale_es_es
             self.nereid_website.save()
+            self.nereid_website.clear_url_adapter_cache()
 
             app = self.get_app()
 
