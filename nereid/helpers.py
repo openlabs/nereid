@@ -12,6 +12,8 @@ import unicodedata
 from functools import wraps
 from hashlib import md5
 
+from trytond.transaction import Transaction
+from trytond.config import CONFIG
 from flask.helpers import (_PackageBoundObject, locked_cached_property,  # noqa
         get_flashed_messages, flash, url_for as flask_url_for)
 from werkzeug import Headers, wrap_file, redirect, abort
@@ -209,7 +211,6 @@ def send_file(filename_or_fp, mimetype=None, as_attachment=False,
 
     if filename is not None:
         if not os.path.isabs(filename):
-            from trytond.config import CONFIG
             filename = os.path.join(
                 CONFIG['data_path'],
                 current_app.database_name,
@@ -396,7 +397,6 @@ def root_transaction_if_required(function):
     """
     @wraps(function)
     def decorated_function(self, *args, **kwargs):
-        from trytond.transaction import Transaction
 
         transaction = None
         if Transaction().cursor is None:

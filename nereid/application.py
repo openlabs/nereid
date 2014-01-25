@@ -13,8 +13,14 @@ from flask.helpers import locked_cached_property
 from jinja2 import MemcachedBytecodeCache
 from werkzeug import import_string
 
+from trytond import backend
+from trytond.pool import Pool
+from trytond.cache import Cache
+from trytond.config import CONFIG
+from trytond.modules import register_classes
+from trytond.transaction import Transaction
+
 from .wrappers import Request, Response
-from .backend import TransactionManager
 from .session import NereidSessionInterface
 from .templating import nereid_default_template_ctx_processor, \
     NEREID_TEMPLATE_FILTERS, ModuleTemplateLoader, LazyRenderer
@@ -133,7 +139,6 @@ class Nereid(Flask):
         # Update the defaults for config attributes introduced by nereid
         self.config.update({
             'TRYTON_CONFIG': None,
-
             'TEMPLATE_PREFIX_WEBSITE_NAME': True,
 
             'CACHE_TYPE': 'werkzeug.contrib.cache.NullCache',
@@ -206,14 +211,14 @@ class Nereid(Flask):
         also connects to the backend, initialising the pool on the go
         """
         if self.tryton_configfile is not None:
-            from trytond.config import CONFIG
+            warnings.warn(DeprecationWarning(
+                'TRYTON_CONFIG configuration will be deprecated in future.'
+            ))
             CONFIG.update_etc(self.tryton_configfile)
-            CONFIG.set_timezone()
 
-        from trytond import backend
-        from trytond.modules import register_classes
+        CONFIG.set_timezone()
+
         register_classes()
-        from trytond.pool import Pool
 
         # Load and initialise pool
         Database = backend.get('Database')
@@ -234,19 +239,6 @@ class Nereid(Flask):
         Return connection to Database backend of tryton
         """
         return self._database
-
-    @property
-    def root_transaction(self):
-        """
-        Allows the use of the transaction as a context manager with the
-        root user.
-
-        This is separately maintained so that the testing module can nullify
-        the effect by an empty decorator.
-
-        .. versionadded::0.3
-        """
-        return TransactionManager(self.database_name, 0, None)
 
     @root_transaction_if_required
     def add_ctx_processors_from_db(self):
@@ -275,7 +267,6 @@ class Nereid(Flask):
         """
         if request is not None:
 
-            from trytond.pool import Pool
             Website = Pool().get('nereid.website')
 
             website = Website.get_from_host(request.host)
@@ -291,12 +282,6 @@ class Nereid(Flask):
         return value of the view or error handler.  This does not have to
         be a response object.
         """
-        from trytond.transaction import Transaction
-        from trytond.config import CONFIG
-        from trytond.pool import Pool
-        from trytond import backend
-        from trytond.cache import Cache
-
         DatabaseOperationalError = backend.get('DatabaseOperationalError')
 
         req = _request_ctx_stack.top.request
@@ -347,8 +332,6 @@ class Nereid(Flask):
         """
         Implement the nereid specific _dispatch
         """
-        from trytond.pool import Pool
-        from trytond.transaction import Transaction
 
         language = 'en_US'
         if req.nereid_website:
