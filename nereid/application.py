@@ -11,17 +11,21 @@ from flask.config import ConfigAttribute
 from flask.globals import _request_ctx_stack
 from flask.helpers import locked_cached_property
 from jinja2 import MemcachedBytecodeCache
-from werkzeug.routing import Submount, Map
 from werkzeug import import_string
 
+from trytond import backend
+from trytond.pool import Pool
+from trytond.cache import Cache
+from trytond.config import CONFIG
+from trytond.modules import register_classes
+from trytond.transaction import Transaction
+
 from .wrappers import Request, Response
-from .backend import TransactionManager
 from .session import NereidSessionInterface
 from .templating import nereid_default_template_ctx_processor, \
     NEREID_TEMPLATE_FILTERS, ModuleTemplateLoader, LazyRenderer
-from .helpers import url_for
+from .helpers import url_for, root_transaction_if_required
 from .ctx import RequestContext
-from .exceptions import WebsiteNotFound
 from .signals import transaction_start, transaction_stop
 
 
@@ -132,14 +136,9 @@ class Nereid(Flask):
         """
         super(Nereid, self).__init__('nereid', **config)
 
-        # Create the Map again because we do not want the static URL that
-        # flask creates which is website agnostic.
-        self.url_map = Map(host_matching=True)
-
         # Update the defaults for config attributes introduced by nereid
         self.config.update({
             'TRYTON_CONFIG': None,
-
             'TEMPLATE_PREFIX_WEBSITE_NAME': True,
 
             'CACHE_TYPE': 'werkzeug.contrib.cache.NullCache',
@@ -163,24 +162,12 @@ class Nereid(Flask):
         #: Load the cache
         self.load_cache()
 
-        #: A dictionary of the website names to spec of the website in the
-        #: backend. This is loaded by :meth:`load_websites` when the app is
-        #: initialised and all future lookups are made on this dictionary.
-        #: The specs include the following information
-        #:
-        #:  1. id - ID of the website in the backend
-        #:  2. url_map - The loaded url_map of the website
-        #:
-        #: .. tip:
-        #:  If a new website is introduced a reload of the application would
-        #:  be necessary for it to reflect here
-        self.websites = {}
+        self.view_functions['static'] = self.send_static_file
 
         # Backend initialisation
         self.load_backend()
-        with self.root_transaction:
-            self.load_websites()
-            self.add_ctx_processors_from_db()
+
+        self.add_ctx_processors_from_db()
 
         # Add the additional template context processors
         self.template_context_processors[None].append(
@@ -224,14 +211,14 @@ class Nereid(Flask):
         also connects to the backend, initialising the pool on the go
         """
         if self.tryton_configfile is not None:
-            from trytond.config import CONFIG
+            warnings.warn(DeprecationWarning(
+                'TRYTON_CONFIG configuration will be deprecated in future.'
+            ))
             CONFIG.update_etc(self.tryton_configfile)
-            CONFIG.set_timezone()
 
-        from trytond import backend
-        from trytond.modules import register_classes
+        CONFIG.set_timezone()
+
         register_classes()
-        from trytond.pool import Pool
 
         # Load and initialise pool
         Database = backend.get('Database')
@@ -253,96 +240,7 @@ class Nereid(Flask):
         """
         return self._database
 
-    @property
-    def root_transaction(self):
-        """
-        Allows the use of the transaction as a context manager with the
-        root user.
-
-        This is separately maintained so that the testing module can nullify
-        the effect by an empty decorator.
-
-        .. versionadded::0.3
-        """
-        return TransactionManager(self.database_name, 0, None)
-
-    def get_method(self, model_method):
-        """
-        Get the object from pool and fetch the method from it
-
-        model_method is expected to be '<model>.<method>'. The returned
-        function/method object can be stored in the endpoint map for a
-        faster lookup and response rather than looking it up at request
-        time.
-        """
-        model_method_split = model_method.split('.')
-        model = '.'.join(model_method_split[:-1])
-        method = model_method_split[-1]
-
-        try:
-            return getattr(self.pool.get(model), method)
-        except AttributeError:
-            raise Exception("Method %s not in Model %s" % (method, model))
-
-    def load_websites(self):
-        """
-        Load the websites and build a map of the website names to the ID
-        in database for quick connection to the website
-        """
-        Website = self.pool.get("nereid.website")
-
-        for website in Website.search([]):
-            url_rules = []
-
-            # Add the static url
-            url_rules.append(
-                self.url_rule_class(
-                    self.static_url_path + '/<path:filename>',
-                    endpoint='static',
-                    host=website.name,
-                )
-            )
-
-            for url_kwargs in website.url_map.get_rules_arguments():
-                rule = self.url_rule_class(
-                    url_kwargs.pop('rule'),
-                    host=website.name,
-                    **url_kwargs
-                )
-                rule.provide_automatic_options = True
-                url_rules.append(rule)   # Add rule to map
-                if (not url_kwargs['build_only']) \
-                        and not(url_kwargs['redirect_to']):
-                    # Add the method to the view_functions list if the
-                    # endpoint was not a build_only url
-                    self.view_functions[url_kwargs['endpoint']] = \
-                        self.get_method(url_kwargs['endpoint'])
-
-            if website.locales:
-                # Create the URL map with locale prefix
-                self.url_map.add(
-                    self.url_rule_class(
-                        '/',
-                        redirect_to='/%s' % website.default_locale.code,
-                        host=website.name
-                    ),
-                )
-                self.url_map.add(Submount('/<locale>', url_rules))
-            else:
-                # Create a new map with the given URLs
-                map(self.url_map.add, url_rules)
-
-            self.websites[website.name] = {
-                'id': website.id,
-                'name': website.name,
-                'application_user': website.application_user.id,
-                'guest_user': website.guest_user.id,
-                'company': website.company.id,
-            }
-
-        # Finally add the view_function for static
-        self.view_functions['static'] = self.send_static_file
-
+    @root_transaction_if_required
     def add_ctx_processors_from_db(self):
         """
         Adds template context processors registers with the model
@@ -360,33 +258,23 @@ class Nereid(Flask):
     def request_context(self, environ):
         return RequestContext(self, environ)
 
-    def get_website_from_request(self, req):
-        """
-        Return a dictionary with the website specific details identified from
-        the request.
+    @root_transaction_if_required
+    def create_url_adapter(self, request):
+        """Creates a URL adapter for the given request.  The URL adapter
+        is created at a point where the request context is not yet set up
+        so the request is passed explicitly.
 
-        :param req: Request object for the current request
         """
-        from trytond.transaction import Transaction
-        from trytond.pool import Pool
+        if request is not None:
 
-        with Transaction().start(self.database_name, 0, readonly=True):
-            # TODO: Make finding website faster by using a cache ?
             Website = Pool().get('nereid.website')
-            try:
-                website, = Website.search([
-                    ('name', '=', req.url_rule.host)
-                ])
-            except ValueError:
-                raise WebsiteNotFound()
-            else:
-                # Construct a dictionary since Active records are not
-                # usable outside the transaction
-                return {
-                    'id': website.id,
-                    'application_user': website.application_user.id,
-                    'company': website.company.id,
-                }
+
+            website = Website.get_from_host(request.host)
+            rv = website.get_url_adapter(self).bind_to_environ(
+                request.environ,
+                server_name=self.config['SERVER_NAME']
+            )
+            return rv
 
     def dispatch_request(self):
         """
@@ -394,11 +282,6 @@ class Nereid(Flask):
         return value of the view or error handler.  This does not have to
         be a response object.
         """
-        from trytond.transaction import Transaction
-        from trytond.config import CONFIG
-        from trytond import backend
-        from trytond.cache import Cache
-
         DatabaseOperationalError = backend.get('DatabaseOperationalError')
 
         req = _request_ctx_stack.top.request
@@ -412,14 +295,18 @@ class Nereid(Flask):
            and req.method == 'OPTIONS':
             return self.make_default_options_response()
 
-        website = self.get_website_from_request(req)
         Cache.clean(self.database_name)
+
+        with Transaction().start(self.database_name, 0, readonly=True):
+            Website = Pool().get('nereid.website')
+            website = Website.get_from_host(req.host)
+
+            user, company = website.application_user.id, website.company.id
 
         for count in range(int(CONFIG['retry']), -1, -1):
             with Transaction().start(
                     self.database_name,
-                    website['application_user'],
-                    context={'company': website['company']}) as txn:
+                    user, context={'company': company}) as txn:
                 try:
                     transaction_start.send(self)
                     rv = self._dispatch_request(req)
@@ -445,8 +332,6 @@ class Nereid(Flask):
         """
         Implement the nereid specific _dispatch
         """
-        from trytond.pool import Pool
-        from trytond.transaction import Transaction
 
         language = 'en_US'
         if req.nereid_website:
@@ -460,7 +345,12 @@ class Nereid(Flask):
             req.view_args.pop('locale', None)
 
             # otherwise dispatch to the handler for that endpoint
-            meth = self.view_functions[req.url_rule.endpoint]
+            if req.url_rule.endpoint in self.view_functions:
+                meth = self.view_functions[req.url_rule.endpoint]
+            else:
+                model, method = req.url_rule.endpoint.rsplit('.', 1)
+                meth = getattr(Pool().get(model), method)
+
             if not hasattr(meth, 'im_self') or meth.im_self:
                 # static or class method
                 result = meth(**req.view_args)

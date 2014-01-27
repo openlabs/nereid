@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<tryton>
+    <data>
+        <record model="ir.trigger" id="trigger_clear_cache_website">
+            <field name="name">Clear Cache when website changes</field>
+            <field name="model" search="[('model', '=', 'nereid.website')]" />
+            <field name="active" eval="True" />
+            <field name="on_create" eval="True" />
+            <field name="on_write" eval="True" />
+            <field name="on_delete" eval="True" />
+            <field name="condition" eval="'True'" />
+            <field name="action_model" search="[('model', '=', 'nereid.website')]" />
+            <field name="action_function">clear_url_adapter_cache</field>
+          </record>
+        <record model="ir.trigger" id="trigger_clear_cache_locale">
+            <field name="name">Clear Cache when locale changes</field>
+            <field name="model" search="[('model', '=', 'nereid.website.locale')]" />
+            <field name="active" eval="True" />
+            <field name="on_create" eval="True" />
+            <field name="on_write" eval="True" />
+            <field name="on_delete" eval="True" />
+            <field name="condition" eval="'True'" />
+            <field name="action_model" search="[('model', '=', 'nereid.website')]" />
+            <field name="action_function">clear_url_adapter_cache</field>
+        </record>
+        <record model="ir.trigger" id="trigger_clear_cache_url_rule">
+            <field name="name">Clear Cache when url rule changes</field>
+            <field name="model" search="[('model', '=', 'nereid.url_rule')]" />
+            <field name="active" eval="True" />
+            <field name="on_create" eval="True" />
+            <field name="on_write" eval="True" />
+            <field name="on_delete" eval="True" />
+            <field name="condition" eval="'True'" />
+            <field name="action_model" search="[('model', '=', 'nereid.website')]" />
+            <field name="action_function">clear_url_adapter_cache</field>
+        </record>
+        <record model="ir.trigger" id="trigger_clear_cache_url_map">
+            <field name="name">Clear Cache when Map changes</field>
+            <field name="model" search="[('model', '=', 'nereid.url_map')]" />
+            <field name="active" eval="True" />
+            <field name="on_create" eval="True" />
+            <field name="on_write" eval="True" />
+            <field name="on_delete" eval="True" />
+            <field name="condition" eval="'True'" />
+            <field name="action_model" search="[('model', '=', 'nereid.website')]" />
+            <field name="action_function">clear_url_adapter_cache</field>
+        </record>        
+    </data>
+</tryton>
