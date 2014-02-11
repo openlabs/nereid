@@ -171,6 +171,7 @@
         <record model="ir.module.module.config_wizard.item"
             id="config_wizard_item_nereid">
             <field name="action" ref="act_nereid_config"/>
+            <field name="sequence" eval="20"/>
         </record>
 
     </data>
