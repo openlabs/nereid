@@ -143,7 +143,7 @@ class ModuleTemplateLoader(ChoiceLoader):
         Does not accept prefixing of site name anymore
     '''
     def __init__(
-            self, database_name, searchpath=None):
+            self, database_name=None, searchpath=None):
         self.database_name = database_name
         self.searchpath = searchpath
         self._loaders = None

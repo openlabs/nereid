@@ -12,8 +12,11 @@ import unicodedata
 from functools import wraps
 from hashlib import md5
 
+from trytond.transaction import Transaction
+from trytond.config import CONFIG
 from flask.helpers import (_PackageBoundObject, locked_cached_property,  # noqa
         get_flashed_messages, flash, url_for as flask_url_for)
+from nereid import jsonify
 from werkzeug import Headers, wrap_file, redirect, abort
 from werkzeug.exceptions import NotFound
 
@@ -75,6 +78,11 @@ def login_required(function):
     @wraps(function)
     def decorated_function(*args, **kwargs):
         if 'user' not in session:
+            if request.is_xhr:
+                return jsonify({
+                    'error': True,
+                    'reason': 'This request can only be completed after login',
+                }), 401
             return redirect(url_for('nereid.website.login', next=request.url))
         return function(*args, **kwargs)
     return decorated_function
@@ -209,7 +217,6 @@ def send_file(filename_or_fp, mimetype=None, as_attachment=False,
 
     if filename is not None:
         if not os.path.isabs(filename):
-            from trytond.config import CONFIG
             filename = os.path.join(
                 CONFIG['data_path'],
                 current_app.database_name,
@@ -387,3 +394,26 @@ def make_crumbs(browse_record, endpoint, add_home=True, max_depth=10,
     items.reverse()
 
     return items
+
+
+def root_transaction_if_required(function):
+    """
+    Starts a root transaction if one is not there. This behavior is used when
+    run from tests cases which manage the transaction on its own.
+    """
+    @wraps(function)
+    def decorated_function(self, *args, **kwargs):
+
+        transaction = None
+        if Transaction().cursor is None:
+            # Start transaction since cursor is None
+            transaction = Transaction().start(
+                self.database_name, 0, readonly=True
+            )
+        try:
+            return function(self, *args, **kwargs)
+        finally:
+            if transaction is not None:
+                Transaction().stop()
+
+    return decorated_function

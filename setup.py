@@ -104,7 +104,7 @@ minor_version = int(minor_version)
 install_requires = [
     'pytz',
     'distribute',
-    'flask',
+    'flask>=0.10',
     'wtforms',
     'wtforms-recaptcha',
     'babel',
@@ -176,9 +176,7 @@ setup(
     test_suite='tests.suite',
     test_loader='trytond.test_loader:Loader',
     tests_require=[
-        'trytond_nereid_test >= %s.%s, < %s.%s' %
-            (major_version, minor_version, major_version,
-                minor_version + 1),
+        'trytond_nereid_test >= 3.0.3.0, < 3.1',
         'mock',
         'pycountry',
     ],

@@ -74,10 +74,8 @@ class Request(RequestBase):
         """Fetch the Browse Record of current website."""
         if self.url_rule is None:
             return None
-        if self.url_rule.host is None:
-            return None
         Website = current_app.pool.get('nereid.website')
-        return Website.search([('name', '=', self.url_rule.host)])[0]
+        return Website.get_from_host(self.host)
 
     @cached_property
     def nereid_user(self):
