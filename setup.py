@@ -104,7 +104,7 @@ minor_version = int(minor_version)
 install_requires = [
     'pytz',
     'distribute',
-    'flask',
+    'flask>=0.10',
     'wtforms',
     'wtforms-recaptcha',
     'babel',
