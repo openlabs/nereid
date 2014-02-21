@@ -409,6 +409,44 @@ class TestAddress(NereidTestCase):
                     len(json.loads(response.data)['result']), 0
                 )
 
+    def test_0060_contact_mechanism(self):
+        """
+        Add an contact mechanism for the user.
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            contact_data = {
+                'party': self.registered_user.party.id,
+                'type': 'irc',
+                'value': 'Value',
+                'comment': 'Comment',
+            }
+
+            with app.test_client() as c:
+                response = c.post(
+                    '/en_US/login',
+                    data={
+                        'email': 'email@example.com',
+                        'password': 'password',
+                    }
+                )
+                self.assertEqual(response.status_code, 302)  # Login success
+
+                # Add a new contact mechanism
+                response = c.post(
+                    '/en_US/contact-mechanisms/add', data=contact_data
+                )
+                self.assertEqual(response.status_code, 302)
+
+                self.assertEqual(
+                    len(self.registered_user.party.contact_mechanisms), 1
+                )
+                self.assertEqual(contact_data['type'], 'irc')
+                self.assertEqual(contact_data['value'], 'Value')
+                self.assertEqual(contact_data['comment'], 'Comment')
+
 
 def suite():
     "Nereid test suite"

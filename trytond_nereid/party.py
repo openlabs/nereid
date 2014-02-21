@@ -1011,19 +1011,20 @@ class ContactMechanism(ModelSQL, ModelView):
         form.type.choices = contact_mechanism._TYPES
         return form
 
+    @classmethod
     @login_required
-    def add(self):
+    def add(cls):
         """
         Adds a contact mechanism to the party's contact mechanisms
         """
-        form = self.get_form()
+        form = cls.get_form()
         if form.validate():
-            self.create({
+            cls.create([{
                 'party': request.nereid_user.party.id,
                 'type': form.type.data,
                 'value': form.value.data,
                 'comment': form.comment.data,
-            })
+            }])
             if request.is_xhr:
                 return jsonify({'success': True})
             return redirect(request.referrer)
