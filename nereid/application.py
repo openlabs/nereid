@@ -11,7 +11,6 @@ from flask.config import ConfigAttribute
 from flask.globals import _request_ctx_stack
 from flask.helpers import locked_cached_property
 from jinja2 import MemcachedBytecodeCache
-from werkzeug.routing import Submount, Map
 from werkzeug import import_string
 
 from trytond import backend
@@ -25,7 +24,6 @@ from .wrappers import Request, Response
 from .session import NereidSessionInterface
 from .templating import nereid_default_template_ctx_processor, \
     NEREID_TEMPLATE_FILTERS, ModuleTemplateLoader, LazyRenderer
-from .exceptions import WebsiteNotFound
 from .helpers import url_for, root_transaction_if_required
 from .ctx import RequestContext
 from .signals import transaction_start, transaction_stop
@@ -137,10 +135,6 @@ class Nereid(Flask):
         The import_name is forced into `Nereid`
         """
         super(Nereid, self).__init__('nereid', **config)
-
-        # Create the Map again because we do not want the static URL that
-        # flask creates which is website agnostic.
-        self.url_map = Map()
 
         # Update the defaults for config attributes introduced by nereid
         self.config.update({
