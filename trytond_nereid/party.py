@@ -12,9 +12,9 @@ except ImportError:
     import sha
 
 import pytz
-from wtforms import Form, TextField, IntegerField, SelectField, validators, \
+from flask_wtf import Form, RecaptchaField
+from wtforms import TextField, IntegerField, SelectField, validators, \
     PasswordField
-from wtfrecaptcha.fields import RecaptchaField
 from werkzeug import redirect, abort
 from jinja2 import TemplateNotFound
 

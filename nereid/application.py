@@ -12,6 +12,7 @@ from flask.globals import _request_ctx_stack
 from flask.helpers import locked_cached_property
 from jinja2 import MemcachedBytecodeCache
 from werkzeug import import_string
+from flask_wtf.csrf import CsrfProtect
 
 from trytond import backend
 from trytond.pool import Pool
@@ -161,6 +162,10 @@ class Nereid(Flask):
 
         #: Load the cache
         self.load_cache()
+
+        #: Initialise the CSRF handling
+        self.csrf_protection = CsrfProtect()
+        self.csrf_protection.init_app(self)
 
         self.view_functions['static'] = self.send_static_file
 

@@ -4,7 +4,8 @@
 import pytz
 from werkzeug import abort, redirect
 from werkzeug.routing import Map, Submount
-from wtforms import Form, TextField, PasswordField, validators
+from flask_wtf import Form
+from wtforms import TextField, PasswordField, validators
 
 from nereid import jsonify, flash, render_template, url_for, cache
 from nereid.globals import session, request
