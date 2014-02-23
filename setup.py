@@ -110,6 +110,7 @@ install_requires = [
     'blinker',
     'speaklater',
     'Flask-Babel>=0.9',
+    'Flask-Login',
 ]
 
 for dep in info.get('depends', []):

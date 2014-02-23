@@ -2,6 +2,7 @@
 # This file is part of Tryton.  The COPYRIGHT file at the top level of
 # this repository contains the full copyright notices and license terms.
 import unittest
+import base64
 
 from mock import patch
 import trytond.tests.test_tryton
@@ -565,31 +566,6 @@ class TestAuth(NereidTestCase):
                 'value': 'nereid_admin',
             }])
 
-            self.nereid_user_obj.write(
-                [self.guest_user], {'permissions': [('set', [perm_admin])]}
-            )
-
-            @permissions_required(['admin'])
-            def test_permission_2():
-                return True
-
-            with app.test_request_context():
-                self.assertTrue(test_permission_2())
-
-            @permissions_required(['admin', 'nereid_admin'])
-            def test_permission_3():
-                return True
-
-            with app.test_request_context():
-                self.assertRaises(Forbidden, test_permission_3)
-
-            self.nereid_user_obj.write(
-                [self.guest_user],
-                {'permissions': [('set', [perm_admin, perm_nereid_admin])]}
-            )
-            with app.test_request_context():
-                self.assertTrue(test_permission_3())
-
     def test_0070_gravatar(self):
         """
         Check if the gravatar is returned by the profile picture
@@ -749,7 +725,122 @@ class TestAuth(NereidTestCase):
 
                 response = c.get('/me')
                 self.assertEqual(response.status_code, 302)
-                print response.data
+
+    def test_200_basic_authentication(self):
+        """
+        Test if basic authentication works
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            party, = self.party_obj.create([{'name': 'Registered user'}])
+            data = {
+                'party': party,
+                'display_name': 'Registered User',
+                'email': 'email@example.com',
+                'password': 'password',
+                'company': self.company,
+            }
+            nereid_user, = self.nereid_user_obj.create([data.copy()])
+
+            with app.test_client() as c:
+                # Login without any auth
+                response = c.get('/me')
+                self.assertEqual(response.status_code, 302)
+
+                # Login with wrong basic auth
+                basic_auth = base64.b64encode(b'email@example.com:oops')
+                response = c.get('/me', headers={
+                    'Authorization': 'Basic ' +
+                    basic_auth.decode('utf-8').strip('\r\n')
+                })
+                self.assertEqual(response.status_code, 302)
+
+                # Send the same request with correct basic authentication
+                basic_auth = base64.b64encode(b'email@example.com:password')
+                response = c.get(
+                    '/me', headers={
+                        'Authorization': 'Basic ' + basic_auth.decode(
+                            'utf-8').strip('\r\n')
+                    }
+                )
+                self.assertEqual(response.data, data['display_name'])
+
+    def test_210_token_authentication(self):
+        """
+        Test if token authentication works
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            party, = self.party_obj.create([{'name': 'Registered user'}])
+            data = {
+                'party': party,
+                'display_name': 'Registered User',
+                'email': 'email@example.com',
+                'password': 'password',
+                'company': self.company,
+            }
+            nereid_user, = self.nereid_user_obj.create([data.copy()])
+
+            with app.test_client() as c:
+                # Login without any auth
+                response = c.get('/me')
+                self.assertEqual(response.status_code, 302)
+
+                # Login with wrong token auth
+                token = "something i thought would just work ;-)"
+                response = c.get('/me', headers={
+                    'Authorization': 'token ' + token
+                })
+                self.assertEqual(response.status_code, 302)
+
+                # Send the same request with correct token authentication
+                response = c.get(
+                    '/me', headers={
+                        'Authorization': 'token ' + nereid_user.get_auth_token()
+                    }
+                )
+                self.assertEqual(response.data, data['display_name'])
+
+                # Send the same request with correct token authentication
+                # but using capital 'T' in 'Token'
+                response = c.get(
+                    '/me', headers={
+                        'Authorization': 'Token ' + nereid_user.get_auth_token()
+                    }
+                )
+                self.assertEqual(response.data, data['display_name'])
+
+    def test_0300_test_is_guest_user(self):
+        """
+        Ensure that is_guest_user works
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            party, = self.party_obj.create([{'name': 'Registered user'}])
+            data = {
+                'party': party,
+                'display_name': 'Registered User',
+                'email': 'email@example.com',
+                'password': 'password',
+                'company': self.company,
+            }
+            nereid_user, = self.nereid_user_obj.create([data.copy()])
+
+            self.templates['home.jinja'] = '{{ request.is_guest_user }}'
+
+            with app.test_client() as c:
+                self.assertEqual(c.get('/').data, 'True')
+                c.post(
+                    '/login',
+                    data={'email': data['email'], 'password': data['password']}
+                )
+                self.assertEqual(c.get('/').data, 'False')
 
 
 def suite():

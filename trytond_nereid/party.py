@@ -3,6 +3,7 @@
 import random
 import string
 import urllib
+import base64
 import warnings
 
 try:
@@ -15,13 +16,14 @@ import pytz
 from flask_wtf import Form, RecaptchaField
 from wtforms import TextField, IntegerField, SelectField, validators, \
     PasswordField
+from flask.ext.login import logout_user, AnonymousUserMixin
 from werkzeug import redirect, abort
 from jinja2 import TemplateNotFound
 
 from nereid import request, url_for, render_template, login_required, flash, \
     jsonify
 from nereid.ctx import has_request_context
-from nereid.globals import session, current_app
+from nereid.globals import current_app
 from nereid.signals import registration
 from nereid.templating import render_email
 from trytond.model import ModelView, ModelSQL, fields
@@ -33,11 +35,11 @@ from trytond.tools import get_smtp_server
 from trytond import backend
 from sql import As, Literal, Column
 from itsdangerous import URLSafeSerializer, TimestampSigner, SignatureExpired, \
-    BadSignature
+    BadSignature, TimedJSONWebSignatureSerializer
 
 from .i18n import _, get_translations
 
-__all__ = ['Address', 'Party', 'NereidUser',
+__all__ = ['Address', 'Party', 'NereidUser', 'NereidAnonymousUser',
            'ContactMechanism', 'Permission', 'UserPermission']
 
 
@@ -685,7 +687,7 @@ class NereidUser(ModelSQL, ModelView):
                     _('Your password has been successfully changed! '
                         'Please login again')
                 )
-                session.pop('user')
+                logout_user()
                 return redirect(url_for('nereid.website.login'))
             else:
                 flash(_("The current password you entered is invalid"))
@@ -826,19 +828,23 @@ class NereidUser(ModelSQL, ModelView):
     @classmethod
     def authenticate(cls, email, password):
         """Assert credentials and if correct return the
-        browse record of the user
+        browse record of the user.
+
+        .. versionchanged:: 3.0.4.0
+
+            Does not check if the user account is active or not as that
+            is not in the scope of 'authentication'.
 
         :param email: email of the user
         :param password: password of the user
         :return:
             Browse Record: Successful Login
             None: User cannot be found or wrong password
-            False: Account is inactive
         """
 
         with Transaction().set_context(active_test=False):
             users = cls.search([
-                ('email', '=', request.form['email']),
+                ('email', '=', email),
                 ('company', '=', request.nereid_website.company.id),
             ])
 
@@ -851,16 +857,109 @@ class NereidUser(ModelSQL, ModelView):
             return None
 
         user, = users
-        if not user.active:
-            # A new account with activation pending
-            current_app.logger.debug('%s not activated' % email)
-            flash(_("Your account has not been activated yet!"))
-            return False  # False so to avoid `invalid credentials` flash
-
         if user.match_password(password):
             return user
 
         return None
+
+    @classmethod
+    def load_user(cls, user_id):
+        """
+        Implements the load_user method for Flask-Login
+
+        :param user_id: Unicode ID of the user
+        """
+        try:
+            with Transaction().set_context(active_test=False):
+                user, = cls.search([('id', '=', int(user_id))])
+        except ValueError:
+            return None
+        return user
+
+    @classmethod
+    def load_user_from_header(cls, header_val):
+        """
+        Implements the header_loader method for Flask-Login
+
+        :param header_val: Value of the header
+        """
+        # Basic authentication
+        if header_val.startswith('Basic '):
+            header_val = header_val.replace('Basic ', '', 1)
+            try:
+                header_val = base64.b64decode(header_val)
+            except TypeError:
+                pass
+            else:
+                return cls.authenticate(*header_val.split(':'))
+
+        # TODO: Digest authentication
+
+        # Token in Authorization header
+        if header_val.startswith(('token ', 'Token ')):
+            token = header_val \
+                            .replace('token ', '', 1) \
+                            .replace('Token ', '', 1)
+            return cls.load_user_from_token(token)
+
+    @classmethod
+    def load_user_from_token(cls, token):
+        """
+        Implements the token_loader method for Flask-Login
+
+        :param token: The token sent in the user's request
+        """
+        serializer = TimedJSONWebSignatureSerializer(
+            current_app.secret_key,
+            expires_in=current_app.token_validity_duration
+        )
+
+        try:
+            data = serializer.loads(token)
+        except SignatureExpired:
+            return None     # valid token, but expired
+        except BadSignature:
+            return None     # invalid token
+
+        user = cls(data['id'])
+        if user.password != data['password']:
+            # The password has been changed by the user. So the token
+            # should also be invalid.
+            return None
+
+        return user
+
+    def get_auth_token(self):
+        """
+        Return an authentication token for the user. The auth token uniquely
+        identifies the user and includes the salted hash of the password, then
+        encrypted with a Timed serializer.
+
+        The token_validity_duration can be set in application configuration
+        using TOKEN_VALIDITY_DURATION
+        """
+        serializer = TimedJSONWebSignatureSerializer(
+            current_app.secret_key,
+            expires_in=current_app.token_validity_duration
+        )
+        return serializer.dumps({'id': self.id, 'password': self.password})
+
+    def is_authenticated(self):
+        """
+        Returns True if the user is authenticated, i.e. they have provided
+        valid credentials. (Only authenticated users will fulfill the criteria
+        of login_required.)
+        """
+        return bool(self.id)
+
+    def is_active(self):
+        return self.active
+
+    def is_anonymous(self):
+        return not self.id
+
+    def get_id(self):
+        return unicode(self.id)
 
     @staticmethod
     def _convert_values(values):
@@ -987,6 +1086,29 @@ class NereidUser(ModelSQL, ModelView):
         return render_template(
             'profile.jinja', user_form=user_form, active_type_name="general"
         )
+
+
+class NereidAnonymousUser(AnonymousUserMixin, ModelView):
+    """
+    Nereid Anonymous User Object
+    """
+    __name__ = "nereid.user.anonymous"
+
+    def has_permissions(self, perm_all=None, perm_any=None):
+        """
+        By default return that the user has no permissions.
+
+        Downstream modules can change this behavior.
+        """
+        return False
+
+    def get_profile_picture(self, **kwargs):
+        """
+        Returns the default gravatar mystery man silouette
+        """
+        User = Pool().get('nereid.user')
+        kwargs['default'] = 'mm'
+        return User.get_gravatar_url("does not matter", **kwargs)
 
 
 class ContactMechanismForm(Form):

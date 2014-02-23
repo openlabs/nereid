@@ -13,6 +13,8 @@ from flask.helpers import locked_cached_property
 from jinja2 import MemcachedBytecodeCache
 from werkzeug import import_string
 from flask_wtf.csrf import CsrfProtect
+import flask.ext.login
+from flask.ext.login import LoginManager
 
 from trytond import backend
 from trytond.pool import Pool
@@ -131,6 +133,11 @@ class Nereid(Flask):
         'TEMPLATE_PREFIX_WEBSITE_NAME'
     )
 
+    #: Time in seconds for which the token is valid.
+    token_validity_duration = ConfigAttribute(
+        'TOKEN_VALIDITY_DURATION'
+    )
+
     def __init__(self, **config):
         """
         The import_name is forced into `Nereid`
@@ -141,6 +148,7 @@ class Nereid(Flask):
         self.config.update({
             'TRYTON_CONFIG': None,
             'TEMPLATE_PREFIX_WEBSITE_NAME': True,
+            'TOKEN_VALIDITY_DURATION': 60 * 60,
 
             'CACHE_TYPE': 'werkzeug.contrib.cache.NullCache',
             'CACHE_DEFAULT_TIMEOUT': 300,
@@ -171,6 +179,23 @@ class Nereid(Flask):
 
         # Backend initialisation
         self.load_backend()
+
+        #: Initialise the login handler
+        login_manager = LoginManager()
+        login_manager.user_loader(self._pool.get('nereid.user').load_user)
+        login_manager.header_loader(
+            self._pool.get('nereid.user').load_user_from_header
+        )
+        login_manager.token_loader(
+            self._pool.get('nereid.user').load_user_from_token
+        )
+        login_manager.login_view = "nereid.website.login"
+        login_manager.anonymous_user = self._pool.get('nereid.user.anonymous')
+        login_manager.init_app(self)
+
+        # Monkey patch the url_for method from flask-login to use
+        # the nereid specific url_for
+        flask.ext.login.url_for = url_for
 
         self.add_ctx_processors_from_db()
 

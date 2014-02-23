@@ -1,10 +1,12 @@
 #This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
 #this repository contains the full copyright notices and license terms.
-from werkzeug import redirect, abort
+import warnings
+
 from werkzeug._internal import _missing
 from flask.wrappers import Request as RequestBase, Response as ResponseBase
-from .helpers import url_for
-from .globals import current_app, session, request
+from flask.ext.login import current_user
+
+from .globals import current_app, request
 from .signals import transaction_stop
 
 
@@ -80,17 +82,12 @@ class Request(RequestBase):
     @cached_property
     def nereid_user(self):
         """Fetch the browse record of current user or None."""
-        NereidUser = current_app.pool.get('nereid.user')
-        if 'user' not in session:
-            return NereidUser(self.nereid_website.guest_user.id)
-
-        try:
-            nereid_user, = NereidUser.search([('id', '=', session['user'])])
-        except ValueError:
-            session.pop('user')
-            abort(redirect(url_for('nereid.website.login')))
-        else:
-            return nereid_user
+        warnings.warn(
+            "request.nereid_user will be deprecated. "
+            "Use `nereid.current_user` proxy instead.",
+            DeprecationWarning, stacklevel=2
+        )
+        return current_user
 
     @cached_property
     def nereid_currency(self):
@@ -124,7 +121,13 @@ class Request(RequestBase):
     @cached_property
     def is_guest_user(self):
         """Return true if the user is guest."""
-        return ('user' not in session)
+        warnings.warn(
+            "request.is_guest_user will be deprecated. "
+            "Use `nereid.current_user` proxy and "
+            "current_user.is_anonymous instead",
+            DeprecationWarning, stacklevel=2
+        )
+        return current_user.is_anonymous()
 
 
 class Response(ResponseBase):

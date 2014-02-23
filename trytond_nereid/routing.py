@@ -6,12 +6,13 @@ from werkzeug import abort, redirect
 from werkzeug.routing import Map, Submount
 from flask_wtf import Form
 from wtforms import TextField, PasswordField, validators
+from flask.ext.login import login_user, logout_user
 
 from nereid import jsonify, flash, render_template, url_for, cache
-from nereid.globals import session, request
+from nereid.globals import request
 from nereid.exceptions import WebsiteNotFound
 from nereid.helpers import login_required, key_from_list, get_flashed_messages
-from nereid.signals import login, failed_login, logout
+from nereid.signals import failed_login
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
 from trytond.pool import Pool
@@ -243,7 +244,7 @@ class WebSite(ModelSQL, ModelView):
 
         if request.method == 'POST' and login_form.validate():
             NereidUser = Pool().get('nereid.user')
-            result = NereidUser.authenticate(
+            user = NereidUser.authenticate(
                 login_form.email.data, login_form.password.data
             )
             # Result can be the following:
@@ -251,21 +252,22 @@ class WebSite(ModelSQL, ModelView):
             # 2 - None - Login failure without message
             # 3 - Any other false value (no message is shown. useful if you
             #       want to handle the message shown to user)
-            if result:
+            if user:
                 # NOTE: Translators leave %s as such
                 flash(_("You are now logged in. Welcome %(name)s",
-                        name=result.display_name))
-                session['user'] = result.id
-                login.send()
-                if request.is_xhr:
-                    return 'OK'
-                else:
-                    return redirect(
-                        request.values.get(
-                            'next', url_for('nereid.website.home')
+                        name=user.display_name))
+                if login_user(user):
+                    if request.is_xhr:
+                        return 'OK'
+                    else:
+                        return redirect(
+                            request.values.get(
+                                'next', url_for('nereid.website.home')
+                            )
                         )
-                    )
-            elif result is None:
+                else:
+                    flash(_("Your account has not been activated yet!"))
+            elif user is None:
                 flash(_("Invalid login credentials"))
 
             failed_login.send(form=login_form)
@@ -278,8 +280,7 @@ class WebSite(ModelSQL, ModelView):
     @classmethod
     def logout(cls):
         "Log the user out"
-        session.pop('user', None)
-        logout.send()
+        logout_user()
         flash(
             _('You have been logged out successfully. Thanks for visiting us')
         )
