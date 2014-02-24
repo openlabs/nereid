@@ -552,9 +552,13 @@ class URLRule(ModelSQL, ModelView):
         """
         Returns an iterable of HTTP methods that the URL has to support.
 
+        .. versionchanged: 3.0.4.0
+
+            OPTIONS is not implicitly added
+
         .. versionadded: 2.4.0.6
         """
-        methods = []
+        methods = ['OPTIONS']
         if self.http_method_get:
             methods.append('GET')
         if self.http_method_post:
