@@ -3,6 +3,7 @@
 # this repository contains the full copyright notices and license terms.
 import unittest
 import base64
+import json
 
 from mock import patch
 import trytond.tests.test_tryton
@@ -841,6 +842,118 @@ class TestAuth(NereidTestCase):
                     data={'email': data['email'], 'password': data['password']}
                 )
                 self.assertEqual(c.get('/').data, 'False')
+
+    def test_0400_auth_xhr_wrong(self):
+        """
+        Ensure that auth in XHR sends the right results
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            party, = self.party_obj.create([{'name': 'Registered user'}])
+            data = {
+                'party': party,
+                'display_name': 'Registered User',
+                'email': 'email@example.com',
+                'password': 'password',
+                'company': self.company,
+            }
+            nereid_user, = self.nereid_user_obj.create([data.copy()])
+
+            with app.test_client() as c:
+                self.assertEqual(c.get('/me').status_code, 302)
+
+                rv = c.post(
+                    '/login',
+                    data={'email': data['email'], 'password': 'wrong'},
+                    headers={'X-Requested-With': 'XMLHTTPRequest'}
+                )
+                self.assertEqual(rv.status_code, 401)
+                self.assertEqual(
+                    json.loads(rv.data), {'message': 'Bad credentials'}
+                )
+                self.assertEqual(c.get('/me').status_code, 302)
+
+    def test_0410_auth_xhr_valid(self):
+        """
+        Ensure that auth in XHR sends the right results
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            party, = self.party_obj.create([{'name': 'Registered user'}])
+            data = {
+                'party': party,
+                'display_name': 'Registered User',
+                'email': 'email@example.com',
+                'password': 'password',
+                'company': self.company,
+            }
+            nereid_user, = self.nereid_user_obj.create([data.copy()])
+
+            with app.test_client() as c:
+                self.assertEqual(c.get('/me').status_code, 302)
+
+                rv = c.post(
+                    '/login',
+                    data={'email': data['email'], 'password': data['password']},
+                    headers={'X-Requested-With': 'XMLHTTPRequest'}
+                )
+                self.assertEqual(rv.status_code, 200)
+                data = json.loads(rv.data)
+
+                self.assertTrue(data['success'])
+                self.assertTrue('user' in data)
+
+                self.assertEqual(c.get('/me').status_code, 200)
+
+    def test_0420_auth_token_basic(self):
+        """
+        Try to get authentication token with basic auth
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            party, = self.party_obj.create([{'name': 'Registered user'}])
+            data = {
+                'party': party,
+                'display_name': 'Registered User',
+                'email': 'email@example.com',
+                'password': 'password',
+                'company': self.company,
+            }
+            nereid_user, = self.nereid_user_obj.create([data.copy()])
+
+            with app.test_client() as c:
+                self.assertEqual(c.get('/me').status_code, 302)
+
+                # wrong credentials first
+                basic_auth = base64.b64encode(b'email@example.com:oops')
+                rv = c.post('/login/token', headers={
+                    'Authorization': 'Basic ' +
+                        basic_auth.decode('utf-8').strip('\r\n'),
+                    'X-Requested-With': 'XMLHTTPRequest',
+                })
+                self.assertEqual(rv.status_code, 401)
+                self.assertEqual(
+                    json.loads(rv.data), {'message': 'Bad credentials'}
+                )
+
+                # Send right credentials
+                basic_auth = base64.b64encode(b'email@example.com:password')
+                rv = c.post('/login/token', headers={
+                    'Authorization': 'Basic ' +
+                        basic_auth.decode('utf-8').strip('\r\n'),
+                    'X-Requested-With': 'XMLHTTPRequest',
+                })
+                self.assertEqual(rv.status_code, 200)
+                data = json.loads(rv.data)
+
+                self.assertTrue('user' in data)
+                self.assertTrue('token' in data)
 
 
 def suite():

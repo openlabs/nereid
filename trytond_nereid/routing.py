@@ -8,7 +8,8 @@ from flask_wtf import Form
 from wtforms import TextField, PasswordField, validators
 from flask.ext.login import login_user, logout_user
 
-from nereid import jsonify, flash, render_template, url_for, cache
+from nereid import jsonify, flash, render_template, url_for, cache, \
+    current_user
 from nereid.globals import request
 from nereid.exceptions import WebsiteNotFound
 from nereid.helpers import login_required, key_from_list, get_flashed_messages
@@ -258,7 +259,10 @@ class WebSite(ModelSQL, ModelView):
                         name=user.display_name))
                 if login_user(user):
                     if request.is_xhr:
-                        return 'OK'
+                        return jsonify({
+                            'success': True,
+                            'user': user.serialize(),
+                        })
                     else:
                         return redirect(
                             request.values.get(
@@ -273,7 +277,9 @@ class WebSite(ModelSQL, ModelView):
             failed_login.send(form=login_form)
 
             if request.is_xhr:
-                return 'NOK'
+                rv = jsonify(message="Bad credentials")
+                rv.status_code = 401
+                return rv
 
         return render_template('login.jinja', login_form=login_form)
 
@@ -287,6 +293,20 @@ class WebSite(ModelSQL, ModelView):
         return redirect(
             request.args.get('next', url_for('nereid.website.home'))
         )
+
+    @classmethod
+    @login_required
+    def get_auth_token(cls):
+        """
+        A method that returns a login token and user information in a json
+        response. This should probably be called with basic authentication in
+        the header. The token generated could then be used for subsequent
+        requests.
+        """
+        return jsonify({
+            'user': current_user.serialize(),
+            'token': current_user.get_auth_token(),
+        })
 
     @staticmethod
     def account_context():

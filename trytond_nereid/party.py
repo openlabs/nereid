@@ -16,7 +16,7 @@ import pytz
 from flask_wtf import Form, RecaptchaField
 from wtforms import TextField, IntegerField, SelectField, validators, \
     PasswordField
-from flask.ext.login import logout_user, AnonymousUserMixin
+from flask.ext.login import logout_user, AnonymousUserMixin, login_url
 from werkzeug import redirect, abort
 from jinja2 import TemplateNotFound
 
@@ -460,6 +460,16 @@ class NereidUser(ModelSQL, ModelView):
             )
             # Finally drop the column
             table.drop_column('activation_code', exception=True)
+
+    def serialize(self, purpose=None):
+        """
+        Return a JSON serializable object that represents this record
+        """
+        return {
+            'id': self.id,
+            'display_name': self.display_name,
+            'permissions': [p.value for p in self.get_permissions()],
+        }
 
     def get_permissions(self):
         """
@@ -944,6 +954,22 @@ class NereidUser(ModelSQL, ModelView):
         )
         return serializer.dumps({'id': self.id, 'password': self.password})
 
+    @classmethod
+    def unauthorized_handler(cls):
+        """
+        This is called when the user is required to log in.
+
+        If the request is XHR, then a JSON message with the status code 401
+        is sent as response, else a redirect to the login page is returned.
+        """
+        if request.is_xhr:
+            rv = jsonify(message="Bad credentials")
+            rv.status_code = 401
+            return rv
+        return redirect(
+            login_url(current_app.login_manager.login_view, request.url)
+        )
+
     def is_authenticated(self):
         """
         Returns True if the user is authenticated, i.e. they have provided
@@ -1080,9 +1106,13 @@ class NereidUser(ModelSQL, ModelView):
                 }
             )
             flash('Your profile has been updated.')
+            if request.is_xhr:
+                return jsonify(request.nereid_user.serialize())
             return redirect(
                 request.args.get('next', url_for('nereid.user.profile'))
             )
+        if request.is_xhr:
+            return jsonify(request.nereid_user.serialize())
         return render_template(
             'profile.jinja', user_form=user_form, active_type_name="general"
         )

@@ -189,9 +189,14 @@ class Nereid(Flask):
         login_manager.token_loader(
             self._pool.get('nereid.user').load_user_from_token
         )
+        login_manager.unauthorized_handler(
+            self._pool.get('nereid.user').unauthorized_handler
+        )
         login_manager.login_view = "nereid.website.login"
         login_manager.anonymous_user = self._pool.get('nereid.user.anonymous')
         login_manager.init_app(self)
+
+        self.login_manager = login_manager
 
         # Monkey patch the url_for method from flask-login to use
         # the nereid specific url_for
