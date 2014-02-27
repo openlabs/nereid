@@ -3,7 +3,7 @@
 from trytond.pool import Pool
 
 from .party import Address, Party, ContactMechanism, NereidUser, Permission, \
-    UserPermission
+    UserPermission, NereidAnonymousUser
 from .routing import URLMap, WebSite, WebSiteLocale, URLRule, URLRuleDefaults, \
     WebsiteCountry, WebsiteCurrency, WebsiteWebsiteLocale
 from .static_file import NereidStaticFolder, NereidStaticFile
@@ -20,6 +20,7 @@ def register():
         Party,
         ContactMechanism,
         NereidUser,
+        NereidAnonymousUser,
         Permission,
         UserPermission,
         URLMap,

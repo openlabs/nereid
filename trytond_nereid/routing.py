@@ -6,12 +6,14 @@ from werkzeug import abort, redirect
 from werkzeug.routing import Map, Submount
 from flask_wtf import Form
 from wtforms import TextField, PasswordField, validators
+from flask.ext.login import login_user, logout_user
 
-from nereid import jsonify, flash, render_template, url_for, cache
-from nereid.globals import session, request
+from nereid import jsonify, flash, render_template, url_for, cache, \
+    current_user
+from nereid.globals import request
 from nereid.exceptions import WebsiteNotFound
 from nereid.helpers import login_required, key_from_list, get_flashed_messages
-from nereid.signals import login, failed_login, logout
+from nereid.signals import failed_login
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
 from trytond.pool import Pool
@@ -243,7 +245,7 @@ class WebSite(ModelSQL, ModelView):
 
         if request.method == 'POST' and login_form.validate():
             NereidUser = Pool().get('nereid.user')
-            result = NereidUser.authenticate(
+            user = NereidUser.authenticate(
                 login_form.email.data, login_form.password.data
             )
             # Result can be the following:
@@ -251,41 +253,60 @@ class WebSite(ModelSQL, ModelView):
             # 2 - None - Login failure without message
             # 3 - Any other false value (no message is shown. useful if you
             #       want to handle the message shown to user)
-            if result:
+            if user:
                 # NOTE: Translators leave %s as such
                 flash(_("You are now logged in. Welcome %(name)s",
-                        name=result.display_name))
-                session['user'] = result.id
-                login.send()
-                if request.is_xhr:
-                    return 'OK'
-                else:
-                    return redirect(
-                        request.values.get(
-                            'next', url_for('nereid.website.home')
+                        name=user.display_name))
+                if login_user(user):
+                    if request.is_xhr:
+                        return jsonify({
+                            'success': True,
+                            'user': user.serialize(),
+                        })
+                    else:
+                        return redirect(
+                            request.values.get(
+                                'next', url_for('nereid.website.home')
+                            )
                         )
-                    )
-            elif result is None:
+                else:
+                    flash(_("Your account has not been activated yet!"))
+            elif user is None:
                 flash(_("Invalid login credentials"))
 
             failed_login.send(form=login_form)
 
             if request.is_xhr:
-                return 'NOK'
+                rv = jsonify(message="Bad credentials")
+                rv.status_code = 401
+                return rv
 
         return render_template('login.jinja', login_form=login_form)
 
     @classmethod
     def logout(cls):
         "Log the user out"
-        session.pop('user', None)
-        logout.send()
+        logout_user()
         flash(
             _('You have been logged out successfully. Thanks for visiting us')
         )
         return redirect(
             request.args.get('next', url_for('nereid.website.home'))
         )
+
+    @classmethod
+    @login_required
+    def get_auth_token(cls):
+        """
+        A method that returns a login token and user information in a json
+        response. This should probably be called with basic authentication in
+        the header. The token generated could then be used for subsequent
+        requests.
+        """
+        return jsonify({
+            'user': current_user.serialize(),
+            'token': current_user.get_auth_token(),
+        })
 
     @staticmethod
     def account_context():
@@ -531,9 +552,13 @@ class URLRule(ModelSQL, ModelView):
         """
         Returns an iterable of HTTP methods that the URL has to support.
 
+        .. versionchanged: 3.0.4.0
+
+            OPTIONS is not implicitly added
+
         .. versionadded: 2.4.0.6
         """
-        methods = []
+        methods = ['OPTIONS']
         if self.http_method_get:
             methods.append('GET')
         if self.http_method_post:

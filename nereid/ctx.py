@@ -12,7 +12,7 @@ class RequestContext(RequestContextBase):
     URL adapter and request object for the WSGI environment provided.
     """
 
-    def __init__(self, app, environ):
-        super(RequestContext, self).__init__(app, environ)
+    def __init__(self, app, environ, request=None):
+        super(RequestContext, self).__init__(app, environ, request)
         self.transaction = None
         self.cache = app.cache

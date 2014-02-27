@@ -2,6 +2,7 @@
 #this repository contains the full copyright notices and license terms.
 from flask.globals import (_request_ctx_stack, current_app,  # noqa
     request, session, g, LocalProxy, _find_app)
+from flask.ext.login import current_user                     # noqa
 
 
 def _find_cache():
