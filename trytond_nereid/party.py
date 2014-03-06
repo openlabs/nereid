@@ -623,11 +623,11 @@ class NereidUser(ModelSQL, ModelView):
         registration_form = cls.get_registration_form()
 
         if request.method == 'POST' and registration_form.validate():
-            existing = cls.search([
-                ('email', '=', request.form['email']),
-                ('company', '=', request.nereid_website.company.id),
-            ]
-            )
+            with Transaction().set_context(active_test=False):
+                existing = cls.search([
+                    ('email', '=', request.form['email']),
+                    ('company', '=', request.nereid_website.company.id),
+                ])
             if existing:
                 flash(_(
                     'A registration already exists with this email. '
