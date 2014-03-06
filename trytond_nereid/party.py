@@ -606,10 +606,10 @@ class NereidUser(ModelSQL, ModelView):
         # Add re_captcha if the configuration has such an option
         if 're_captcha_public' in CONFIG.options:
             registration_form = RegistrationForm(
-                request.form, captcha={'ip_address': request.remote_addr}
+                captcha={'ip_address': request.remote_addr}
             )
         else:
-            registration_form = RegistrationForm(request.form)
+            registration_form = RegistrationForm()
 
         return registration_form
 
@@ -622,17 +622,21 @@ class NereidUser(ModelSQL, ModelView):
 
         registration_form = cls.get_registration_form()
 
-        if request.method == 'POST' and registration_form.validate():
+        if registration_form.validate_on_submit():
             with Transaction().set_context(active_test=False):
                 existing = cls.search([
-                    ('email', '=', request.form['email']),
+                    ('email', '=', registration_form.email.data),
                     ('company', '=', request.nereid_website.company.id),
                 ])
             if existing:
-                flash(_(
+                message = _(
                     'A registration already exists with this email. '
-                    'Please contact customer care')
+                    'Please contact customer care'
                 )
+                if request.is_xhr or request.is_json:
+                    return jsonify(message=unicode(message)), 400
+                else:
+                    flash(message)
             else:
                 party = Party(name=registration_form.name.data)
                 party.addresses = []
@@ -648,12 +652,22 @@ class NereidUser(ModelSQL, ModelView):
                 nereid_user.save()
                 registration.send(nereid_user)
                 nereid_user.send_activation_email()
-                flash(
-                    _('Registration Complete. Check your email for activation')
+                message = _(
+                    'Registration Complete. Check your email for activation'
                 )
+                if request.is_xhr or request.is_json:
+                    return jsonify(message=unicode(message)), 201
+                else:
+                    flash(message)
                 return redirect(
                     request.args.get('next', url_for('nereid.website.home'))
                 )
+
+        if registration_form.errors and (request.is_xhr or request.is_json):
+            return jsonify({
+                'message': unicode(_('Form has errors')),
+                'errors': registration_form.errors,
+            }), 400
 
         return render_template('registration.jinja', form=registration_form)
 

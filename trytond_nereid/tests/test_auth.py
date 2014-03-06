@@ -175,6 +175,76 @@ class TestAuth(NereidTestCase):
                 "A registration already exists with this email" in response.data
             )
 
+    def test_0015_register_json(self):
+        """
+        Registration must create a new party.
+
+        Same as registration test but with json data
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            with app.test_client() as c:
+                response = c.get('/registration')
+                self.assertEqual(response.status_code, 200)   # GET Request
+
+                data = {
+                    'name': 'Registered User',
+                    'email': 'regd_user@openlabs.co.in',
+                    'password': 'password'
+                }
+                # Post with missing password
+                response = c.post(
+                    '/registration', data=json.dumps(data),
+                    content_type='application/json'
+                )
+                self.assertEqual(response.status_code, 400)  # Form rejected
+
+                data['confirm'] = 'password'
+                response = c.post(
+                    '/registration',
+                    data=json.dumps(data),
+                    content_type='application/json'
+                )
+                self.assertEqual(response.status_code, 201)
+
+                self.assertEqual(
+                    self.mocked_smtp_instance.sendmail.call_count, 1
+                )
+                self.assertEqual(
+                    self.mocked_smtp_instance.sendmail.call_args[0][0],
+                    CONFIG['smtp_from']
+                )
+                self.assertEqual(
+                    self.mocked_smtp_instance.sendmail.call_args[0][1],
+                    [data['email']]
+                )
+
+            self.assertEqual(
+                self.party_obj.search(
+                    [('name', '=', data['name'])], count=True
+                ), 1
+            )
+
+            with Transaction().set_context(active_test=False):
+                self.assertEqual(
+                    self.nereid_user_obj.search(
+                        [('email', '=', data['email'])], count=True
+                    ), 1
+                )
+
+            # Try to register the same user again
+            response = c.post(
+                '/registration',
+                data=json.dumps(data),
+                content_type='application/json'
+            )
+            self.assertEqual(response.status_code, 400)
+            self.assertTrue(
+                "A registration already exists with this email" in response.data
+            )
+
     def test_0015_match_password(self):
         """
         Assert that matching of password works
