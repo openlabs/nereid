@@ -168,6 +168,13 @@ class TestAuth(NereidTestCase):
                     ), 1
                 )
 
+            # Try to register the same user again
+            response = c.post('/registration', data=data)
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(
+                "A registration already exists with this email" in response.data
+            )
+
     def test_0015_match_password(self):
         """
         Assert that matching of password works
