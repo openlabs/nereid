@@ -129,6 +129,24 @@ class Request(RequestBase):
         )
         return current_user.is_anonymous()
 
+    @property
+    def is_json(self):
+        """Indicates if this request is JSON or not.  By default a request
+        is considered to include JSON data if the mimetype is
+        ``application/json`` or ``application/*+json``.
+
+        This feature is forward ported from flask 0.11. When flask is released
+        this will be removed from nereid code
+
+        .. versionadded:: 3.0.4.0
+        """
+        mt = self.mimetype
+        if mt == 'application/json':
+            return True
+        if mt.startswith('application/') and mt.endswith('+json'):
+            return True
+        return False
+
 
 class Response(ResponseBase):
     pass
