@@ -36,8 +36,7 @@ from trytond import backend
 from sql import As, Literal, Column
 from itsdangerous import URLSafeSerializer, TimestampSigner, SignatureExpired, \
     BadSignature, TimedJSONWebSignatureSerializer
-
-from .i18n import _, get_translations
+from .i18n import _
 
 __all__ = ['Address', 'Party', 'NereidUser', 'NereidAnonymousUser',
            'ContactMechanism', 'Permission', 'UserPermission']
@@ -45,13 +44,6 @@ __all__ = ['Address', 'Party', 'NereidUser', 'NereidAnonymousUser',
 
 class RegistrationForm(Form):
     "Simple Registration form"
-
-    def _get_translations(self):
-        """
-        Provide alternate translations factory.
-        """
-        return get_translations()
-
     name = TextField(_('Name'), [validators.Required(), ])
     email = TextField(_('e-mail'), [validators.Required(), validators.Email()])
     password = PasswordField(_('New Password'), [
@@ -71,12 +63,6 @@ class AddressForm(Form):
     """
     A form resembling the party.address
     """
-    def _get_translations(self):
-        """
-        Provide alternate translations factory.
-        """
-        return get_translations()
-
     name = TextField(_('Name'), [validators.Required(), ])
     street = TextField(_('Street'), [validators.Required(), ])
     streetbis = TextField(_('Street (Bis)'))
@@ -92,12 +78,6 @@ class NewPasswordForm(Form):
     """
     Form to set a new password
     """
-    def _get_translations(self):
-        """
-        Provide alternate translations factory.
-        """
-        return get_translations()
-
     password = PasswordField(_('New Password'), [
         validators.Required(),
         validators.EqualTo('confirm', message=_('Passwords must match'))])
@@ -108,12 +88,6 @@ class ChangePasswordForm(NewPasswordForm):
     """
     Form to change the password
     """
-    def _get_translations(self):
-        """
-        Provide alternate translations factory.
-        """
-        return get_translations()
-
     old_password = PasswordField(_('Old Password'), [validators.Required()])
 
 
