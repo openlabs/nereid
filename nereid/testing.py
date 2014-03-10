@@ -18,6 +18,10 @@ class NereidTestApp(Nereid):
     app
     """
 
+    def __init__(self, **config):
+        super(NereidTestApp, self).__init__(**config)
+        self.config['WTF_CSRF_ENABLED'] = False
+
     @property
     def root_transaction(self):
         """

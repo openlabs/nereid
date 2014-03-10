@@ -36,6 +36,14 @@
             <field name="url_map" ref="default_url_map" />
         </record>
 
+        <record id="get_auth_token" model="nereid.url_rule">
+            <field name="rule">/login/token</field>
+            <field name="endpoint">nereid.website.get_auth_token</field>
+            <field name="sequence" eval="10" />
+            <field name="http_method_post" eval="True"/>
+            <field name="url_map" ref="default_url_map" />
+        </record>
+
         <record id="registration_url" model="nereid.url_rule">
             <field name="rule">/registration</field>
             <field name="endpoint">nereid.user.registration</field>

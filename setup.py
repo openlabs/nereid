@@ -105,12 +105,12 @@ install_requires = [
     'pytz',
     'distribute',
     'flask>=0.10',
-    'wtforms',
-    'wtforms-recaptcha',
+    'flask-wtf',
     'babel',
     'blinker',
     'speaklater',
     'Flask-Babel>=0.9',
+    'Flask-Login',
 ]
 
 for dep in info.get('depends', []):

@@ -16,5 +16,5 @@ from .helpers import flash, get_flashed_messages, url_for, \
     login_required, permissions_required
 from .application import Nereid, Request, Response
 from .sessions import Session
-from .globals import cache
+from .globals import cache, current_user
 from .templating import render_template, render_email, LazyRenderer
