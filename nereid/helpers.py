@@ -14,8 +14,9 @@ from hashlib import md5
 
 from trytond.transaction import Transaction
 from trytond.config import CONFIG
+from speaklater import is_lazy_string
 from flask.helpers import (_PackageBoundObject, locked_cached_property,  # noqa
-        get_flashed_messages, flash, url_for as flask_url_for)
+        get_flashed_messages, flash as _flash, url_for as flask_url_for)
 from werkzeug import Headers, wrap_file, redirect, abort
 from werkzeug.exceptions import NotFound
 from flask.ext.login import login_required      # noqa
@@ -403,3 +404,23 @@ def root_transaction_if_required(function):
                 Transaction().stop()
 
     return decorated_function
+
+
+def flash(message, category='message'):
+    """
+    Lazy strings are no real strings so pickling them results in strange issues.
+    Pickling cannot be avoided because of the way sessions work. Hence, this
+    special flash function converts lazy strings to unicode content.
+
+    .. versionadded:: 3.0.4.1
+
+    :param message: the message to be flashed.
+    :param category: the category for the message.  The following values
+                     are recommended: ``'message'`` for any kind of message,
+                     ``'error'`` for errors, ``'info'`` for information
+                     messages and ``'warning'`` for warnings.  However any
+                     kind of string can be used as category.
+    """
+    if is_lazy_string(message):
+        message = unicode(message)
+    return _flash(message, category)
