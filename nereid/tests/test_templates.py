@@ -305,6 +305,20 @@ class TestLazyRendering(BaseTestCase):
                 response = c.get('/registration')
                 self.assertEqual(response.status_code, 200)
 
+    def test_0040_headers(self):
+        '''
+        Change registrations headers and check
+        '''
+        trytond.tests.test_tryton.install_module('nereid_test')
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            with app.test_client() as c:
+                response = c.get('/test-lazy-renderer')
+                self.assertEqual(response.headers['X-Test-Header'], 'TestValue')
+                self.assertEqual(response.status_code, 201)
+
 
 def suite():
     "Nereid Template Loading test suite"

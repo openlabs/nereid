@@ -397,7 +397,9 @@ class Nereid(Flask):
                 result = meth(i, **req.view_args)
 
             if isinstance(result, LazyRenderer):
-                result = unicode(result)
+                result = (
+                    unicode(result), result.status, result.headers
+                )
 
             return result
 
