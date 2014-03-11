@@ -44,6 +44,11 @@ class LazyRenderer(_LazyString):
 
     >>> unicode(lazy_render_object)
 
+    The status code or header can also be set on the lazy renderer
+
+    >>> lazy_render_object.sattus = 201
+    >>> lazy_render_object.headers['X-Some-Header'] = 'header value'
+
     .. note::
 
         If the template renders objects which depend on the application,
@@ -51,9 +56,9 @@ class LazyRenderer(_LazyString):
         the call must be made within those contexts.
     """
 
-    __slots__ = ('template_name_or_list', 'context',)
+    __slots__ = ('template_name_or_list', 'context', 'headers', 'status')
 
-    def __init__(self, template_name_or_list, context):
+    def __init__(self, template_name_or_list, context, headers=None):
         """
         :param template_name_or_list: the name of the template to be
                                       rendered, or an iterable with template
@@ -64,6 +69,8 @@ class LazyRenderer(_LazyString):
         """
         self.template_name_or_list = template_name_or_list
         self.context = context
+        self.headers = {}
+        self.status = 200
 
     @property
     def value(self):
@@ -75,10 +82,16 @@ class LazyRenderer(_LazyString):
         )
 
     def __getstate__(self):
-        return self.template_name_or_list, self.context
+        return (
+            self.template_name_or_list,
+            self.context,
+            self.headers,
+            self.status,
+        )
 
     def __setstate__(self, tup):
-        self.template_name_or_list, self.context = tup
+        self.template_name_or_list, self.context, \
+                self.headers, self.status = tup
 
 
 def render_template(template_name_or_list, **context):

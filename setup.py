@@ -176,7 +176,7 @@ setup(
     test_suite='tests.suite',
     test_loader='trytond.test_loader:Loader',
     tests_require=[
-        'trytond_nereid_test >= 3.0.3.0, < 3.1',
+        'trytond_nereid_test >= 3.0.4.0, < 3.1',
         'mock',
         'pycountry',
     ],
