@@ -898,7 +898,13 @@ class NereidUser(ModelSQL, ModelView):
                 user, = cls.search([('id', '=', int(user_id))])
         except ValueError:
             return None
-        return user
+
+        # Instead of returning the active record returned in the above search
+        # we are creating a new record here. This is because the returned
+        # active record seems to carry around the context setting of
+        # active_test and any nested lookup from the record will result in
+        # records being fetched which are inactive.
+        return cls(int(user_id))
 
     @classmethod
     def load_user_from_header(cls, header_val):
