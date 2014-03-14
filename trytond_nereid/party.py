@@ -442,7 +442,7 @@ class NereidUser(ModelSQL, ModelView):
         return {
             'id': self.id,
             'display_name': self.display_name,
-            'permissions': [p.value for p in self.get_permissions()],
+            'permissions': list(self.get_permissions()),
         }
 
     def get_permissions(self):
