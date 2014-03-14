@@ -1091,8 +1091,8 @@ class NereidUser(ModelSQL, ModelView):
         """
         User profile
         """
-        user_form = ProfileForm(request.form, obj=request.nereid_user)
-        if request.method == 'POST' and user_form.validate():
+        user_form = ProfileForm(obj=request.nereid_user)
+        if user_form.validate_on_submit():
             cls.write(
                 [request.nereid_user], {
                     'display_name': user_form.display_name.data,
@@ -1100,13 +1100,10 @@ class NereidUser(ModelSQL, ModelView):
                 }
             )
             flash('Your profile has been updated.')
-            if request.is_xhr:
-                return jsonify(request.nereid_user.serialize())
-            return redirect(
-                request.args.get('next', url_for('nereid.user.profile'))
-            )
-        if request.is_xhr:
+
+        if request.is_xhr or request.is_json:
             return jsonify(request.nereid_user.serialize())
+
         return render_template(
             'profile.jinja', user_form=user_form, active_type_name="general"
         )
