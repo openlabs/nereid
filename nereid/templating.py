@@ -312,14 +312,14 @@ def render_email(
         if isinstance(text_template, Template):
             text = text_template.render(**context)
         else:
-            text = render_template(text_template, **context)
+            text = unicode(render_template(text_template, **context))
         text_part = MIMEText(text.encode("utf-8"), 'plain', _charset="UTF-8")
         msg.attach(text_part)
     if html_template:
         if isinstance(html_template, Template):
             html = html_template.render(**context)
         else:
-            html = render_template(html_template, **context)
+            html = unicode(render_template(html_template, **context))
         html_part = MIMEText(html.encode("utf-8"), 'html', _charset="UTF-8")
         msg.attach(html_part)
 
