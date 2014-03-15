@@ -10,7 +10,7 @@ import trytond.tests.test_tryton
 from trytond.transaction import Transaction
 from trytond.backend.sqlite.database import Database as SQLiteDatabase  # noqa
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
-from nereid import render_template, LazyRenderer
+from nereid import render_template, LazyRenderer, render_email
 from nereid.testing import NereidTestCase, NereidTestApp
 from nereid.sessions import Session
 from nereid.contrib.locale import Babel
@@ -224,6 +224,27 @@ class TestTemplateLoading(BaseTestCase):
                 self.assertEqual(
                     render_template('site-specific-template.html'),
                     'content-from-localhost-site-specific-template'
+                )
+
+    def test_0060_render_email(self):
+        '''
+        Render Email with template from local searchpath
+        '''
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            with app.test_request_context('/'):
+                email_message = unicode(render_email(
+                    'sender@openlabs.co.in', 'reciever@openlabs.co.in',
+                    'Dummy subject of email', text_template='from-local.html',
+                    cc='cc@openlabs.co.in'
+                ))
+                self.assertTrue(
+                    'From: sender@openlabs.co.in' in email_message
+                )
+                self.assertTrue(
+                    'Subject: Dummy subject of email' in email_message
                 )
 
 
