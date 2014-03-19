@@ -66,6 +66,15 @@ class BasePagination(object):
     def __len__(self):
         return self.count
 
+    def serialize(self):
+        return {
+            "count": self.count,
+            "pages": self.pages,
+            "page": self.page,
+            "per_page": self.per_page,
+            "items": self.items(),
+        }
+
     @property
     def prev(self):
         """Returns a :class:`Pagination` object for the previous page."""
@@ -191,6 +200,22 @@ class Pagination(BasePagination):
             (self.domain[0][0] == 'id') and \
             (self.domain[0][1] == 'in') and \
             (self.order is None)
+
+    def serialize(self, purpose=None):
+        rv = super(Pagination, self).serialize()
+        if hasattr(self.obj, 'serialize'):
+            rv['items'] = [item.serialize(purpose) for item in self.items()]
+        elif hasattr(self.obj, '_json'):
+            # older style _json methods
+            rv['items'] = [item._json() for item in self.items()]
+        else:
+            rv['items'] = [
+                {
+                    'id': item.id,
+                    'rec_name': item.rec_name,
+                } for item in self.items()
+            ]
+        return rv
 
     def items(self):
         """
