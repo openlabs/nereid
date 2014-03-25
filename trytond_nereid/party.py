@@ -36,8 +36,7 @@ from trytond import backend
 from sql import As, Literal, Column
 from itsdangerous import URLSafeSerializer, TimestampSigner, SignatureExpired, \
     BadSignature, TimedJSONWebSignatureSerializer
-
-from .i18n import _, get_translations
+from .i18n import _
 
 __all__ = ['Address', 'Party', 'NereidUser', 'NereidAnonymousUser',
            'ContactMechanism', 'Permission', 'UserPermission']
@@ -45,13 +44,6 @@ __all__ = ['Address', 'Party', 'NereidUser', 'NereidAnonymousUser',
 
 class RegistrationForm(Form):
     "Simple Registration form"
-
-    def _get_translations(self):
-        """
-        Provide alternate translations factory.
-        """
-        return get_translations()
-
     name = TextField(_('Name'), [validators.Required(), ])
     email = TextField(_('e-mail'), [validators.Required(), validators.Email()])
     password = PasswordField(_('New Password'), [
@@ -71,12 +63,6 @@ class AddressForm(Form):
     """
     A form resembling the party.address
     """
-    def _get_translations(self):
-        """
-        Provide alternate translations factory.
-        """
-        return get_translations()
-
     name = TextField(_('Name'), [validators.Required(), ])
     street = TextField(_('Street'), [validators.Required(), ])
     streetbis = TextField(_('Street (Bis)'))
@@ -92,12 +78,6 @@ class NewPasswordForm(Form):
     """
     Form to set a new password
     """
-    def _get_translations(self):
-        """
-        Provide alternate translations factory.
-        """
-        return get_translations()
-
     password = PasswordField(_('New Password'), [
         validators.Required(),
         validators.EqualTo('confirm', message=_('Passwords must match'))])
@@ -108,12 +88,6 @@ class ChangePasswordForm(NewPasswordForm):
     """
     Form to change the password
     """
-    def _get_translations(self):
-        """
-        Provide alternate translations factory.
-        """
-        return get_translations()
-
     old_password = PasswordField(_('Old Password'), [validators.Required()])
 
 
@@ -468,7 +442,7 @@ class NereidUser(ModelSQL, ModelView):
         return {
             'id': self.id,
             'display_name': self.display_name,
-            'permissions': [p.value for p in self.get_permissions()],
+            'permissions': list(self.get_permissions()),
         }
 
     def get_permissions(self):
@@ -1117,8 +1091,8 @@ class NereidUser(ModelSQL, ModelView):
         """
         User profile
         """
-        user_form = ProfileForm(request.form, obj=request.nereid_user)
-        if request.method == 'POST' and user_form.validate():
+        user_form = ProfileForm(obj=request.nereid_user)
+        if user_form.validate_on_submit():
             cls.write(
                 [request.nereid_user], {
                     'display_name': user_form.display_name.data,
@@ -1126,13 +1100,10 @@ class NereidUser(ModelSQL, ModelView):
                 }
             )
             flash('Your profile has been updated.')
-            if request.is_xhr:
-                return jsonify(request.nereid_user.serialize())
-            return redirect(
-                request.args.get('next', url_for('nereid.user.profile'))
-            )
-        if request.is_xhr:
+
+        if request.is_xhr or request.is_json:
             return jsonify(request.nereid_user.serialize())
+
         return render_template(
             'profile.jinja', user_form=user_form, active_type_name="general"
         )

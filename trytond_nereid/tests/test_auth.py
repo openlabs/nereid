@@ -700,12 +700,7 @@ class TestAuth(NereidTestCase):
                         'email': 'cannot@openlabs.co.in',
                     }
                 )
-                self.assertEqual(response.status_code, 302)
-                self.assertTrue(
-                    '/me' in response.data
-                )
-
-                response = c.get('/me')
+                self.assertEqual(response.status_code, 200)
                 self.assertEqual(response.data, 'Regd User')
 
     def test_0100_has_permission(self):

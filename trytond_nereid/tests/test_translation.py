@@ -369,6 +369,39 @@ class TestTranslation(NereidTestCase):
             count_after = IRTranslation.search([], count=True)
             self.assertEqual(count_after, count_before * 2)
 
+    def test_0400_translation_export(self):
+        """
+        Export the translations and test
+        """
+        TranslationSet = POOL.get('ir.translation.set', type='wizard')
+        TranslationUpdate = POOL.get('ir.translation.update', type='wizard')
+        IRTranslation = POOL.get('ir.translation')
+        IRLanguage = POOL.get('ir.lang')
+
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            # First create all the translations
+            session_id, _, _ = TranslationSet.create()
+            set_wizard = TranslationSet(session_id)
+            set_wizard.transition_set_()
+
+            # set an additional language as translatable
+            new_lang, = IRLanguage.search([
+                ('translatable', '=', False)
+            ], limit=1)
+            new_lang.translatable = True
+            new_lang.save()
+
+            # Now update the translations
+            session_id, _, _ = TranslationUpdate.create()
+            update_wizard = TranslationUpdate(session_id)
+
+            update_wizard.start.language = new_lang
+            update_wizard.do_update(update_wizard.update.get_action())
+
+            # TODO: Check the contents of the po file
+            IRTranslation.translation_export(new_lang.code, 'nereid_test')
+            IRTranslation.translation_export(new_lang.code, 'nereid')
+
 
 def suite():
     "Nereid test suite"
