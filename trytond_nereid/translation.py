@@ -26,6 +26,7 @@ from trytond.pool import Pool, PoolMeta
 from trytond.cache import Cache
 from trytond.tools import file_open
 from trytond.const import RECORD_CACHE_SIZE
+from trytond.ir.translation import TrytonPOFile
 
 __all__ = [
     'Translation',
@@ -222,6 +223,75 @@ class Translation:
             translations_to_delete = all_translations - translations
             cls.delete(list(translations_to_delete))
         return len(translations)
+
+    @classmethod
+    def translation_export(cls, lang, module):
+        """
+        Override the entire method just to avoid lookup for nereid
+        related functionality.
+        """
+        pool = Pool()
+        ModelData = pool.get('ir.model.data')
+        Config = pool.get('ir.configuration')
+
+        models_data = ModelData.search([
+                ('module', '=', module),
+                ])
+        db_id2fs_id = {}
+        for model_data in models_data:
+            db_id2fs_id.setdefault(model_data.model, {})
+            db_id2fs_id[model_data.model][model_data.db_id] = model_data.fs_id
+            for extra_model in cls.extra_model_data(model_data):
+                db_id2fs_id.setdefault(extra_model, {})
+                db_id2fs_id[extra_model][model_data.db_id] = model_data.fs_id
+
+        pofile = TrytonPOFile(wrapwidth=78)
+        pofile.metadata = {
+            'Content-Type': 'text/plain; charset=utf-8',
+        }
+
+        with Transaction().set_context(language=Config.get_language()):
+            translations = cls.search([
+                ('lang', '=', lang),
+                ('module', '=', module),
+            ], order=[])
+        for translation in translations:
+            if (translation.overriding_module
+                    and translation.overriding_module != module):
+                cls.raise_user_error('translation_overridden', {
+                        'name': translation.name,
+                        'name': translation.overriding_module,
+                        })
+            flags = [] if not translation.fuzzy else ['fuzzy']
+            trans_ctxt = '%(type)s:%(name)s:' % {
+                'type': translation.type,
+                'name': translation.name,
+            }
+            res_id = translation.res_id
+
+            # This is the line where logic change is introduced by nereid
+            nereid_types = ('nereid', 'nereid_template', 'wtforms')
+            if res_id >= 0 and \
+                    translation.type not in nereid_types:
+                model, _ = translation.name.split(',')
+                if model in db_id2fs_id:
+                    res_id = db_id2fs_id[model].get(res_id)
+                else:
+                    continue
+                trans_ctxt += '%s' % res_id
+            entry = polib.POEntry(
+                msgid=(translation.src or ''),
+                msgstr=(translation.value or ''),
+                msgctxt=trans_ctxt,
+                flags=flags
+            )
+            pofile.append(entry)
+
+        if pofile:
+            pofile.sort()
+            return unicode(pofile).encode('utf-8')
+        else:
+            return
 
     _nereid_translation_cache = Cache(
         'ir.translation', size_limit=10240, context=False
