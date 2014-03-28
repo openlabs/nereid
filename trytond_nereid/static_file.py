@@ -253,7 +253,7 @@ class NereidStaticFile(ModelSQL, ModelView):
         :param folder: folder_name of the folder
         :param name: name of the file
         """
-        #TODO: Separate this search and find into separate cached method
+        # TODO: Separate this search and find into separate cached method
 
         files = cls.search([
             ('folder.folder_name', '=', folder),
