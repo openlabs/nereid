@@ -18,6 +18,7 @@ from test_static_file import TestStaticFile
 from test_currency import TestCurrency
 from test_routing import TestRouting
 from test_translation import TestTranslation
+from test_country import TestCountry
 
 
 class TestNereid(unittest.TestCase):
@@ -62,7 +63,10 @@ def suite():
         unittest.TestLoader().loadTestsFromTestCase(TestRouting)
     )
     test_suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(TestTranslation)
+        unittest.TestLoader().loadTestsFromTestCase(TestTranslation),
+    )
+    test_suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(TestCountry)
     )
     return test_suite
 
