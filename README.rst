@@ -32,7 +32,16 @@ GPL3 - Read LICENSE
 Installation
 ------------
 
-Read INSTALL
+From PyPI using pip::
+
+    pip install trytond_nereid
+
+Using github repository::
+
+    git clone git@github.com:openlabs/nereid.git
+    cd nereid
+    python setup.py install
+
 
 FAQ
 ---
