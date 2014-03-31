@@ -3,7 +3,7 @@
 
     Add Translation support for Nereid
 
-    :copyright: (c) 2013 by Openlabs Technologies & Consulting (P) Ltd.
+    :copyright: (c) 2013-14 by Openlabs Technologies & Consulting (P) Ltd.
     :copyright: (c) 2011-2012 NaN Projectes de Programari Lliure, S.L.
     :license: BSD, see LICENSE for more details
 
@@ -63,8 +63,8 @@ class Translation:
         pool = Pool()
         ModelData = pool.get('ir.model.data')
         models_data = ModelData.search([
-                ('module', '=', module),
-                ])
+            ('module', '=', module),
+        ])
         fs_id2prop = {}
         for model_data in models_data:
             fs_id2prop.setdefault(model_data.model, {})
@@ -82,9 +82,9 @@ class Translation:
         id2translation = {}
         key2ids = {}
         module_translations = cls.search([
-                ('lang', '=', lang),
-                ('module', '=', module),
-                ], order=[])
+            ('lang', '=', lang),
+            ('module', '=', module),
+        ], order=[])
         for translation in module_translations:
             if translation.type in (
                     'odt', 'view', 'wizard_button',
@@ -110,9 +110,9 @@ class Translation:
             res_id_module, res_id = ressource_id.split('.')
             if res_id:
                 model_data, = ModelData.search([
-                        ('module', '=', res_id_module),
-                        ('fs_id', '=', res_id),
-                        ])
+                    ('module', '=', res_id_module),
+                    ('fs_id', '=', res_id),
+                ])
                 res_id = model_data.db_id
             else:
                 res_id = -1
@@ -120,12 +120,12 @@ class Translation:
                     Transaction().set_user(0),
                     Transaction().set_context(module=res_id_module)):
                 translation, = cls.search([
-                        ('name', '=', name),
-                        ('res_id', '=', res_id),
-                        ('lang', '=', lang),
-                        ('type', '=', ttype),
-                        ('module', '=', res_id_module),
-                        ])
+                    ('name', '=', name),
+                    ('res_id', '=', res_id),
+                    ('lang', '=', lang),
+                    ('type', '=', ttype),
+                    ('module', '=', res_id_module),
+                ])
                 if translation.value != new_translation:
                     translation.value = new_translation
                     translation.overriding_module = module
@@ -217,9 +217,9 @@ class Translation:
 
         if translations:
             all_translations = set(cls.search([
-                        ('module', '=', module),
-                        ('lang', '=', lang),
-                        ]))
+                ('module', '=', module),
+                ('lang', '=', lang),
+            ]))
             translations_to_delete = all_translations - translations
             cls.delete(list(translations_to_delete))
         return len(translations)
@@ -235,8 +235,8 @@ class Translation:
         Config = pool.get('ir.configuration')
 
         models_data = ModelData.search([
-                ('module', '=', module),
-                ])
+            ('module', '=', module),
+        ])
         db_id2fs_id = {}
         for model_data in models_data:
             db_id2fs_id.setdefault(model_data.model, {})
@@ -259,9 +259,9 @@ class Translation:
             if (translation.overriding_module
                     and translation.overriding_module != module):
                 cls.raise_user_error('translation_overridden', {
-                        'name': translation.name,
-                        'name': translation.overriding_module,
-                        })
+                    'name': translation.name,
+                    'name': translation.overriding_module,
+                })
             flags = [] if not translation.fuzzy else ['fuzzy']
             trans_ctxt = '%(type)s:%(name)s:' % {
                 'type': translation.type,
@@ -467,12 +467,12 @@ class TranslationSet:
 
             for message in messages:
                 translations = Translation.search([
-                        ('lang', '=', 'en_US'),
-                        ('type', '=', 'nereid_template'),
-                        ('name', '=', template),
-                        ('src', '=', message),
-                        ('module', '=', module),
-                        ], limit=1)
+                    ('lang', '=', 'en_US'),
+                    ('type', '=', 'nereid_template'),
+                    ('name', '=', template),
+                    ('src', '=', message),
+                    ('module', '=', module),
+                ], limit=1)
                 if translations:
                     continue
                 to_create.append({
@@ -512,12 +512,12 @@ class TranslationSet:
 
             for message in messages:
                 translations = Translation.search([
-                        ('lang', '=', 'en_US'),
-                        ('type', '=', 'wtforms'),
-                        ('name', '=', filename),
-                        ('src', '=', message),
-                        ('module', '=', 'nereid'),
-                        ], limit=1)
+                    ('lang', '=', 'en_US'),
+                    ('type', '=', 'wtforms'),
+                    ('name', '=', filename),
+                    ('src', '=', message),
+                    ('module', '=', 'nereid'),
+                ], limit=1)
                 if translations:
                     continue
                 to_create.append({
@@ -557,12 +557,12 @@ class TranslationSet:
 
                 for message in messages:
                     translations = Translation.search([
-                            ('lang', '=', 'en_US'),
-                            ('type', '=', 'nereid'),
-                            ('name', '=', filename),
-                            ('src', '=', message),
-                            ('module', '=', module),
-                            ], limit=1)
+                        ('lang', '=', 'en_US'),
+                        ('type', '=', 'nereid'),
+                        ('name', '=', filename),
+                        ('src', '=', message),
+                        ('module', '=', module),
+                    ], limit=1)
                     if translations:
                         continue
                     to_create.append({
@@ -611,14 +611,14 @@ class TranslationUpdate:
         to_create = []
         for row in cursor.dictfetchall():
             to_create.append({
-                    'name': row['name'],
-                    'res_id': row['res_id'],
-                    'lang': lang,
-                    'type': row['type'],
-                    'src': row['src'],
-                    'module': row['module'],
-                    'comments': row['comments'],
-                    })
+                'name': row['name'],
+                'res_id': row['res_id'],
+                'lang': lang,
+                'type': row['type'],
+                'src': row['src'],
+                'module': row['module'],
+                'comments': row['comments'],
+            })
         if to_create:
             with Transaction().set_user(0):
                 Translation.create(to_create)

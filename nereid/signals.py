@@ -1,5 +1,5 @@
-#This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
-#this repository contains the full copyright notices and license terms.
+# This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
+# this repository contains the full copyright notices and license terms.
 from flask.signals import (template_rendered, request_started,  # noqa
     request_finished, got_request_exception, _signals,
     request_tearing_down)
