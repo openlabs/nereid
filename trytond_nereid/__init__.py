@@ -12,6 +12,7 @@ from .template import ContextProcessors
 from .configuration import NereidConfigStart, NereidConfig
 from .translation import Translation, TranslationSet, TranslationUpdate, \
     TranslationClean
+from .country import Country
 
 
 def register():
@@ -37,6 +38,7 @@ def register():
         ContextProcessors,
         NereidConfigStart,
         Translation,
+        Country,
         module='nereid', type_='model'
     )
     Pool.register(
