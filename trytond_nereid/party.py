@@ -174,9 +174,9 @@ class Address:
                 phone=address.phone
             )
         else:
-            form = AddressForm(
-                request.form, name=request.nereid_user.display_name
-            )
+            address_name = "" if request.nereid_user.is_anonymous() else \
+                request.nereid_user.display_name
+            form = AddressForm(request.form, name=address_name)
 
         # Prefill the available countries
         countries = [
