@@ -170,6 +170,22 @@ class WebSite(ModelSQL, ModelView):
     def default_active():
         return True
 
+    @staticmethod
+    def default_url_map():
+        ModelData = Pool().get('ir.model.data')
+
+        return ModelData.get_id("nereid", "default_url_map")
+
+    @staticmethod
+    def default_company():
+        return Transaction().context.get('company')
+
+    @staticmethod
+    def default_default_locale():
+        ModelData = Pool().get('ir.model.data')
+
+        return ModelData.get_id("nereid", "website_locale_en-us")
+
     @classmethod
     def __setup__(cls):
         super(WebSite, cls).__setup__()
