@@ -186,6 +186,11 @@ class WebSite(ModelSQL, ModelView):
 
         return ModelData.get_id("nereid", "website_locale_en-us")
 
+    @staticmethod
+    def default_application_user():
+        ModelData = Pool().get('ir.model.data')
+        return ModelData.get_id("nereid", "web_user")
+
     @classmethod
     def __setup__(cls):
         super(WebSite, cls).__setup__()

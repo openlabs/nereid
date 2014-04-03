@@ -14,6 +14,11 @@
             <field name="group" ref="group_nereid_admin"/>
         </record>
 
+        <record model="res.user" id="web_user">
+            <field name="name">Nereid Web User</field>
+            <field name="login">nereidwebuser</field>
+        </record>
+
         <menuitem name="Nereid" id="menu_nereid" />
         <record model="ir.ui.menu-res.group" id="menu_group_nereid_admin">
           <field name="menu" ref="menu_nereid"/>
