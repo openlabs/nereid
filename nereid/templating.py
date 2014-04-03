@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-#This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
-#this repository contains the full copyright notices and license terms.
+# This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
+# this repository contains the full copyright notices and license terms.
 import os
 import contextlib
 from decimal import Decimal
@@ -333,7 +333,7 @@ def render_email(
             part = MIMEBase('application', "octet-stream")
             part.set_payload(content)
             Encoders.encode_base64(part)
-            #XXX: Filename might have to be encoded with utf-8,
+            # XXX: Filename might have to be encoded with utf-8,
             # i.e., part's encoding or with email's encoding
             part.add_header(
                 'Content-Disposition', 'attachment; filename="%s"' % filename

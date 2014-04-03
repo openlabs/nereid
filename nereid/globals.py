@@ -1,5 +1,5 @@
-#This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
-#this repository contains the full copyright notices and license terms.
+# This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
+# this repository contains the full copyright notices and license terms.
 from flask.globals import (_request_ctx_stack, current_app,  # noqa
     request, session, g, LocalProxy, _find_app)
 from flask.ext.login import current_user                     # noqa

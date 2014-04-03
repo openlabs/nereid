@@ -6,6 +6,7 @@
     Signalling.
 
     :copyright: (c) 2011 by Armin Ronacher.
+    :copyright: (c) 2014 by Openlabs Technologies & Consulting (P) LTD.
     :license: BSD, see LICENSE for more details.
 """
 import new
@@ -35,7 +36,7 @@ class SignalsTestCase(BaseTestCase):
             app.view_functions['nereid.website.home'] = \
                 new.instancemethod(
                     home_func, self.nereid_website_obj
-                )
+            )
             self.nereid_website_obj.home = new.instancemethod(
                 home_func, self.nereid_website_obj
             )
@@ -85,7 +86,7 @@ class SignalsTestCase(BaseTestCase):
             app.view_functions['nereid.website.home'] = \
                 new.instancemethod(
                     home_func, self.nereid_website_obj
-                )
+            )
             self.nereid_website_obj.home = new.instancemethod(
                 home_func, self.nereid_website_obj
             )
@@ -97,9 +98,12 @@ class SignalsTestCase(BaseTestCase):
                 rv = app.test_client().get('/')
                 self.assertEqual(rv.data, b'stuff')
 
-                self.assertEqual(calls, ['before-signal', 'before-handler',
-                                 'handler', 'after-handler',
-                                 'after-signal'])
+                self.assertEqual(
+                    calls, [
+                        'before-signal', 'before-handler', 'handler',
+                        'after-handler', 'after-signal'
+                    ]
+                )
             finally:
                 flask.request_started.disconnect(before_request_signal, app)
                 flask.request_finished.disconnect(after_request_signal, app)
@@ -118,7 +122,7 @@ class SignalsTestCase(BaseTestCase):
             app.view_functions['nereid.website.home'] = \
                 new.instancemethod(
                     home_func, self.nereid_website_obj
-                )
+            )
             self.nereid_website_obj.home = new.instancemethod(
                 home_func, self.nereid_website_obj
             )
@@ -179,7 +183,7 @@ class SignalsTestCase(BaseTestCase):
             app.view_functions['nereid.website.home'] = \
                 new.instancemethod(
                     home_func, self.nereid_website_obj
-                )
+            )
             self.nereid_website_obj.home = new.instancemethod(
                 home_func, self.nereid_website_obj
             )
