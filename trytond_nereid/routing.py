@@ -5,7 +5,7 @@ import pytz
 from werkzeug import abort, redirect
 from werkzeug.routing import Map, Submount
 from flask_wtf import Form
-from wtforms import TextField, PasswordField, validators
+from wtforms import TextField, PasswordField, validators, BooleanField
 from flask.ext.login import login_user, logout_user
 
 from nereid import jsonify, flash, render_template, url_for, cache, \
@@ -92,6 +92,7 @@ class LoginForm(Form):
     "Default Login Form"
     email = TextField(_('e-mail'), [validators.Required(), validators.Email()])
     password = PasswordField(_('Password'), [validators.Required()])
+    remember = BooleanField(_('Remember me'), default=False)
 
 
 class WebSite(ModelSQL, ModelView):
@@ -273,7 +274,7 @@ class WebSite(ModelSQL, ModelView):
                 # NOTE: Translators leave %s as such
                 flash(_("You are now logged in. Welcome %(name)s",
                         name=user.display_name))
-                if login_user(user):
+                if login_user(user, remember=login_form.remember.data):
                     if request.is_xhr:
                         return jsonify({
                             'success': True,
