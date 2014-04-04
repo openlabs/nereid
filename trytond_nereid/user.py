@@ -685,7 +685,20 @@ class NereidUser(ModelSQL, ModelView):
             current_app.secret_key,
             expires_in=current_app.token_validity_duration
         )
-        return serializer.dumps({'id': self.id, 'password': self.password})
+        local_txn = None
+        if Transaction().cursor is None:
+            # Flask-Login can call get_auth_token outside the context
+            # of a nereid transaction. If that is the case, launch a
+            # new transaction here.
+            local_txn = Transaction().start(
+                current_app.database_name, 0, readonly=True
+            )
+            self = self.__class__(self.id)
+        try:
+            return serializer.dumps({'id': self.id, 'password': self.password})
+        finally:
+            if local_txn is not None:
+                Transaction().stop()
 
     @classmethod
     def unauthorized_handler(cls):
