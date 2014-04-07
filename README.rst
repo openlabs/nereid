@@ -1,23 +1,13 @@
 Nereid for Tryton
 =================
 
-Nereid is a web framework built over Flask, with Tryton as a Backend.
-
-Build Status (Master)
----------------------
-
-.. image:: https://secure.travis-ci.org/openlabs/nereid.png?branch=master
-
-`View on Travis CI <https://travis-ci.org/openlabs/nereid>`_
-
-
-Build Status (Develop)
-----------------------
-
 .. image:: https://secure.travis-ci.org/openlabs/nereid.png?branch=develop
+  :target: https://travis-ci.org/openlabs/nereid
 
-`View on Travis CI <https://travis-ci.org/openlabs/nereid>`_
+.. image:: https://coveralls.io/repos/openlabs/nereid/badge.png
+  :target: https://coveralls.io/r/openlabs/nereid
 
+Nereid is a web framework built over Flask, with Tryton as a Backend.
 
 Copyright
 ---------

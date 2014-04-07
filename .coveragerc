@@ -1,0 +1,5 @@
+[run]
+source = trytond.modules.nereid,nereid
+
+[report]
+omit = */tests/*
