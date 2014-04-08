@@ -17,7 +17,7 @@ from trytond.transaction import Transaction
 
 class TestCountry(NereidTestCase):
     """
-    Test Currency
+    Test Country
     """
 
     def setUp(self):
@@ -33,6 +33,7 @@ class TestCountry(NereidTestCase):
         self.language_obj = POOL.get('ir.lang')
         self.party_obj = POOL.get('party.party')
         self.Country = POOL.get('country.country')
+        self.Subdivision = POOL.get('country.subdivision')
 
     def setup_defaults(self):
         """
@@ -141,6 +142,43 @@ class TestCountry(NereidTestCase):
                 self.assertEqual(rv.status_code, 200)
                 data = json.loads(rv.data)
                 self.assertEqual(len(data['countries']), 2)
+
+    def test_0010_subdivisions(self):
+        """
+        Check subdivisons for given country
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            country1, country2, = self.Country.create([{
+                'name': 'India',
+                'code': 'IN'
+            }, {
+                'name': 'Australia',
+                'code': 'AU',
+            }])
+
+            # Create subdivision only for country1
+            self.Subdivision.create([{
+                'country': country1.id,
+                'code': 'IN-OR',
+                'name': 'Orissa',
+                'type': 'state',
+            }])
+
+            with app.test_client() as c:
+                rv = c.get('/countries/%d/subdivisions' % country1.id)
+                self.assertEqual(rv.status_code, 200)
+                data = json.loads(rv.data)
+                self.assertEqual(len(data['result']), 1)
+                self.assertTrue(data['result'][0]['name'] == 'Orissa')
+                self.assertTrue(data['result'][0]['code'] == 'IN-OR')
+
+                rv = c.get('/countries/%d/subdivisions' % country2.id)
+                self.assertEqual(rv.status_code, 200)
+                data = json.loads(rv.data)
+                self.assertEqual(len(data['result']), 0)
 
 
 def suite():

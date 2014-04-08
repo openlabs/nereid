@@ -5,12 +5,12 @@
     :copyright: (c) 2014 by Openlabs Technologies & Consulting (P) Limited
     :license: BSD, see LICENSE for more details.
 """
-from trytond.pool import PoolMeta
+from trytond.pool import PoolMeta, Pool
 from nereid import jsonify
 
 __metaclass__ = PoolMeta
 
-__all__ = ['Country']
+__all__ = ['Country', 'Subdivision']
 
 
 class Country:
@@ -35,4 +35,31 @@ class Country:
             'id': self.id,
             'name': self.name,
             'code': self.code
+        }
+
+    def get_subdivisions(self):
+        """
+        Returns serialized list of all subdivisions for current country
+        """
+        Subdivision = Pool().get('country.subdivision')
+
+        subdivisions = Subdivision.search([('country', '=', self.id)])
+        return jsonify(
+            result=[s.serialize() for s in subdivisions]
+        )
+
+
+class Subdivision:
+    "Subdivision"
+
+    __name__ = 'country.subdivision'
+
+    def serialize(self, purpose=None):
+        """
+        Serialize subdivision data
+        """
+        return {
+            'id': self.id,
+            'name': self.name,
+            'code': self.code,
         }

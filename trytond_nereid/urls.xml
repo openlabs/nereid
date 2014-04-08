@@ -163,7 +163,14 @@
             <field name="sequence" eval="120" />
             <field name="http_method_get" eval="True"/>
             <field name="url_map" ref="default_url_map" />
-        </record> 
+        </record>
+        <record id="country_subdivisions" model="nereid.url_rule">
+            <field name="rule">/countries/&lt;active_id&gt;/subdivisions</field>
+            <field name="endpoint">country.country.get_subdivisions</field>
+            <field name="sequence" eval="120" />
+            <field name="http_method_get" eval="True"/>
+            <field name="url_map" ref="default_url_map" />
+        </record>
 
         <record id="static_file_url" model="nereid.url_rule">
             <field name="rule">/static-file/&lt;folder&gt;/&lt;name&gt;</field>

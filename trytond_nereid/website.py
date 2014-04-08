@@ -152,19 +152,14 @@ class WebSite(ModelSQL, ModelView):
         """
         Return the list of states for given country
         """
+        Subdivision = Pool().get('country.subdivision')
+
         country = int(request.args.get('country', 0))
         if country not in [c.id for c in request.nereid_website.countries]:
             abort(404)
-
-        Subdivision = Pool().get('country.subdivision')
         subdivisions = Subdivision.search([('country', '=', country)])
         return jsonify(
-            result=[{
-                'id': s.id,
-                'name': s.name,
-                'code': s.code,
-            } for s in subdivisions
-            ]
+            result=[s.serialize() for s in subdivisions]
         )
 
     def get_urls(self, name):
