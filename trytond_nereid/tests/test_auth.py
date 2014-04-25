@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # This file is part of Tryton.  The COPYRIGHT file at the top level of
 # this repository contains the full copyright notices and license terms.
+import urllib
 import unittest
 import base64
 import json
@@ -1026,6 +1027,65 @@ class TestAuth(NereidTestCase):
 
                 self.assertTrue('user' in data)
                 self.assertTrue('token' in data)
+
+    def test_0430_remember_me(self):
+        """
+        Ensure that remember me in login is working
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            party, = self.party_obj.create([{'name': 'Registered user'}])
+            data = {
+                'party': party,
+                'display_name': 'Registered User',
+                'email': 'email@example.com',
+                'password': 'password',
+                'company': self.company,
+            }
+            nereid_user, = self.nereid_user_obj.create([data.copy()])
+
+            with app.test_client() as c:
+                response = c.post(
+                    '/login',
+                    data={
+                        'email': data['email'], 'password': data['password'],
+                        'remember': ''
+                    }
+                )
+                self.assertEqual(response.status_code, 302)
+
+                response = c.get('/me')
+                self.assertEqual(response.status_code, 200)
+
+                with c.session_transaction() as sess:
+                    sess.clear()
+
+                response = c.get("/me")
+                self.assertEqual(response.status_code, 302)
+                self.assertEqual(
+                        urllib.unquote(response.location),
+                        'http://localhost/login?next=/me'
+                )
+
+                response = c.post(
+                    '/login',
+                    data={
+                        'email': data['email'], 'password': data['password'],
+                        'remember': 'True'
+                    }
+                )
+                self.assertEqual(response.status_code, 302)
+
+                response = c.get("/me")
+                self.assertEqual(response.status_code, 200)
+
+                with c.session_transaction() as sess:
+                    sess.clear()
+
+                response = c.get("/me")
+                self.assertEqual(response.status_code, 200)
 
 
 def suite():

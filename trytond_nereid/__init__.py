@@ -2,16 +2,18 @@
 # this repository contains the full copyright notices and license terms.
 from trytond.pool import Pool
 
-from .party import Address, Party, ContactMechanism, NereidUser, Permission, \
-    UserPermission, NereidAnonymousUser
-from .routing import URLMap, WebSite, WebSiteLocale, URLRule, URLRuleDefaults, \
-    WebsiteCountry, WebsiteCurrency, WebsiteWebsiteLocale
+from .party import Address, Party, ContactMechanism
+from .user import NereidUser, Permission, UserPermission, NereidAnonymousUser
+from .website import WebSite, WebSiteLocale, WebsiteCountry, \
+    WebsiteCurrency, WebsiteWebsiteLocale
+from .urls import URLMap, URLRule, URLRuleDefaults
 from .static_file import NereidStaticFolder, NereidStaticFile
 from .currency import Currency
 from .template import ContextProcessors
 from .configuration import NereidConfigStart, NereidConfig
 from .translation import Translation, TranslationSet, TranslationUpdate, \
     TranslationClean
+from .country import Country, Subdivision
 
 
 def register():
@@ -37,6 +39,8 @@ def register():
         ContextProcessors,
         NereidConfigStart,
         Translation,
+        Country,
+        Subdivision,
         module='nereid', type_='model'
     )
     Pool.register(

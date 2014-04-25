@@ -4,28 +4,31 @@ this repository contains the full copyright notices and license terms. -->
 <form string="Web Site">
     <label name="name" />
     <field name="name" />
-    <label name="url_map" />
-    <field name="url_map" />
-    <label name="active" />
-    <field name="active" />
-    <label name="company"/>
-    <field name="company"/>
-    <label name="default_locale"/>
-    <field name="default_locale"/>
-    <label name="application_user"/>
-    <field name="application_user"/>
-    <label name="guest_user"/>
-    <field name="guest_user"/>
-    <label name="timezone"/>
-    <field name="timezone"/>
     <notebook colspan="4">
-      <page id="locales" string="Locales">
-        <field name="locales"/>
-      </page>
-      <page id="Countries" string="Countries">
-        <field name="countries"/>
-      </page>
-      <page string="Configuration" id="configuration">
-      </page>
+        <page id="general" string="General">
+            <label name="url_map" />
+            <field name="url_map" />
+            <label name="active" />
+            <field name="active" />
+            <label name="company"/>
+            <field name="company"/>
+            <label name="application_user"/>
+            <field name="application_user"/>
+            <label name="guest_user"/>
+            <field name="guest_user"/>
+            <label name="timezone"/>
+            <field name="timezone"/>
+        </page>
+        <page id="locales" string="Locales">
+            <label name="default_locale"/>
+            <field name="default_locale"/>
+            <newline/>
+	    <field name="locales" colspan="4"/>
+        </page>
+        <page id="Countries" string="Countries">
+            <field name="countries"/>
+        </page>
+        <page string="Configuration" id="configuration">
+        </page>
     </notebook>
 </form>
