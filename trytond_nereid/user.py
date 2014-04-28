@@ -578,7 +578,8 @@ class NereidUser(ModelSQL, ModelView):
             Browse Record: Successful Login
             None: User cannot be found or wrong password
         """
-
+        if not (email and password):
+            return None
         with Transaction().set_context(active_test=False):
             users = cls.search([
                 ('email', '=', email),
