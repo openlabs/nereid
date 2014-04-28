@@ -8,16 +8,15 @@
     :copyright: (c) 2012-2013 by Openlabs Technologies & Consulting (P) LTD
     :license: GPLv3, see LICENSE for more details.
 """
-import new
 import unittest
-import functools
 
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from trytond.transaction import Transaction
+from trytond.pool import PoolMeta, Pool
 from trytond.config import CONFIG
 from nereid.testing import NereidTestCase
-from nereid import render_template
+from nereid import render_template, route
 
 CONFIG['smtp_server'] = 'smtpserver'
 CONFIG['smtp_user'] = 'test@xyz.com'
@@ -28,7 +27,38 @@ CONFIG['smtp_from'] = 'from@xyz.com'
 CONFIG.options['data_path'] = '/tmp/temp_tryton_data/'
 
 
+class StaticFileServingHomePage:
+    __metaclass__ = PoolMeta
+    __name__ = 'nereid.website'
+
+    @classmethod
+    @route('/static-file-test')
+    def static_file_test(cls):
+        static_file_obj = Pool().get('nereid.static.file')
+
+        static_file, = static_file_obj.search([])
+        return render_template(
+            'home.jinja',
+            static_file_obj=static_file_obj,
+            static_file_id=static_file.id
+        )
+
+
 class TestStaticFile(NereidTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        Pool.register(
+            StaticFileServingHomePage,
+            module='nereid', type_='model'
+        )
+        POOL.init(update=True)
+
+    @classmethod
+    def tearDownClss(cls):
+        mpool = Pool.classes['model'].setdefault('nereid', [])
+        mpool.remove(StaticFileServingHomePage)
+        POOL.init(update=True)
 
     def setUp(self):
         trytond.tests.test_tryton.install_module('nereid')
@@ -132,9 +162,9 @@ class TestStaticFile(NereidTestCase):
 
             with app.test_client() as c:
                 rv = c.get('/en_US/static-file/test/test.png')
+                self.assertEqual(rv.status_code, 200)
                 self.assertEqual(rv.data, 'test-content')
                 self.assertEqual(rv.headers['Content-Type'], 'image/png')
-                self.assertEqual(rv.status_code, 200)
 
     def test_0020_static_file_url(self):
         with Transaction().start(DB_NAME, USER, CONTEXT):
@@ -145,26 +175,10 @@ class TestStaticFile(NereidTestCase):
             self.assertFalse(file.url)
 
             app = self.get_app()
-            static_file_obj = self.static_file_obj
             with app.test_client() as c:
-                # Patch the home page method
-                def home_func(self, file_id):
-                    return render_template(
-                        'home.jinja',
-                        static_file_obj=static_file_obj,
-                        static_file_id=file_id,
-                    )
-                home_func = functools.partial(home_func, file_id=file.id)
-                c.application.view_functions[
-                    'nereid.website.home'] = new.instancemethod(
-                    home_func, self.nereid_website_obj
-                )
-                self.nereid_website_obj.home = new.instancemethod(
-                    home_func, self.nereid_website_obj
-                )
-                rv = c.get('/en_US/')
-                self.assertTrue('/en_US/static-file/test/test.png' in rv.data)
+                rv = c.get('/en_US/static-file-test')
                 self.assertEqual(rv.status_code, 200)
+                self.assertTrue('/en_US/static-file/test/test.png' in rv.data)
 
     def test_0030_static_file_remote_url(self):
         """
@@ -186,28 +200,12 @@ class TestStaticFile(NereidTestCase):
             self.assertFalse(file.url)
 
             app = self.get_app()
-            static_file_obj = POOL.get('nereid.static.file')
             with app.test_client() as c:
-                # Patch the home page method
-                def home_func(self, file_id):
-                    return render_template(
-                        'home.jinja',
-                        static_file_obj=static_file_obj,
-                        static_file_id=file_id,
-                    )
-                home_func = functools.partial(home_func, file_id=file.id)
-                c.application.view_functions[
-                    'nereid.website.home'] = new.instancemethod(
-                    home_func, self.nereid_website_obj
-                )
-                self.nereid_website_obj.home = new.instancemethod(
-                    home_func, self.nereid_website_obj
-                )
-                rv = c.get('/en_US/')
+                rv = c.get('/en_US/static-file-test')
+                self.assertEqual(rv.status_code, 200)
                 self.assertTrue(
                     'http://openlabs.co.in/logo.png' in rv.data
                 )
-                self.assertEqual(rv.status_code, 200)
 
 
 def suite():

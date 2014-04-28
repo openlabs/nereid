@@ -11,39 +11,6 @@
             <field name="name">Default</field>
         </record>
 
-        <record id="home_url_wo_lang" model="nereid.url_rule">
-            <field name="rule">/</field>
-            <field name="endpoint">nereid.website.home</field>
-            <field name="sequence" eval="05" />
-            <field name="http_method_get" eval="True"/>
-            <field name="url_map" ref="default_url_map" />
-        </record>
-
-        <record id="login_url" model="nereid.url_rule">
-            <field name="rule">/login</field>
-            <field name="endpoint">nereid.website.login</field>
-            <field name="sequence" eval="20" />
-            <field name="http_method_get" eval="True"/>
-            <field name="http_method_post" eval="True"/>
-            <field name="url_map" ref="default_url_map" />
-        </record>
-
-        <record id="logout_url" model="nereid.url_rule">
-            <field name="rule">/logout</field>
-            <field name="endpoint">nereid.website.logout</field>
-            <field name="sequence" eval="30" />
-            <field name="http_method_get" eval="True"/>
-            <field name="url_map" ref="default_url_map" />
-        </record>
-
-        <record id="get_auth_token" model="nereid.url_rule">
-            <field name="rule">/login/token</field>
-            <field name="endpoint">nereid.website.get_auth_token</field>
-            <field name="sequence" eval="10" />
-            <field name="http_method_post" eval="True"/>
-            <field name="url_map" ref="default_url_map" />
-        </record>
-
         <record id="registration_url" model="nereid.url_rule">
             <field name="rule">/registration</field>
             <field name="endpoint">nereid.user.registration</field>
