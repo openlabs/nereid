@@ -5,6 +5,7 @@ from __future__ import with_statement
 
 import os  # noqa
 import warnings
+import inspect
 
 from flask import Flask
 from flask.config import ConfigAttribute
@@ -211,6 +212,36 @@ class Nereid(Flask):
 
         # Finally set the initialised attribute
         self.initialised = True
+
+    def get_urls(self):
+        """
+        Return the URL rules for routes formed by decorating methods with the
+        :func:`~nereid.helpers.route` decorator.
+
+        This method goes through all the models and their methods in the pool
+        of the loaded database and looks for the `_url_rules` attribute in
+        them. If there are URLs defined, it is added to the url map.
+        """
+        rules = []
+        models = Pool._pool[self.database_name]['model']
+
+        for model_name, model in models.iteritems():
+            for f_name, f in inspect.getmembers(
+                    model, predicate=inspect.ismethod):
+
+                if not hasattr(f, '_url_rules'):
+                    continue
+
+                for rule in f._url_rules:
+                    rules.append(
+                        self.url_rule_class(
+                            rule[0],
+                            endpoint='.'.join([model_name, f_name]),
+                            **rule[1]
+                        )
+                    )
+
+        return rules
 
     def load_cache(self):
         """

@@ -9,7 +9,7 @@ from wtforms import TextField, PasswordField, validators, BooleanField
 from flask.ext.login import login_user, logout_user
 
 from nereid import jsonify, flash, render_template, url_for, cache, \
-    current_user
+    current_user, route
 from nereid.globals import request
 from nereid.exceptions import WebsiteNotFound
 from nereid.helpers import login_required, key_from_list, get_flashed_messages
@@ -181,11 +181,13 @@ class WebSite(ModelSQL, ModelView):
             % (request, arguments, request.environ)
 
     @classmethod
+    @route('/')
     def home(cls):
         "A dummy home method which just renders home.jinja"
         return render_template('home.jinja')
 
     @classmethod
+    @route('/login', methods=['GET', 'POST'])
     def login(cls):
         """
         Simple login based on the email and password
@@ -238,6 +240,7 @@ class WebSite(ModelSQL, ModelView):
         return render_template('login.jinja', login_form=login_form)
 
     @classmethod
+    @route('/logout')
     def logout(cls):
         "Log the user out"
         logout_user()
@@ -250,6 +253,7 @@ class WebSite(ModelSQL, ModelView):
 
     @classmethod
     @login_required
+    @route('/login/token', methods=['POST'])
     def get_auth_token(cls):
         """
         A method that returns a login token and user information in a json
@@ -363,7 +367,7 @@ class WebSite(ModelSQL, ModelView):
         if cache_rv is not None:
             return cache_rv
 
-        url_rules = []
+        url_rules = app.get_urls()[:]
 
         # Add the static url
         url_rules.append(

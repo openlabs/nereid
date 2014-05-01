@@ -1,7 +1,8 @@
 language: python
 python:
-  - "2.6"
   - "2.7"
+before_install:
+  - sudo apt-get install python-lxml
 install: 
   - pip install flake8
   # the following are installed because its needed for postgres tests to run

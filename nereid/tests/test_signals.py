@@ -9,15 +9,15 @@
     :copyright: (c) 2014 by Openlabs Technologies & Consulting (P) LTD.
     :license: BSD, see LICENSE for more details.
 """
-import new
 import unittest
 
 from test_templates import BaseTestCase
-from trytond.tests.test_tryton import USER, DB_NAME, CONTEXT
+from trytond.tests.test_tryton import USER, DB_NAME, CONTEXT, POOL
 from trytond.transaction import Transaction
 
 import flask
 import nereid
+from nereid import route
 
 
 class SignalsTestCase(BaseTestCase):
@@ -29,17 +29,12 @@ class SignalsTestCase(BaseTestCase):
             app = self.get_app()
 
             # Patch the home page method
-            def home_func(self):
+            @route('/')
+            def home_func():
                 return nereid.render_template(
                     'home.jinja', whiskey=42
                 )
-            app.view_functions['nereid.website.home'] = \
-                new.instancemethod(
-                    home_func, self.nereid_website_obj
-            )
-            self.nereid_website_obj.home = new.instancemethod(
-                home_func, self.nereid_website_obj
-            )
+            app.view_functions['nereid.website.home'] = home_func
 
             recorded = []
 
@@ -80,16 +75,12 @@ class SignalsTestCase(BaseTestCase):
                 return response
 
             # Patch the home page method
-            def home_func(self):
+            @route('/')
+            def home_func():
                 calls.append('handler')
                 return 'ignored anyway'
-            app.view_functions['nereid.website.home'] = \
-                new.instancemethod(
-                    home_func, self.nereid_website_obj
-            )
-            self.nereid_website_obj.home = new.instancemethod(
-                home_func, self.nereid_website_obj
-            )
+
+            app.view_functions['nereid.website.home'] = home_func
 
             flask.request_started.connect(before_request_signal, app)
             flask.request_finished.connect(after_request_signal, app)
@@ -116,16 +107,11 @@ class SignalsTestCase(BaseTestCase):
             recorded = []
 
             # Patch the home page method
-            def home_func(self):
+            @route('/')
+            def home_func():
                 1 // 0
 
-            app.view_functions['nereid.website.home'] = \
-                new.instancemethod(
-                    home_func, self.nereid_website_obj
-            )
-            self.nereid_website_obj.home = new.instancemethod(
-                home_func, self.nereid_website_obj
-            )
+            app.view_functions['nereid.website.home'] = home_func
 
             def record(sender, exception):
                 recorded.append(exception)
@@ -175,18 +161,13 @@ class SignalsTestCase(BaseTestCase):
             app.config['SECRET_KEY'] = 'secret'
 
             # Patch the home page method
-            def home_func(self):
+            @route('/')
+            def home_func():
                 flask.flash('This is a flash message', category='notice')
                 return nereid.render_template(
                     'home.jinja', whiskey=42
                 )
-            app.view_functions['nereid.website.home'] = \
-                new.instancemethod(
-                    home_func, self.nereid_website_obj
-            )
-            self.nereid_website_obj.home = new.instancemethod(
-                home_func, self.nereid_website_obj
-            )
+            app.view_functions['nereid.website.home'] = home_func
 
             recorded = []
 
@@ -204,6 +185,10 @@ class SignalsTestCase(BaseTestCase):
                     self.assertEqual(category, 'notice')
             finally:
                 flask.message_flashed.disconnect(record, app)
+
+    @classmethod
+    def tearDownClass(cls):
+        POOL.init(update=True)
 
 
 def suite():

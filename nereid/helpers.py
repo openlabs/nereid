@@ -424,3 +424,35 @@ def flash(message, category='message'):
     if is_lazy_string(message):
         message = unicode(message)
     return _flash(message, category)
+
+
+def route(rule, **options):
+    """Like :meth:`Flask.route` but for nereid.
+
+    .. versionadded:: 3.0.7.0
+
+    Unlike the implementation in flask and flask.blueprint route decorator does
+    not require an existing nereid application or a blueprint instance. Instead
+    the decorator adds an attribute to the method called `_url_rules`.
+
+    .. code-block:: python
+        :emphasize-lines: 1,7
+
+        from nereid import route
+
+        class Product:
+            __name__ = 'product.product'
+
+            @classmethod
+            @route('/product/<uri>')
+            def render_product(cls, uri):
+                ...
+                return 'Product Information'
+
+    """
+    def decorator(f):
+        if not hasattr(f, '_url_rules'):
+            f._url_rules = []
+        f._url_rules.append((rule, options))
+        return f
+    return decorator

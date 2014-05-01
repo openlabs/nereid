@@ -1,5 +1,6 @@
 # This file is part of Tryton.  The COPYRIGHT file at the top level of
 # this repository contains the full copyright notices and license terms.
+import warnings
 
 from trytond.model import ModelView, ModelSQL, fields
 
@@ -13,6 +14,13 @@ class URLMap(ModelSQL, ModelView):
 
     A collection of URLs for a website. This is analogous to werkzeug's
     URL Map.
+
+    .. warning::
+
+        Defining URLs int he database (using XML) will be deprecated in 3.2.1.0
+        Use the `route` decorator to route instead.
+
+        See: https://github.com/openlabs/nereid/issues/178
 
     :param name: Name of the URL Map
     :param default_subdomain: Default subdomain for URLs in this Map
@@ -66,6 +74,16 @@ class URLMap(ModelSQL, ModelView):
         rule_args = []
         for rule in self.rules:
             rule_args.append(rule.get_rule_arguments())
+
+        if rule_args:
+            warnings.warn(
+                "Use of XML/Database to bind URLs to view function will be "
+                "deprecated in version 3.2.1.0.\n\n"
+                "Use the route decorator instead.\n\n"
+                "See: https://github.com/openlabs/nereid/issues/178",
+                DeprecationWarning
+            )
+
         return rule_args
 
 
@@ -75,6 +93,13 @@ class URLRule(ModelSQL, ModelView):
     ~~~~~~~~
 
     A rule that represents a single URL pattern
+
+    .. warning::
+
+        Defining URLs int he database (using XML) will be deprecated in 3.2.1.0.
+        Use the `route` decorator to route instead.
+
+        See: https://github.com/openlabs/nereid/issues/178
 
     :param path: Path of the URL
     :param name: Name of the URL. This is used for reverse mapping, hence
@@ -188,6 +213,13 @@ class URLRule(ModelSQL, ModelView):
 class URLRuleDefaults(ModelSQL, ModelView):
     """
     Defaults for the URL
+
+    .. warning::
+
+        Defining URLs int he database (using XML) will be deprecated in 3.2.1.0.
+        Use the `route` decorator to route instead.
+
+        See: https://github.com/openlabs/nereid/issues/178
 
     :param key: The char for the default's key
     :param value: The Value for the default's Value

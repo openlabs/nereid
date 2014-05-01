@@ -11,7 +11,6 @@ Familiarity with Tryton is assumed.
    :maxdepth: 2
 
    foreword
-   advanced_foreword
    installation
    quickstart
    tutorial
