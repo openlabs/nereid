@@ -293,7 +293,7 @@ class ContactMechanism(ModelSQL, ModelView):
         Returns the contact mechanism form
         """
         from trytond.modules.party import contact_mechanism
-        form = ContactMechanismForm(request.form)
+        form = ContactMechanismForm()
         form.type.choices = contact_mechanism._TYPES
         return form
 
@@ -304,7 +304,7 @@ class ContactMechanism(ModelSQL, ModelView):
         Adds a contact mechanism to the party's contact mechanisms
         """
         form = cls.get_form()
-        if form.validate():
+        if form.validate_on_submit():
             cls.create([{
                 'party': request.nereid_user.party.id,
                 'type': form.type.data,
@@ -325,17 +325,12 @@ class ContactMechanism(ModelSQL, ModelView):
     @login_required
     def remove(self):
         """
-        :param record_id: Delete the contat mechanism with the given ID
+        DELETE: Removes the current contact mechanism
         """
-        record_id = request.form.get('record_id', type=int)
-        if not record_id:
-            abort(404)
+        ContactMechanism = Pool().get('party.contact_mechanism')
 
-        record = self.browse(record_id)
-        if not record:
-            abort(404)
-        if record.party == request.nereid_user.party:
-            self.delete(record_id)
+        if self.party == request.nereid_user.party:
+            ContactMechanism.delete([self])
         else:
             abort(403)
         if request.is_xhr:

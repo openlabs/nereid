@@ -163,10 +163,11 @@
         </record>
 
         <record id="remove_contact_mechanism" model="nereid.url_rule">
-            <field name="rule">/contact-mechanisms/remove</field>
+            <field name="rule">/contact-mechanisms/&lt;active_id&gt;</field>
             <field name="endpoint">party.contact_mechanism.remove</field>
             <field name="sequence" eval="140" />
             <field name="http_method_post" eval="True"/>
+            <field name="http_method_delete" eval="True"/>
             <field name="url_map" ref="nereid.default_url_map" />
         </record>
 
