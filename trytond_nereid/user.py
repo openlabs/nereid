@@ -18,7 +18,7 @@ from flask.ext.login import logout_user, AnonymousUserMixin, login_url
 from werkzeug import redirect, abort
 
 from nereid import request, url_for, render_template, login_required, flash, \
-    jsonify
+    jsonify, route
 from nereid.ctx import has_request_context
 from nereid.globals import current_app
 from nereid.signals import registration
@@ -280,6 +280,7 @@ class NereidUser(ModelSQL, ModelView):
             **options
         )
 
+    @route("/verify-email/<int:active_id>/<sign>", methods=["GET"])
     def verify_email(self, sign, max_age=24 * 60 * 60):
         """
         Verifies the email and redirects to home page. This is a method in
@@ -327,6 +328,7 @@ class NereidUser(ModelSQL, ModelView):
         return registration_form
 
     @classmethod
+    @route("/registration", methods=["GET", "POST"])
     def registration(cls):
         """
         Invokes registration of an user
@@ -403,6 +405,7 @@ class NereidUser(ModelSQL, ModelView):
         server.quit()
 
     @classmethod
+    @route("/change-password", methods=["GET", "POST"])
     @login_required
     def change_password(cls):
         """
@@ -433,6 +436,7 @@ class NereidUser(ModelSQL, ModelView):
             'change-password.jinja', change_password_form=form
         )
 
+    @route("/new-password/<int:active_id>/<sign>", methods=["GET", "POST"])
     def new_password(self, sign, max_age=24 * 60 * 60):
         """Create a new password
 
@@ -468,6 +472,7 @@ class NereidUser(ModelSQL, ModelView):
             'new-password.jinja', password_form=form, sign=sign, user=self
         )
 
+    @route("/activate-account/<int:active_id>/<sign>", methods=["GET"])
     def activate(self, sign, max_age=24 * 60 * 60):
         """A web request handler for activation of the user account. This
         method verifies the email and if it succeeds, activates the account.
@@ -499,6 +504,7 @@ class NereidUser(ModelSQL, ModelView):
         return redirect(url_for('nereid.website.login'))
 
     @classmethod
+    @route("/reset-account", methods=["GET", "POST"])
     def reset_account(cls):
         """
         Reset the password for the user.
@@ -839,6 +845,7 @@ class NereidUser(ModelSQL, ModelView):
         return self.aslocaltime(naive_date, self.timezone)
 
     @classmethod
+    @route("/me", methods=["GET", "POST"])
     @login_required
     def profile(cls):
         """

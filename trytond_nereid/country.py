@@ -6,7 +6,7 @@
     :license: BSD, see LICENSE for more details.
 """
 from trytond.pool import PoolMeta, Pool
-from nereid import jsonify
+from nereid import jsonify, route
 
 __metaclass__ = PoolMeta
 
@@ -19,6 +19,7 @@ class Country:
     __name__ = 'country.country'
 
     @classmethod
+    @route("/all-countries", methods=["GET"])
     def get_all_countries(cls):
         """
         Returns serialized list of all countries
@@ -37,6 +38,7 @@ class Country:
             'code': self.code
         }
 
+    @route("/countries/<int:active_id>/subdivisions", methods=["GET"])
     def get_subdivisions(self):
         """
         Returns serialized list of all subdivisions for current country
