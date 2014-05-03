@@ -12,6 +12,7 @@ import unicodedata
 from functools import wraps
 from hashlib import md5
 
+import trytond.modules
 from trytond.transaction import Transaction
 from trytond.config import CONFIG
 from speaklater import is_lazy_string
@@ -456,3 +457,11 @@ def route(rule, **options):
         f._url_rules.append((rule, options))
         return f
     return decorator
+
+
+def get_version():
+    """
+    Return the version of nereid by looking up the version as read by the
+    tryton module loader.
+    """
+    return trytond.modules.get_module_info('nereid')['version']
