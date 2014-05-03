@@ -138,6 +138,7 @@ class WebSite(ModelSQL, ModelView):
         ]
 
     @classmethod
+    @route("/countries", methods=["GET"])
     def country_list(cls):
         """
         Return the list of countries in JSON
@@ -147,8 +148,9 @@ class WebSite(ModelSQL, ModelView):
             for c in request.nereid_website.countries
         ])
 
-    @staticmethod
-    def subdivision_list():
+    @classmethod
+    @route("/subdivisions", methods=["GET"])
+    def subdivision_list(cls):
         """
         Return the list of states for given country
         """
@@ -278,6 +280,7 @@ class WebSite(ModelSQL, ModelView):
         )
 
     @classmethod
+    @route("/account", methods=["GET"])
     @login_required
     def account(cls):
         return render_template('account.jinja', **cls.account_context())
@@ -328,6 +331,7 @@ class WebSite(ModelSQL, ModelView):
         return rv
 
     @classmethod
+    @route("/user_status", methods=["GET"])
     def user_status(cls):
         """
         Returns a JSON of the user_status

@@ -3,6 +3,7 @@
 import os
 import urllib
 
+from nereid import route
 from nereid.helpers import slugify, send_file, url_for
 from nereid.globals import _request_ctx_stack
 from werkzeug import abort
@@ -243,6 +244,7 @@ class NereidStaticFile(ModelSQL, ModelView):
             self.raise_user_error("invalid_file_name")
 
     @classmethod
+    @route("/static-file/<folder>/<name>", methods=["GET"])
     def send_static_file(cls, folder, name):
         """
         Invokes the send_file method in nereid.helpers to send a file as the
