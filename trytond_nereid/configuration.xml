@@ -179,6 +179,11 @@
             <field name="sequence" eval="20"/>
         </record>
 
+        <!-- Create Default UrlMap record -->
+        <record id="default_url_map" model="nereid.url_map">
+            <field name="name">Default</field>
+        </record>
+
     </data>
 </tryton>
 

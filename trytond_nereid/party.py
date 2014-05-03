@@ -7,7 +7,7 @@ from werkzeug import redirect, abort
 from jinja2 import TemplateNotFound
 
 from nereid import request, url_for, render_template, login_required, flash, \
-    jsonify
+    jsonify, route
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.pool import Pool, PoolMeta
 from trytond.transaction import Transaction
@@ -125,6 +125,7 @@ class Address:
         return form
 
     @classmethod
+    @route("/create-address", methods=["GET", "POST"])
     @login_required
     def create_address(cls):
         """
@@ -181,6 +182,8 @@ class Address:
             return render_template('address-edit.jinja', form=form)
 
     @classmethod
+    @route("/save-new-address", methods=["GET", "POST"])
+    @route("/edit-address/<int:address>", methods=["GET", "POST"])
     @login_required
     def edit_address(cls, address=None):
         """
@@ -241,6 +244,7 @@ class Address:
         return render_template('address-edit.jinja', form=form, address=address)
 
     @classmethod
+    @route("/view-address", methods=["GET"])
     @login_required
     def view_address(cls):
         "View the addresses of user"
@@ -298,6 +302,7 @@ class ContactMechanism(ModelSQL, ModelView):
         return form
 
     @classmethod
+    @route("/contact-mechanisms/add", methods=["POST"])
     @login_required
     def add(cls):
         """
@@ -322,6 +327,7 @@ class ContactMechanism(ModelSQL, ModelView):
                 flash("<br>".join(messages), "Field %s" % field)
             return redirect(request.referrer)
 
+    @route("/contact-mechanisms/<int:active_id>", methods=["POST", "DELETE"])
     @login_required
     def remove(self):
         """
