@@ -121,10 +121,10 @@ class TestCurrency(NereidTestCase):
         """
         return self.templates.get(name)
 
-    def test_0010_currency_from_company(self):
+    def test_0010_currency_from_default_locale(self):
         """
         Do not set a currency for the language, and the fail over of
-        picking currency from company should work.
+        picking currency from default locale.
         """
         with Transaction().start(DB_NAME, USER, CONTEXT):
             self.setup_defaults()
@@ -134,7 +134,7 @@ class TestCurrency(NereidTestCase):
                 rv = c.get('/en_us/')
                 self.assertEqual(rv.status_code, 200)
 
-            self.assertEqual(int(rv.data), self.company.currency.id)
+            self.assertEqual(int(rv.data), self.usd.id)
 
             with app.test_request_context('/en_us/'):
                 self.assertEqual(
