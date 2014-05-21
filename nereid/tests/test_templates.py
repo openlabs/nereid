@@ -235,19 +235,21 @@ class TestTemplateLoading(BaseTestCase):
             self.setup_defaults()
             app = self.get_app()
 
+            sender = u'Sender <sender@openlabs.co.in>'
+
             with app.test_request_context('/'):
                 email_message = render_email(
-                    'sender@openlabs.co.in', 'reciever@openlabs.co.in',
-                    'Dummy subject of email', text_template='from-local.html',
-                    cc='cc@openlabs.co.in'
+                    sender, u'reciever@openlabs.co.in',
+                    u'Dummy subject of email', text_template='from-local.html',
+                    cc=u'cc@openlabs.co.in'
                 )
                 self.assertEqual(
                     decode_header(email_message['From'])[0],
-                    ('sender@openlabs.co.in', 'utf-8')
+                    (sender, None)
                 )
                 self.assertEqual(
                     decode_header(email_message['Subject'])[0],
-                    ('Dummy subject of email', 'utf-8')
+                    ('Dummy subject of email', None)
                 )
 
     def test_0070_render_email_unicode(self):
@@ -258,21 +260,27 @@ class TestTemplateLoading(BaseTestCase):
             self.setup_defaults()
             app = self.get_app()
 
+            sender = u'Cédric Krier <cedric.krier@b2ck.com>'
+
             with app.test_request_context('/'):
                 email_message = render_email(
-                    u'sénderø@openlabs.co.in',
-                    u'récievør@openlabs.co.in',
+                    sender,
+                    u'reciever@openlabs.co.in',
                     u'Dummy subject øf email',
                     text_template='from-local.html',
-                    cc=u'ccø@openlabs.co.in'
+                    cc=u'cc@openlabs.co.in'
                 )
                 self.assertEqual(
                     decode_header(email_message['From'])[0],
-                    (u'sénderø@openlabs.co.in'.encode('UTF-8'), 'utf-8')
+                    (sender.encode('UTF-8'), 'utf-8')
                 )
                 self.assertEqual(
                     decode_header(email_message['Subject'])[0],
                     (u'Dummy subject øf email'.encode('UTF-8'), 'utf-8')
+                )
+                self.assertEqual(
+                    decode_header(email_message['To'])[0],
+                    (u'reciever@openlabs.co.in'.encode('UTF-8'), None)
                 )
 
 

@@ -352,10 +352,10 @@ def render_email(
 
     # We need to use Header objects here instead of just assigning the strings
     # in order to get our headers properly encoded (with QP).
-    msg['Subject'] = Header(subject.encode("utf-8"), 'UTF-8').encode()
-    msg['From'] = Header(from_email.encode("utf-8"), 'UTF-8').encode()
-    msg['To'] = Header(to.encode("utf-8"), 'UTF-8').encode()
+    msg['Subject'] = Header(subject)
+    msg['From'] = Header(from_email)
+    msg['To'] = Header(to)
     if cc:
-        msg['Cc'] = Header(cc.encode("utf-8"), 'UTF-8').encode()
+        msg['Cc'] = Header(cc)
 
     return msg
