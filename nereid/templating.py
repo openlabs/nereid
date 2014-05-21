@@ -13,12 +13,22 @@ from jinja2.ext import Extension
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.MIMEBase import MIMEBase
-from email import Encoders
+from email.header import Header
+from email import Encoders, Charset
 import trytond.tools as tools
 from trytond.transaction import Transaction
 
 from .globals import request, current_app  # noqa
 from .helpers import _rst_to_html_filter, make_crumbs
+
+
+# Override python's weird assumption that utf-8 text should be encoded with
+# base64, and instead use quoted-printable (for both subject and body).  I
+# can't figure out a way to specify QP (quoted-printable) instead of base64 in
+# a way that doesn't modify global state. :-(
+#
+# wordeology.com/computer/how-to-send-good-unicode-email-with-python.html
+Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
 
 
 class LazyRenderer(_LazyString):
@@ -340,9 +350,12 @@ def render_email(
             )
             msg.attach(part)
 
-    msg['Subject'] = subject.encode("utf-8")
-    msg['From'] = from_email
-    msg['To'] = to
-    msg['Cc'] = cc or ''
+    # We need to use Header objects here instead of just assigning the strings
+    # in order to get our headers properly encoded (with QP).
+    msg['Subject'] = Header(subject.encode("utf-8"), 'UTF-8').encode()
+    msg['From'] = Header(from_email.encode("utf-8"), 'UTF-8').encode()
+    msg['To'] = Header(to.encode("utf-8"), 'UTF-8').encode()
+    if cc:
+        msg['Cc'] = Header(cc.encode("utf-8"), 'UTF-8').encode()
 
     return msg

@@ -4,6 +4,7 @@
 import os
 import unittest
 import pickle
+from email.header import decode_header
 
 import pycountry
 import trytond.tests.test_tryton
@@ -235,16 +236,43 @@ class TestTemplateLoading(BaseTestCase):
             app = self.get_app()
 
             with app.test_request_context('/'):
-                email_message = unicode(render_email(
+                email_message = render_email(
                     'sender@openlabs.co.in', 'reciever@openlabs.co.in',
                     'Dummy subject of email', text_template='from-local.html',
                     cc='cc@openlabs.co.in'
-                ))
-                self.assertTrue(
-                    'From: sender@openlabs.co.in' in email_message
                 )
-                self.assertTrue(
-                    'Subject: Dummy subject of email' in email_message
+                self.assertEqual(
+                    decode_header(email_message['From'])[0],
+                    ('sender@openlabs.co.in', 'utf-8')
+                )
+                self.assertEqual(
+                    decode_header(email_message['Subject'])[0],
+                    ('Dummy subject of email', 'utf-8')
+                )
+
+    def test_0070_render_email_unicode(self):
+        '''
+        Render email with unicode in Subject, From and To.
+        '''
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            with app.test_request_context('/'):
+                email_message = render_email(
+                    u'sénderø@openlabs.co.in',
+                    u'récievør@openlabs.co.in',
+                    u'Dummy subject øf email',
+                    text_template='from-local.html',
+                    cc=u'ccø@openlabs.co.in'
+                )
+                self.assertEqual(
+                    decode_header(email_message['From'])[0],
+                    (u'sénderø@openlabs.co.in'.encode('UTF-8'), 'utf-8')
+                )
+                self.assertEqual(
+                    decode_header(email_message['Subject'])[0],
+                    (u'Dummy subject øf email'.encode('UTF-8'), 'utf-8')
                 )
 
 
