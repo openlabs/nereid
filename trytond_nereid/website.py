@@ -122,7 +122,8 @@ class WebSite(ModelSQL, ModelView):
     def default_default_locale():
         ModelData = Pool().get('ir.model.data')
 
-        return ModelData.get_id("nereid", "website_locale_en-us")
+        if not Pool().test:
+            return ModelData.get_id("nereid", "website_locale_en-us")
 
     @staticmethod
     def default_application_user():
