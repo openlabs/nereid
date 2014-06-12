@@ -39,7 +39,8 @@ class TestAddress(NereidTestCase):
         self.contact_mech_obj = POOL.get('party.contact_mechanism')
 
         self.templates = {
-            'home.jinja': '{{get_flashed_messages()}}',
+            'home.jinja':
+            "{{ get_using_xml_id('ir', 'lang_en').name }}",
             'login.jinja':
             '{{ login_form.errors }} {{get_flashed_messages()}}',
             'registration.jinja':
@@ -446,6 +447,19 @@ class TestAddress(NereidTestCase):
                 self.assertEqual(contact_data['type'], 'irc')
                 self.assertEqual(contact_data['value'], 'Value')
                 self.assertEqual(contact_data['comment'], 'Comment')
+
+    def test_0070_test_get_using_xml_id(self):
+        """
+        Tests context processor get_using_xml_id.
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            with app.test_client() as c:
+                response = c.get('/en_US/')
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.data, 'English')
 
 
 def suite():
