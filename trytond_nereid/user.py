@@ -180,6 +180,7 @@ class NereidUser(ModelSQL, ModelView):
         """
         return {
             'id': self.id,
+            'email': self.email,
             'display_name': self.display_name,
             'permissions': list(self.get_permissions()),
         }

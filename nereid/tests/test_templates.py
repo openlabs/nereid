@@ -272,11 +272,14 @@ class TestTemplateLoading(BaseTestCase):
                 )
                 self.assertEqual(
                     decode_header(email_message['From'])[0],
-                    (sender.encode('UTF-8'), 'utf-8')
+                    (sender.encode('ISO-8859-1'), 'iso-8859-1')
                 )
                 self.assertEqual(
                     decode_header(email_message['Subject'])[0],
-                    (u'Dummy subject øf email'.encode('UTF-8'), 'utf-8')
+                    (
+                        u'Dummy subject øf email'.encode('iso-8859-1'),
+                        'iso-8859-1'
+                    )
                 )
                 self.assertEqual(
                     decode_header(email_message['To'])[0],

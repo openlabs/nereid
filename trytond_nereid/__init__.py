@@ -14,6 +14,7 @@ from .configuration import NereidConfigStart, NereidConfig
 from .translation import Translation, TranslationSet, TranslationUpdate, \
     TranslationClean
 from .country import Country, Subdivision
+from .model import ModelData
 
 
 def register():
@@ -41,6 +42,7 @@ def register():
         Translation,
         Country,
         Subdivision,
+        ModelData,
         module='nereid', type_='model'
     )
     Pool.register(
