@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tryton>
+    <data>
+        <record model="nereid.template.context_processor" id="ctx_get_xml_record">
+            <field name="method">ir.model.data.context_processor</field>
+        </record>
+    </data>
+</tryton>
