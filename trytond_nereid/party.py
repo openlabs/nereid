@@ -7,7 +7,7 @@ from werkzeug import redirect, abort
 from jinja2 import TemplateNotFound
 
 from nereid import request, url_for, render_template, login_required, flash, \
-    jsonify, route
+    jsonify, route, current_user
 from trytond.model import ModelView, ModelSQL, fields
 from trytond.pool import Pool, PoolMeta
 from trytond.transaction import Transaction
@@ -249,6 +249,22 @@ class Address:
     def view_address(cls):
         "View the addresses of user"
         return render_template('address.jinja')
+
+    @route("/remove-address/<int:active_id>", methods=["POST"])
+    @login_required
+    def remove_address(self):
+        """
+        Make address inactive if user removes the address from address book.
+        """
+        if self.party == current_user.party:
+            self.active = False
+            self.save()
+            flash(_('Address has been deleted successfully!'))
+            if request.is_xhr:
+                return jsonify(success=True)
+            return redirect(request.referrer)
+
+        abort(403)
 
 
 class Party(ModelSQL, ModelView):
