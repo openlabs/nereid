@@ -461,6 +461,74 @@ class TestAddress(NereidTestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(response.data, 'English')
 
+    def test_0080_remove_address(self):
+        """
+        Test for making address inactive when user wants to remove address.
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            registered_user = self.registered_user
+
+            with app.test_client() as c:
+                response = c.post(
+                    '/en_US/login',
+                    data={
+                        'email': 'email@example.com',
+                        'password': 'password',
+                    }
+                )
+                self.assertEqual(response.status_code, 302)
+                self.assertEqual(len(registered_user.party.addresses), 1)
+                c.post(
+                    '/en_US/remove-address/%d' %
+                    (registered_user.party.addresses[0].id, )
+                )
+                self.assertEqual(len(registered_user.party.addresses), 0)
+
+    def test_0090_remove_address_by_unauthorized_user(self):
+        """
+        Test if registered user can remove the address of another registered
+        user.
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            party1, = self.party_obj.create([{
+                'name': 'TestParty',
+            }])
+
+            # Creating new_user
+            new_user, = self.nereid_user_obj.create([{
+                'party': party1,
+                'display_name': 'Test User',
+                'email': 'registered-user@example.com',
+                'password': 'password',
+                'company': self.company,
+            }])
+            # Login from registered_user.
+            with app.test_client() as c:
+                response = c.post(
+                    '/en_US/login',
+                    data={
+                        'email': 'email@example.com',
+                        'password': 'password',
+                    }
+                )
+                self.assertEqual(response.status_code, 302)
+
+                # check for addresses in new_user address book.
+                self.assertEqual(len(new_user.party.addresses), 1)
+
+                # registered_user trying to remove address of new_user
+                rv = c.post(
+                    '/en_US/remove-address/%d' %
+                    (new_user.party.addresses[0].id, )
+                )
+                self.assertEqual(rv.status_code, 403)
+
 
 def suite():
     "Nereid test suite"
