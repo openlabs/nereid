@@ -41,9 +41,6 @@ class Address:
 
     registration_form = RegistrationForm
 
-    phone = fields.Function(fields.Char('Phone'), 'get_address_mechanism')
-    email = fields.Function(fields.Char('E-Mail'), 'get_address_mechanism')
-
     @classmethod
     def __register__(cls, module_name):
         pool = Pool()
@@ -83,12 +80,6 @@ class Address:
 
                 table.column_rename(column, '%s_deprecated' % column)
 
-    def get_address_mechanism(self, name):
-        for mechanism in self.party.contact_mechanisms:
-            if mechanism.type == name:
-                return mechanism.value
-        return ''
-
     @classmethod
     def get_address_form(cls, address=None):
         """
@@ -108,8 +99,8 @@ class Address:
                 city=address.city,
                 country=address.country and address.country.id,
                 subdivision=address.subdivision and address.subdivision.id,
-                email=address.email,
-                phone=address.phone
+                email=address.party.email,
+                phone=address.party.phone
             )
         else:
             address_name = "" if request.nereid_user.is_anonymous() else \
