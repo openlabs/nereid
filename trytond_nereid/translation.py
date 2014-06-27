@@ -17,7 +17,7 @@ import logging
 import contextlib
 
 import wtforms
-from jinja2 import FileSystemLoader
+from jinja2 import FileSystemLoader, Environment
 from jinja2.ext import babel_extract, GETTEXT_FUNCTIONS
 from babel.messages.extract import extract_from_dir
 from trytond.model import fields
@@ -445,7 +445,9 @@ class TranslationSet:
             # using a simple filesystem loader and load all the
             # translations from it.
             loader = FileSystemLoader(template_dir)
-            for template in loader.list_templates():
+            env = Environment(loader=loader)
+            extensions = '.html,.jinja'
+            for template in env.list_templates(extensions=extensions):
                 logger.info('Loading from: %s:%s' % (module, template))
                 file_obj = open(loader.get_source({}, template)[1])
                 for message_tuple in babel_extract(
