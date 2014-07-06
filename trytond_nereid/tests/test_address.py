@@ -146,7 +146,7 @@ class TestAddress(NereidTestCase):
             'default_locale': locale,
             'locales': [('add', [locale.id])],
             'guest_user': self.guest_user,
-            'countries': [('set', self.available_countries)],
+            'countries': [('add', self.available_countries)],
         }])
 
     def get_template_source(self, name):

@@ -109,7 +109,7 @@ class TestCurrency(NereidTestCase):
             'default_locale': locale_en_us.id,
             'locales': [('add', [locale_en_us.id, locale_es_es.id])],
             'guest_user': self.guest_user.id,
-            'currencies': [('set', self.website_currencies)],
+            'currencies': [('add', self.website_currencies)],
         }])
         self.templates = {
             'home.jinja': '{{ request.nereid_currency.id }}',
