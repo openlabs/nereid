@@ -11,7 +11,7 @@ install:
   - pip install pycountry
   - pip install coveralls
   - python setup.py install
-  - pip install 'trytond_nereid_test>=3.0,<3.1'
+  - pip install git+git://github.com/openlabs/nereid-test@develop
 script:
   - coverage run setup.py test
   - python setup.py test_on_postgres

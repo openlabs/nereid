@@ -146,7 +146,7 @@ class TestAddress(NereidTestCase):
             'default_locale': locale,
             'locales': [('add', [locale.id])],
             'guest_user': self.guest_user,
-            'countries': [('set', self.available_countries)],
+            'countries': [('add', self.available_countries)],
         }])
 
     def get_template_source(self, name):
@@ -189,10 +189,7 @@ class TestAddress(NereidTestCase):
                 )
                 self.assertEqual(response.status_code, 302)  # Login success
 
-                # Assert that the user has only 1 address, which gets created
-                # automatically with the party
-                self.assertEqual(len(registered_user.party.addresses), 1)
-                existing_address, = registered_user.party.addresses
+                self.assertEqual(len(registered_user.party.addresses), 0)
 
                 # POST and a new address must be created
                 response = c.post('/en_US/save-new-address', data=address_data)
@@ -202,14 +199,10 @@ class TestAddress(NereidTestCase):
                 registered_user = self.nereid_user_obj(
                     self.registered_user.id
                 )
-                # Check if the user has two addresses now
-                self.assertEqual(len(registered_user.party.addresses), 2)
-                for address in registered_user.party.addresses:
-                    if address != existing_address:
-                        break
-                else:
-                    self.fail("New address not found")
+                # Check if the user has one addresses now
+                self.assertEqual(len(registered_user.party.addresses), 1)
 
+                address, = registered_user.party.addresses
                 self.assertEqual(address.name, address_data['name'])
                 self.assertEqual(address.street, address_data['street'])
                 self.assertEqual(address.streetbis, address_data['streetbis'])
@@ -257,10 +250,7 @@ class TestAddress(NereidTestCase):
                 )
                 self.assertEqual(response.status_code, 302)  # Login success
 
-                # Assert that the user has only 1 address, which gets created
-                # automatically with the party
-                self.assertEqual(len(registered_user.party.addresses), 1)
-                existing_address, = registered_user.party.addresses
+                self.assertEqual(len(registered_user.party.addresses), 0)
 
                 # POST and a new address must be created
                 response = c.post('/en_US/create-address', data=address_data)
@@ -271,13 +261,9 @@ class TestAddress(NereidTestCase):
                     self.registered_user.id
                 )
                 # Check if the user has two addresses now
-                self.assertEqual(len(registered_user.party.addresses), 2)
-                for address in registered_user.party.addresses:
-                    if address != existing_address:
-                        break
-                else:
-                    self.fail("New address not found")
+                self.assertEqual(len(registered_user.party.addresses), 1)
 
+                address, = registered_user.party.addresses
                 self.assertEqual(address.name, address_data['name'])
                 self.assertEqual(address.street, address_data['street'])
                 self.assertEqual(address.streetbis, address_data['streetbis'])
@@ -322,10 +308,11 @@ class TestAddress(NereidTestCase):
                 )
                 self.assertEqual(response.status_code, 302)  # Login success
 
-                # Assert that the user has only 1 address, which gets created
-                # automatically with the party
-                self.assertEqual(len(registered_user.party.addresses), 1)
-                existing_address, = registered_user.party.addresses
+                # Create an address that can be edited
+                self.assertEqual(len(registered_user.party.addresses), 0)
+                existing_address, = self.address_obj.create([{
+                    'party': registered_user.party.id,
+                }])
 
                 response = c.get(
                     '/en_US/edit-address/%d' % existing_address.id
@@ -339,8 +326,7 @@ class TestAddress(NereidTestCase):
                 )
                 self.assertEqual(response.status_code, 302)
 
-                # Assert that the user has only 1 address, which gets created
-                # automatically with the party
+                # Assert that the user has only 1 address
                 self.assertEqual(len(registered_user.party.addresses), 1)
 
                 address = self.address_obj(existing_address.id)
@@ -480,7 +466,11 @@ class TestAddress(NereidTestCase):
                     }
                 )
                 self.assertEqual(response.status_code, 302)
-                self.assertEqual(len(registered_user.party.addresses), 1)
+                self.assertEqual(len(registered_user.party.addresses), 0)
+                self.address_obj.create([{
+                    'party': registered_user.party.id,
+                }])
+
                 c.post(
                     '/en_US/remove-address/%d' %
                     (registered_user.party.addresses[0].id, )
@@ -520,6 +510,9 @@ class TestAddress(NereidTestCase):
                 self.assertEqual(response.status_code, 302)
 
                 # check for addresses in new_user address book.
+                self.address_obj.create([{
+                    'party': new_user.party.id,
+                }])
                 self.assertEqual(len(new_user.party.addresses), 1)
 
                 # registered_user trying to remove address of new_user
