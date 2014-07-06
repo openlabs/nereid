@@ -6,11 +6,17 @@ include CHANGELOG
 include MIGRATION
 include LICENSE
 include Makefile
-include docs/*
+
+recursive-include docs *
+
 include trytond_nereid/*.xml
 include trytond_nereid/view/*.xml
 include trytond_nereid/*.odt
-include trytond_nereid/tryton.cfg
+recursive-include trytond_nereid *.cfg
 include trytond_nereid/locale/*.po
 include trytond_nereid/icons/*
+recursive-include tests *.py
 graft trytond_nereid/templates
+
+include tox.ini
+include *.txt
