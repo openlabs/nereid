@@ -13,7 +13,7 @@ class SQLiteTest(Command):
     """
     Run the tests on SQLite
     """
-    description = "Run tests on Postgresql"
+    description = "Run tests on SQLite"
 
     user_options = []
 
