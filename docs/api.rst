@@ -32,6 +32,7 @@ Helpers
 
 .. autofunction:: nereid.helpers.url_for
 .. autofunction:: nereid.helpers.route
+.. autofunction:: nereid.helpers.context_processor
 
 Backend - Tryton Connection
 ---------------------------

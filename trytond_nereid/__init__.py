@@ -9,7 +9,6 @@ from .website import WebSite, WebSiteLocale, WebsiteCountry, \
 from .urls import URLMap, URLRule, URLRuleDefaults
 from .static_file import NereidStaticFolder, NereidStaticFile
 from .currency import Currency
-from .template import ContextProcessors
 from .configuration import NereidConfigStart, NereidConfig
 from .translation import Translation, TranslationSet, TranslationUpdate, \
     TranslationClean
@@ -37,7 +36,6 @@ def register():
         NereidStaticFolder,
         NereidStaticFile,
         Currency,
-        ContextProcessors,
         NereidConfigStart,
         Translation,
         Country,
