@@ -465,3 +465,31 @@ def get_version():
     tryton module loader.
     """
     return trytond.modules.get_module_info('nereid')['version']
+
+
+def context_processor(name=None):
+    """Makes method available in template context. By default method will be
+    registered by its name.
+
+    Decorator adds an attribute to the method called `_context_processor`.
+
+    .. code-block:: python
+        :emphasize-lines: 1,7
+
+        from nereid import context_processor
+
+        class Product:
+            __name__ = 'product.product'
+
+            @classmethod
+            @context_processor('get_sale_price')
+            def get_sale_price(cls):
+                ...
+                return 'Product sale price'
+    """
+    def decorator(f):
+        f._context_processor = True
+        if name is not None:
+            f.func_name = name
+        return f
+    return decorator

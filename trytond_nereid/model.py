@@ -6,6 +6,7 @@
     :license: BSD, see LICENSE for more details.
 """
 from trytond.pool import PoolMeta, Pool
+from nereid import context_processor
 
 __metaclass__ = PoolMeta
 
@@ -16,6 +17,7 @@ class ModelData:
     __name__ = 'ir.model.data'
 
     @classmethod
+    @context_processor('get_using_xml_id')
     def get_using_xml_id(cls, module, fs_id):
         """Returns active db record corresponding to fs_id
         """
@@ -27,13 +29,3 @@ class ModelData:
         ], limit=1)
 
         return Pool().get(data.model)(id_)
-
-    @classmethod
-    def context_processor(cls):
-        """This function will be called by nereid to update
-        the template context. Must return a dictionary that the context
-        will be updated with.
-        """
-        return {
-            'get_using_xml_id': cls.get_using_xml_id,
-        }
