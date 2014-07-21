@@ -115,7 +115,7 @@ class TestCountry(NereidTestCase):
             'application_user': USER,
             'default_locale': locale_en_us.id,
             'guest_user': self.guest_user.id,
-            'currencies': [('set', self.website_currencies)],
+            'currencies': [('add', self.website_currencies)],
         }])
         self.templates = {
             'home.jinja': '{{ "hell" }}',

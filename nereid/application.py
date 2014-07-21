@@ -203,7 +203,9 @@ class Nereid(Flask):
         # the nereid specific url_for
         flask.ext.login.url_for = url_for
 
-        self.add_ctx_processors_from_db()
+        self.template_context_processors[None].append(
+            self.get_context_processors()
+        )
 
         # Add the additional template context processors
         self.template_context_processors[None].append(
@@ -242,6 +244,37 @@ class Nereid(Flask):
                     )
 
         return rules
+
+    @root_transaction_if_required
+    def get_context_processors(self):
+        """
+        Returns the method object which wraps context processor methods
+        formed by decorating methods with the
+        :func:`~nereid.helpers.context_processor` decorator.
+
+        This method goes through all the models and their methods in the pool
+        of the loaded database and looks for the `_context_processor` attribute
+        in them and adds to context_processor dict.
+        """
+        context_processors = {}
+        models = Pool._pool[self.database_name]['model']
+
+        for model_name, model in models.iteritems():
+            for f_name, f in inspect.getmembers(
+                    model, predicate=inspect.ismethod):
+
+                if hasattr(f, '_context_processor'):
+                    ctx_proc_as_func = getattr(Pool().get(model_name), f_name)
+                    context_processors[ctx_proc_as_func.func_name] = \
+                        ctx_proc_as_func
+
+        def get_ctx():
+            """Returns dictionary having method name in keys and method object
+            in values.
+            """
+            return context_processors
+
+        return get_ctx
 
     def load_cache(self):
         """
@@ -305,21 +338,6 @@ class Nereid(Flask):
         Return connection to Database backend of tryton
         """
         return self._database
-
-    @root_transaction_if_required
-    def add_ctx_processors_from_db(self):
-        """
-        Adds template context processors registers with the model
-        nereid.template.context_processor
-        """
-        ctx_processor_obj = self.pool.get('nereid.template.context_processor')
-
-        db_ctx_processors = ctx_processor_obj.get_processors()
-        if None in db_ctx_processors:
-            self.template_context_processors[None].extend(
-                db_ctx_processors.pop(None)
-            )
-        self.template_context_processors.update(db_ctx_processors)
 
     def request_context(self, environ):
         return RequestContext(self, environ)

@@ -7,7 +7,7 @@ Nereid for Tryton
 .. image:: https://coveralls.io/repos/openlabs/nereid/badge.png
   :target: https://coveralls.io/r/openlabs/nereid
 
-Nereid is a web framework built over Flask, with Tryton as a Backend.
+Nereid is a web framework built over Flask, with Tryton as an ORM.
 
 Copyright
 ---------
@@ -64,9 +64,9 @@ management, account management etc to the existing Tryton modules.
 Which version of Tryton does nereid use ?
 `````````````````````````````````````````
 
-Nereid is available for version 2.0, 2.4, 2.6, 2.8 and 3.0.
+Nereid is available for version 2.0, 2.4, 2.6, 2.8, 3.0 and 3.2.
 
-All versions other than 3.0 are mainteinance only releases.
+All versions other than 3.2 and 3.0 are mainteinance only releases.
 
 Now that brings us to how versioning is done
 
@@ -75,7 +75,7 @@ with a few differences. The repository is maintained on Github and each
 version of Nereid is separately maintained on a git branch.
 
 Specific minor releases can be identified from git tags or downloaded from
-the tags page on github.
+the tags page on github. All minor releases are available on PYPI too.
 
 What is the license of Nereid ?
 ```````````````````````````````
@@ -104,10 +104,15 @@ separate Tryton module and then the functionality would be available
 to you depending on what modules are installed in the database that you
 are accessing.
 
+This also allows modules to be reused. For example, the nereid-catalog
+module which makes product information available could just be used for
+a display only catalog and is also used as the cart display module for
+nereid-webshop - the full eCommerce system.
+
 A little history
 ````````````````
 
-The initial goal was to build an e-commerce system over OpenERP 
+The initial goal was to build an e-commerce system over OpenERP/Odoo 
 called Callisto, and we did! It worked, but never scaled on OpenERP.
 The license sucked (surprise)! and then we saw that most issues we saw
 with OpenERP don't exist in Tryton. And, we were right.
@@ -120,7 +125,7 @@ Authors and Contributors
 
 Nereid was built at `Openlabs <http://www.openlabs.co.in>`_. It's now 
 opensource, feel free to fork and contribute! Hate us! Just fork You 
-can get hold of @sharoonthomas or @shalabhaggarwal if you have some 
+can get hold of @openlabsindia or @sharoonthomas if you have some 
 techy questions to drill with.
 
 Support or Contact

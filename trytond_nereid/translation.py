@@ -13,10 +13,11 @@
 '''
 import os
 import polib
+import logging
 import contextlib
 
 import wtforms
-from jinja2 import FileSystemLoader
+from jinja2 import FileSystemLoader, Environment
 from jinja2.ext import babel_extract, GETTEXT_FUNCTIONS
 from babel.messages.extract import extract_from_dir
 from trytond.model import fields
@@ -427,6 +428,7 @@ class TranslationSet:
               {{ _(Welcome) }} {# trans: In the top banner #}
         """
         extract_options = cls._get_nereid_template_extract_options()
+        logger = logging.getLogger('nereid.translation')
 
         for module, directory in cls._get_installed_module_directories():
             template_dir = os.path.join(directory, 'templates')
@@ -434,11 +436,19 @@ class TranslationSet:
                 # The template directory does not exist. Just continue
                 continue
 
+            logger.info(
+                'Found template directory for module %s at %s' % (
+                    module, template_dir
+                )
+            )
             # now that there is a template directory, load the templates
             # using a simple filesystem loader and load all the
             # translations from it.
             loader = FileSystemLoader(template_dir)
-            for template in loader.list_templates():
+            env = Environment(loader=loader)
+            extensions = '.html,.jinja'
+            for template in env.list_templates(extensions=extensions):
+                logger.info('Loading from: %s:%s' % (module, template))
                 file_obj = open(loader.get_source({}, template)[1])
                 for message_tuple in babel_extract(
                         file_obj, GETTEXT_FUNCTIONS,

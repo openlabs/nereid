@@ -33,6 +33,14 @@ class AddressForm(Form):
     email = TextField(_('Email'))
     phone = TextField(_('Phone'))
 
+    def __init__(self, formdata=None, obj=None, prefix='', **kwargs):
+        super(AddressForm, self).__init__(formdata, obj, prefix, **kwargs)
+
+        # Fill country choices while form is initialized
+        self.country.choices = [
+            (c.id, c.name) for c in request.nereid_website.countries
+        ]
+
 
 class Address:
     """Party Address"""
@@ -106,12 +114,6 @@ class Address:
             address_name = "" if request.nereid_user.is_anonymous() else \
                 request.nereid_user.display_name
             form = AddressForm(request.form, name=address_name)
-
-        # Prefill the available countries
-        countries = [
-            (c.id, c.name) for c in request.nereid_website.countries
-        ]
-        form.country.choices = countries
 
         return form
 

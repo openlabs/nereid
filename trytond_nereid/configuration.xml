@@ -158,11 +158,6 @@
             <field name="act_window" ref="act_url_rule_defaults_tree" />
         </record>
 
-        <!-- Context processors -->
-        <record model="nereid.template.context_processor" id="ctx_processor_currency">
-            <field name="method">currency.currency.context_processor</field>
-        </record>
-
         <!-- Nereid Configuration wizard -->
         <record model="ir.ui.view" id="website_config_start_view_form">
             <field name="model">nereid.website.config.start</field>
