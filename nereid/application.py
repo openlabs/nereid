@@ -9,10 +9,10 @@ import inspect
 
 from flask import Flask
 from flask.config import ConfigAttribute
-from flask.globals import _request_ctx_stack
+from flask.globals import _request_ctx_stack, current_app
 from flask.helpers import locked_cached_property
 from jinja2 import MemcachedBytecodeCache
-from werkzeug import import_string
+from werkzeug import import_string, abort
 from flask_wtf.csrf import CsrfProtect
 import flask.ext.login
 from flask.ext.login import LoginManager
@@ -21,6 +21,7 @@ from trytond import backend
 from trytond.pool import Pool
 from trytond.cache import Cache
 from trytond.config import CONFIG
+from trytond.exceptions import UserError
 from trytond.modules import register_classes
 from trytond.transaction import Transaction
 
@@ -425,6 +426,15 @@ class Nereid(Flask):
                 # arguments and pass the model instance as first argument
                 model = Pool().get(req.url_rule.endpoint.rsplit('.', 1)[0])
                 i = model(req.view_args.pop('active_id'))
+                try:
+                    i.rec_name
+                except UserError:
+                    # The record may not exist anymore which results in
+                    # a read error
+                    current_app.logger.debug(
+                        "Record %s doesn't exist anymore." % i
+                    )
+                    abort(404)
                 result = meth(i, **req.view_args)
 
             if isinstance(result, LazyRenderer):

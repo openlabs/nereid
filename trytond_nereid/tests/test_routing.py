@@ -198,6 +198,27 @@ class TestRouting(NereidTestCase):
                 response = c.get('/')
                 self.assertEqual(response.data, 'es_ES')
 
+    def test_0050_invalid_active_id_url(self):
+        """
+        Test that the url if 404 if record for active_id doesn't exist
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            self.nereid_website.locales = []
+            self.nereid_website.save()
+            app = self.get_app()
+            country, = self.country_obj.create([{
+                'name': 'India',
+                'code': 'IN'
+            }])
+
+            with app.test_client() as c:
+                response = c.get('/countries/%d/subdivisions' % country.id)
+                self.assertEqual(response.status_code, 200)
+
+                response = c.get('/countries/6/subdivisions')  # Invalid record
+                self.assertEqual(response.status_code, 404)
+
 
 def suite():
     "Nereid test suite"
