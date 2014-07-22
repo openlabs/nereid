@@ -23,7 +23,6 @@ class NereidStaticFolder(ModelSQL, ModelView):
 
     folder_name = fields.Char(
         'Folder Name', required=True, select=1,
-        on_change_with=['name', 'folder_name']
     )
     description = fields.Char('Description', select=1)
     files = fields.One2Many('nereid.static.file', 'folder', 'Files')
@@ -42,6 +41,7 @@ class NereidStaticFolder(ModelSQL, ModelView):
             'folder_cannot_change': "Folder name cannot be changed"
         })
 
+    @fields.depends('name', 'folder_name')
     def on_change_with_folder_name(self):
         """
         Fills the name field with a slugified name
