@@ -315,8 +315,6 @@ class Nereid(Flask):
             ))
             CONFIG.update_etc(self.tryton_configfile)
 
-        CONFIG.set_timezone()
-
         register_classes()
 
         # Load and initialise pool
