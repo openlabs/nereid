@@ -18,6 +18,7 @@ from trytond.model import ModelView, ModelSQL, fields
 from trytond.transaction import Transaction
 from trytond.pool import Pool
 from trytond.cache import Cache
+from trytond import backend
 
 from .i18n import _
 
@@ -92,9 +93,6 @@ class WebSite(ModelSQL, ModelView):
     application_user = fields.Many2One(
         'res.user', 'Application User', required=True
     )
-    guest_user = fields.Many2One(
-        'nereid.user', 'Guest user', required=True
-    )
 
     timezone = fields.Selection(
         [(x, x) for x in pytz.common_timezones], 'Timezone', translate=False
@@ -137,6 +135,14 @@ class WebSite(ModelSQL, ModelView):
             ('name_uniq', 'UNIQUE(name)',
              'Another site with the same name already exists!')
         ]
+
+    @classmethod
+    def __register__(cls, module_name):
+        TableHandler = backend.get('TableHandler')
+        super(WebSite, cls).__register__(module_name)
+        table = TableHandler(Transaction().cursor, cls, module_name)
+
+        table.not_null_action('guest_user', action='remove')
 
     @classmethod
     @route("/countries", methods=["GET"])
@@ -199,7 +205,7 @@ class WebSite(ModelSQL, ModelView):
         """
         login_form = LoginForm(request.form)
 
-        if not request.is_guest_user and request.args.get('next'):
+        if not current_user.is_anonymous() and request.args.get('next'):
             return redirect(request.args['next'])
 
         if request.method == 'POST' and login_form.validate():
@@ -320,7 +326,7 @@ class WebSite(ModelSQL, ModelView):
         rv = {
             'messages': map(unicode, get_flashed_messages()),
         }
-        if request.is_guest_user:
+        if current_user.is_anonymous():
             rv.update({
                 'logged_id': False
             })

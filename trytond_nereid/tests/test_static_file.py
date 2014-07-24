@@ -102,16 +102,6 @@ class TestStaticFile(NereidTestCase):
             'party': self.party,
             'currency': usd,
         }])
-        self.guest_party, = self.party_obj.create([{
-            'name': 'Guest User',
-        }])
-        self.guest_user, = self.nereid_user_obj.create([{
-            'party': self.guest_party,
-            'display_name': 'Guest User',
-            'email': 'guest@openlabs.co.in',
-            'password': 'password',
-            'company': self.company.id,
-        }])
 
         url_map_id, = self.url_map_obj.search([], limit=1)
         en_us, = self.language_obj.search([('code', '=', 'en_US')])
@@ -128,7 +118,6 @@ class TestStaticFile(NereidTestCase):
             'application_user': USER,
             'default_locale': locale,
             'locales': [('add', [locale.id])],
-            'guest_user': self.guest_user,
         }])
 
     def create_static_file(self, file_buffer):

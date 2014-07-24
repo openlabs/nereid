@@ -14,8 +14,6 @@ this repository contains the full copyright notices and license terms. -->
             <field name="company"/>
             <label name="application_user"/>
             <field name="application_user"/>
-            <label name="guest_user"/>
-            <field name="guest_user"/>
             <label name="timezone"/>
             <field name="timezone"/>
         </page>

@@ -62,16 +62,6 @@ class TestAuth(NereidTestCase):
             'party': self.party,
             'currency': usd,
         }])
-        self.guest_party, = self.party_obj.create([{
-            'name': 'Guest User',
-        }])
-        self.guest_user, = self.nereid_user_obj.create([{
-            'party': self.guest_party,
-            'display_name': 'Guest User',
-            'email': 'guest@openlabs.co.in',
-            'password': 'password',
-            'company': self.company.id,
-        }])
 
         url_map, = self.url_map_obj.search([], limit=1)
         en_us, = self.language_obj.search([('code', '=', 'en_US')])
@@ -87,7 +77,6 @@ class TestAuth(NereidTestCase):
             'company': self.company,
             'application_user': USER,
             'default_locale': locale,
-            'guest_user': self.guest_user,
         }])
         self.templates = {
             'home.jinja': '{{get_flashed_messages()}}',
@@ -710,6 +699,15 @@ class TestAuth(NereidTestCase):
         '''
         with Transaction().start(DB_NAME, USER, CONTEXT):
             self.setup_defaults()
+
+            nereid_user, = self.nereid_user_obj.create([{
+                'party': self.party_obj.create([{'name': 'Nereid User'}])[0],
+                'display_name': 'Nereid User',
+                'email': 'nereid@example.com',
+                'password': 'password',
+                'company': self.company,
+            }])
+
             p1, p2, p3, p4 = self.nereid_permission_obj.create([
                 {'name': 'p1', 'value': 'nereid.perm1'},
                 {'name': 'p2', 'value': 'nereid.perm2'},
@@ -717,7 +715,7 @@ class TestAuth(NereidTestCase):
                 {'name': 'p4', 'value': 'nereid.perm4'},
             ])
             self.nereid_user_obj.write(
-                [self.guest_user],
+                [nereid_user],
                 {
                     'permissions': [
                         ('add', [p1, p2])
@@ -726,43 +724,43 @@ class TestAuth(NereidTestCase):
             )
 
             # all = [], any = [] = True
-            self.assertTrue(self.guest_user.has_permissions())
+            self.assertTrue(nereid_user.has_permissions())
 
             # all = [p1, p2], any = [] == True
-            self.assertTrue(self.guest_user.has_permissions(
+            self.assertTrue(nereid_user.has_permissions(
                 perm_all=[p1.value, p2.value]
             ))
 
             # all = [p1, p2], any = [p3, p4] == False
-            self.assertFalse(self.guest_user.has_permissions(
+            self.assertFalse(nereid_user.has_permissions(
                 perm_all=[p1.value, p2.value],
                 perm_any=[p3.value, p4.value]
             ))
 
             # all = [p1, p3], any = [] == False
-            self.assertFalse(self.guest_user.has_permissions(
+            self.assertFalse(nereid_user.has_permissions(
                 perm_all=[p1.value, p3.value],
             ))
 
             # all = [p1, p3], any = [p1, p3, p4] == False
-            self.assertFalse(self.guest_user.has_permissions(
+            self.assertFalse(nereid_user.has_permissions(
                 perm_all=[p1.value, p3.value],
                 perm_any=[p1.value, p3.value, p4.value]
             ))
 
             # all = [p1, p2], any = [p1, p3, p4] == True
-            self.assertTrue(self.guest_user.has_permissions(
+            self.assertTrue(nereid_user.has_permissions(
                 perm_all=[p1.value, p2.value],
                 perm_any=[p1.value, p3.value, p4.value]
             ))
 
             # all = [], any = [p1, p2, p3] == True
-            self.assertTrue(self.guest_user.has_permissions(
+            self.assertTrue(nereid_user.has_permissions(
                 perm_any=[p1.value, p2.value, p3.value]
             ))
 
             # all = [], any = [p3, p4] == False
-            self.assertFalse(self.guest_user.has_permissions(
+            self.assertFalse(nereid_user.has_permissions(
                 perm_any=[p3.value, p4.value]
             ))
 
@@ -887,34 +885,6 @@ class TestAuth(NereidTestCase):
                     }
                 )
                 self.assertEqual(response.data, data['display_name'])
-
-    def test_0300_test_is_guest_user(self):
-        """
-        Ensure that is_guest_user works
-        """
-        with Transaction().start(DB_NAME, USER, CONTEXT):
-            self.setup_defaults()
-            app = self.get_app()
-
-            party, = self.party_obj.create([{'name': 'Registered user'}])
-            data = {
-                'party': party,
-                'display_name': 'Registered User',
-                'email': 'email@example.com',
-                'password': 'password',
-                'company': self.company,
-            }
-            nereid_user, = self.nereid_user_obj.create([data.copy()])
-
-            self.templates['home.jinja'] = '{{ request.is_guest_user }}'
-
-            with app.test_client() as c:
-                self.assertEqual(c.get('/').data, 'True')
-                c.post(
-                    '/login',
-                    data={'email': data['email'], 'password': data['password']}
-                )
-                self.assertEqual(c.get('/').data, 'False')
 
     def test_0400_auth_xhr_wrong(self):
         """

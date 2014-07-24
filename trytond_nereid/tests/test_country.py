@@ -58,16 +58,6 @@ class TestCountry(NereidTestCase):
             'currency': usd,
             'party': self.party,
         }])
-        self.guest_party, = self.party_obj.create([{
-            'name': 'Guest User',
-        }])
-        self.guest_user, = self.nereid_user_obj.create([{
-            'party': self.guest_party,
-            'display_name': 'Guest User',
-            'email': 'guest@openlabs.co.in',
-            'password': 'password',
-            'company': self.company.id,
-        }])
         c1, = self.currency_obj.create([{
             'code': 'C1',
             'symbol': 'C1',
@@ -114,7 +104,6 @@ class TestCountry(NereidTestCase):
             'company': self.company,
             'application_user': USER,
             'default_locale': locale_en_us.id,
-            'guest_user': self.guest_user.id,
             'currencies': [('add', self.website_currencies)],
         }])
         self.templates = {

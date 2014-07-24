@@ -118,17 +118,6 @@ class Request(RequestBase):
         """
         return self.nereid_locale.language
 
-    @cached_property
-    def is_guest_user(self):
-        """Return true if the user is guest."""
-        warnings.warn(
-            "request.is_guest_user will be deprecated. "
-            "Use `nereid.current_user` proxy and "
-            "current_user.is_anonymous instead",
-            DeprecationWarning, stacklevel=2
-        )
-        return current_user.is_anonymous()
-
     @property
     def is_json(self):
         """Indicates if this request is JSON or not.  By default a request
