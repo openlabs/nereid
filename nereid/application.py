@@ -501,12 +501,3 @@ class Nereid(Flask):
         if filename.endswith(('.jinja',)):
             return True
         return super(Nereid, self).select_jinja_autoescape(filename)
-
-    @property
-    def guest_user(self):
-        warnings.warn(DeprecationWarning(
-            "guest_user as an attribute will be deprecated.\n"
-            "Use request.nereid_website.guest_user.id instead"
-        ))
-        from .globals import request
-        return request.nereid_website.guest_user.id

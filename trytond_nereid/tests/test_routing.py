@@ -51,16 +51,6 @@ class TestRouting(NereidTestCase):
             'party': self.party,
             'currency': self.usd,
         }])
-        self.guest_party, = self.party_obj.create([{
-            'name': 'Guest User',
-        }])
-        self.guest_user, = self.nereid_user_obj.create([{
-            'party': self.guest_party,
-            'display_name': 'Guest User',
-            'email': 'guest@openlabs.co.in',
-            'password': 'password',
-            'company': self.company.id,
-        }])
         party, = self.party_obj.create([{
             'name': 'Registered User',
         }])
@@ -93,7 +83,6 @@ class TestRouting(NereidTestCase):
             'application_user': USER,
             'default_locale': self.locale_en_us,
             'locales': [('add', [self.locale_en_us.id, self.locale_es_es.id])],
-            'guest_user': self.guest_user,
         }])
 
     def get_template_source(self, name):
