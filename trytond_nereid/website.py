@@ -1,5 +1,6 @@
 # This file is part of Tryton.  The COPYRIGHT file at the top level of
 # this repository contains the full copyright notices and license terms.
+import warnings
 
 import pytz
 from werkzeug import abort, redirect
@@ -94,13 +95,18 @@ class WebSite(ModelSQL, ModelView):
         'res.user', 'Application User', required=True
     )
 
-    timezone = fields.Selection(
-        [(x, x) for x in pytz.common_timezones], 'Timezone', translate=False
+    timezone = fields.Function(
+        fields.Selection(
+            [(x, x) for x in pytz.common_timezones], 'Timezone', translate=False
+        ), getter="get_timezone"
     )
 
-    @staticmethod
-    def default_timezone():
-        return 'UTC'
+    def get_timezone(self, name):
+        warnings.warn(
+            "Website timezone is deprecated, use company timezone instead",
+            DeprecationWarning, stacklevel=2
+        )
+        return self.company.timezone
 
     @staticmethod
     def default_active():
