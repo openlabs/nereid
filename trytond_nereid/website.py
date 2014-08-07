@@ -358,6 +358,8 @@ class WebSite(ModelSQL, ModelView):
 
         If not silent a website not found error is raised.
         """
+        if cls.search([], count=True) == 1:
+            return cls.search([])[0]
         try:
             website, = cls.search([('name', '=', host)])
         except ValueError:
