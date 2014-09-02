@@ -767,12 +767,12 @@ class NereidUser(ModelSQL, ModelView):
         return super(NereidUser, cls).create(vlist)
 
     @classmethod
-    def write(cls, nereid_users, values):
+    def write(cls, nereid_users, values, *args):
         """
         Update salt before saving
         """
         return super(NereidUser, cls).write(
-            nereid_users, cls._convert_values(values)
+            nereid_users, cls._convert_values(values), *args
         )
 
     @staticmethod
