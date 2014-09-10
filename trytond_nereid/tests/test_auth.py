@@ -6,11 +6,9 @@ import unittest
 import base64
 import json
 
-from mock import patch
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from trytond.transaction import Transaction
-from trytond.tools import get_smtp_server
 from trytond.config import CONFIG
 from nereid.testing import NereidTestCase
 from nereid import permissions_required
@@ -36,15 +34,6 @@ class TestAuth(NereidTestCase):
         self.currency_obj = POOL.get('currency.currency')
         self.language_obj = POOL.get('ir.lang')
         self.party_obj = POOL.get('party.party')
-
-        # Patch SMTP Lib
-        self.smtplib_patcher = patch('smtplib.SMTP', autospec=True)
-        self.PatchedSMTP = self.smtplib_patcher.start()
-        self.mocked_smtp_instance = self.PatchedSMTP.return_value
-
-    def tearDown(self):
-        # Unpatch SMTP Lib
-        self.smtplib_patcher.stop()
 
     def setup_defaults(self):
         """
@@ -105,13 +94,12 @@ class TestAuth(NereidTestCase):
 
         return self.templates.get(name)
 
-    def test_0005_mock_setup(self):
-        assert get_smtp_server() is self.PatchedSMTP.return_value
-
     def test_0010_register(self):
         """
         Registration must create a new party
         """
+        EmailQueue = POOL.get('email.queue')
+
         with Transaction().start(DB_NAME, USER, CONTEXT):
             self.setup_defaults()
             app = self.get_app()
@@ -133,16 +121,9 @@ class TestAuth(NereidTestCase):
                 response = c.post('/registration', data=data)
                 self.assertEqual(response.status_code, 302)
 
+                # Test if an email record is created in email queue
                 self.assertEqual(
-                    self.mocked_smtp_instance.sendmail.call_count, 1
-                )
-                self.assertEqual(
-                    self.mocked_smtp_instance.sendmail.call_args[0][0],
-                    CONFIG['smtp_from']
-                )
-                self.assertEqual(
-                    self.mocked_smtp_instance.sendmail.call_args[0][1],
-                    [data['email']]
+                    EmailQueue.search([], count=True), 1
                 )
 
             self.assertEqual(
@@ -171,6 +152,8 @@ class TestAuth(NereidTestCase):
 
         Same as registration test but with json data
         """
+        EmailQueue = POOL.get('email.queue')
+
         with Transaction().start(DB_NAME, USER, CONTEXT):
             self.setup_defaults()
             app = self.get_app()
@@ -199,16 +182,9 @@ class TestAuth(NereidTestCase):
                 )
                 self.assertEqual(response.status_code, 201)
 
+                # Test if an email record is created in email queue
                 self.assertEqual(
-                    self.mocked_smtp_instance.sendmail.call_count, 1
-                )
-                self.assertEqual(
-                    self.mocked_smtp_instance.sendmail.call_args[0][0],
-                    CONFIG['smtp_from']
-                )
-                self.assertEqual(
-                    self.mocked_smtp_instance.sendmail.call_args[0][1],
-                    [data['email']]
+                    EmailQueue.search([], count=True), 1
                 )
 
             self.assertEqual(

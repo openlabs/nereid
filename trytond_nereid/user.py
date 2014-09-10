@@ -28,7 +28,6 @@ from trytond.pool import Pool
 from trytond.pyson import Eval, Bool, Not
 from trytond.transaction import Transaction
 from trytond.config import CONFIG
-from trytond.tools import get_smtp_server
 from trytond import backend
 from itsdangerous import URLSafeSerializer, TimestampSigner, SignatureExpired, \
     BadSignature, TimedJSONWebSignatureSerializer
@@ -393,17 +392,17 @@ class NereidUser(ModelSQL, ModelView):
 
         :param nereid_user: The browse record of the user
         """
+        EmailQueue = Pool().get('email.queue')
+
         email_message = render_email(
             CONFIG['smtp_from'], self.email, _('Account Activation'),
             text_template='emails/activation-text.jinja',
             html_template='emails/activation-html.jinja',
             nereid_user=self
         )
-        server = get_smtp_server()
-        server.sendmail(
-            CONFIG['smtp_from'], [self.email], email_message.as_string()
+        EmailQueue.queue_mail(
+            CONFIG['smtp_from'], self.email, email_message.as_string()
         )
-        server.quit()
 
     @classmethod
     @route("/change-password", methods=["GET", "POST"])
@@ -541,17 +540,17 @@ class NereidUser(ModelSQL, ModelView):
 
         :param nereid_user: The browse record of the user
         """
+        EmailQueue = Pool().get('email.queue')
+
         email_message = render_email(
             CONFIG['smtp_from'], self.email, _('Account Password Reset'),
             text_template='emails/reset-text.jinja',
             html_template='emails/reset-html.jinja',
             nereid_user=self
         )
-        server = get_smtp_server()
-        server.sendmail(
-            CONFIG['smtp_from'], [self.email], email_message.as_string()
+        EmailQueue.queue_mail(
+            CONFIG['smtp_from'], self.email, email_message.as_string()
         )
-        server.quit()
 
     def match_password(self, password):
         """

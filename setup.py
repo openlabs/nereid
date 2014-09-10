@@ -127,12 +127,17 @@ install_requires = [
     'Flask-Login',
 ]
 
+MODULE2PREFIX = {
+    'email_queue': 'openlabs',
+}
+
 for dep in info.get('depends', []):
     if not re.match(r'(ir|res|webdav)(\W|$)', dep):
         install_requires.append(
-            'trytond_%s >= %s.%s, < %s.%s' %
-            (dep, major_version, minor_version, major_version,
-                minor_version + 1)
+            '%s_%s >= %s.%s, < %s.%s' % (
+                MODULE2PREFIX.get(dep, 'trytond'), dep, major_version,
+                minor_version, major_version, minor_version + 1
+            )
         )
 install_requires.append(
     'trytond >= %s.%s, < %s.%s' %
