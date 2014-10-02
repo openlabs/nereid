@@ -6,11 +6,9 @@ import unittest
 import base64
 import json
 
-from mock import patch
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from trytond.transaction import Transaction
-from trytond.tools import get_smtp_server
 from trytond.config import CONFIG
 from nereid.testing import NereidTestCase
 from nereid import permissions_required
@@ -37,15 +35,6 @@ class TestAuth(NereidTestCase):
         self.language_obj = POOL.get('ir.lang')
         self.party_obj = POOL.get('party.party')
 
-        # Patch SMTP Lib
-        self.smtplib_patcher = patch('smtplib.SMTP', autospec=True)
-        self.PatchedSMTP = self.smtplib_patcher.start()
-        self.mocked_smtp_instance = self.PatchedSMTP.return_value
-
-    def tearDown(self):
-        # Unpatch SMTP Lib
-        self.smtplib_patcher.stop()
-
     def setup_defaults(self):
         """
         Setup the defaults
@@ -62,16 +51,6 @@ class TestAuth(NereidTestCase):
             'party': self.party,
             'currency': usd,
         }])
-        self.guest_party, = self.party_obj.create([{
-            'name': 'Guest User',
-        }])
-        self.guest_user, = self.nereid_user_obj.create([{
-            'party': self.guest_party,
-            'display_name': 'Guest User',
-            'email': 'guest@openlabs.co.in',
-            'password': 'password',
-            'company': self.company.id,
-        }])
 
         url_map, = self.url_map_obj.search([], limit=1)
         en_us, = self.language_obj.search([('code', '=', 'en_US')])
@@ -87,7 +66,6 @@ class TestAuth(NereidTestCase):
             'company': self.company,
             'application_user': USER,
             'default_locale': locale,
-            'guest_user': self.guest_user,
         }])
         self.templates = {
             'home.jinja': '{{get_flashed_messages()}}',
@@ -116,13 +94,12 @@ class TestAuth(NereidTestCase):
 
         return self.templates.get(name)
 
-    def test_0005_mock_setup(self):
-        assert get_smtp_server() is self.PatchedSMTP.return_value
-
     def test_0010_register(self):
         """
         Registration must create a new party
         """
+        EmailQueue = POOL.get('email.queue')
+
         with Transaction().start(DB_NAME, USER, CONTEXT):
             self.setup_defaults()
             app = self.get_app()
@@ -144,16 +121,9 @@ class TestAuth(NereidTestCase):
                 response = c.post('/registration', data=data)
                 self.assertEqual(response.status_code, 302)
 
+                # Test if an email record is created in email queue
                 self.assertEqual(
-                    self.mocked_smtp_instance.sendmail.call_count, 1
-                )
-                self.assertEqual(
-                    self.mocked_smtp_instance.sendmail.call_args[0][0],
-                    CONFIG['smtp_from']
-                )
-                self.assertEqual(
-                    self.mocked_smtp_instance.sendmail.call_args[0][1],
-                    [data['email']]
+                    EmailQueue.search([], count=True), 1
                 )
 
             self.assertEqual(
@@ -182,6 +152,8 @@ class TestAuth(NereidTestCase):
 
         Same as registration test but with json data
         """
+        EmailQueue = POOL.get('email.queue')
+
         with Transaction().start(DB_NAME, USER, CONTEXT):
             self.setup_defaults()
             app = self.get_app()
@@ -210,16 +182,9 @@ class TestAuth(NereidTestCase):
                 )
                 self.assertEqual(response.status_code, 201)
 
+                # Test if an email record is created in email queue
                 self.assertEqual(
-                    self.mocked_smtp_instance.sendmail.call_count, 1
-                )
-                self.assertEqual(
-                    self.mocked_smtp_instance.sendmail.call_args[0][0],
-                    CONFIG['smtp_from']
-                )
-                self.assertEqual(
-                    self.mocked_smtp_instance.sendmail.call_args[0][1],
-                    [data['email']]
+                    EmailQueue.search([], count=True), 1
                 )
 
             self.assertEqual(
@@ -710,6 +675,15 @@ class TestAuth(NereidTestCase):
         '''
         with Transaction().start(DB_NAME, USER, CONTEXT):
             self.setup_defaults()
+
+            nereid_user, = self.nereid_user_obj.create([{
+                'party': self.party_obj.create([{'name': 'Nereid User'}])[0],
+                'display_name': 'Nereid User',
+                'email': 'nereid@example.com',
+                'password': 'password',
+                'company': self.company,
+            }])
+
             p1, p2, p3, p4 = self.nereid_permission_obj.create([
                 {'name': 'p1', 'value': 'nereid.perm1'},
                 {'name': 'p2', 'value': 'nereid.perm2'},
@@ -717,7 +691,7 @@ class TestAuth(NereidTestCase):
                 {'name': 'p4', 'value': 'nereid.perm4'},
             ])
             self.nereid_user_obj.write(
-                [self.guest_user],
+                [nereid_user],
                 {
                     'permissions': [
                         ('add', [p1, p2])
@@ -726,43 +700,43 @@ class TestAuth(NereidTestCase):
             )
 
             # all = [], any = [] = True
-            self.assertTrue(self.guest_user.has_permissions())
+            self.assertTrue(nereid_user.has_permissions())
 
             # all = [p1, p2], any = [] == True
-            self.assertTrue(self.guest_user.has_permissions(
+            self.assertTrue(nereid_user.has_permissions(
                 perm_all=[p1.value, p2.value]
             ))
 
             # all = [p1, p2], any = [p3, p4] == False
-            self.assertFalse(self.guest_user.has_permissions(
+            self.assertFalse(nereid_user.has_permissions(
                 perm_all=[p1.value, p2.value],
                 perm_any=[p3.value, p4.value]
             ))
 
             # all = [p1, p3], any = [] == False
-            self.assertFalse(self.guest_user.has_permissions(
+            self.assertFalse(nereid_user.has_permissions(
                 perm_all=[p1.value, p3.value],
             ))
 
             # all = [p1, p3], any = [p1, p3, p4] == False
-            self.assertFalse(self.guest_user.has_permissions(
+            self.assertFalse(nereid_user.has_permissions(
                 perm_all=[p1.value, p3.value],
                 perm_any=[p1.value, p3.value, p4.value]
             ))
 
             # all = [p1, p2], any = [p1, p3, p4] == True
-            self.assertTrue(self.guest_user.has_permissions(
+            self.assertTrue(nereid_user.has_permissions(
                 perm_all=[p1.value, p2.value],
                 perm_any=[p1.value, p3.value, p4.value]
             ))
 
             # all = [], any = [p1, p2, p3] == True
-            self.assertTrue(self.guest_user.has_permissions(
+            self.assertTrue(nereid_user.has_permissions(
                 perm_any=[p1.value, p2.value, p3.value]
             ))
 
             # all = [], any = [p3, p4] == False
-            self.assertFalse(self.guest_user.has_permissions(
+            self.assertFalse(nereid_user.has_permissions(
                 perm_any=[p3.value, p4.value]
             ))
 
@@ -887,34 +861,6 @@ class TestAuth(NereidTestCase):
                     }
                 )
                 self.assertEqual(response.data, data['display_name'])
-
-    def test_0300_test_is_guest_user(self):
-        """
-        Ensure that is_guest_user works
-        """
-        with Transaction().start(DB_NAME, USER, CONTEXT):
-            self.setup_defaults()
-            app = self.get_app()
-
-            party, = self.party_obj.create([{'name': 'Registered user'}])
-            data = {
-                'party': party,
-                'display_name': 'Registered User',
-                'email': 'email@example.com',
-                'password': 'password',
-                'company': self.company,
-            }
-            nereid_user, = self.nereid_user_obj.create([data.copy()])
-
-            self.templates['home.jinja'] = '{{ request.is_guest_user }}'
-
-            with app.test_client() as c:
-                self.assertEqual(c.get('/').data, 'True')
-                c.post(
-                    '/login',
-                    data={'email': data['email'], 'password': data['password']}
-                )
-                self.assertEqual(c.get('/').data, 'False')
 
     def test_0400_auth_xhr_wrong(self):
         """

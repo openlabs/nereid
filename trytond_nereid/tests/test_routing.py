@@ -7,6 +7,7 @@ import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from trytond.transaction import Transaction
 from nereid.testing import NereidTestCase
+from nereid.exceptions import WebsiteNotFound
 
 
 class TestRouting(NereidTestCase):
@@ -51,16 +52,6 @@ class TestRouting(NereidTestCase):
             'party': self.party,
             'currency': self.usd,
         }])
-        self.guest_party, = self.party_obj.create([{
-            'name': 'Guest User',
-        }])
-        self.guest_user, = self.nereid_user_obj.create([{
-            'party': self.guest_party,
-            'display_name': 'Guest User',
-            'email': 'guest@openlabs.co.in',
-            'password': 'password',
-            'company': self.company.id,
-        }])
         party, = self.party_obj.create([{
             'name': 'Registered User',
         }])
@@ -93,7 +84,6 @@ class TestRouting(NereidTestCase):
             'application_user': USER,
             'default_locale': self.locale_en_us,
             'locales': [('add', [self.locale_en_us.id, self.locale_es_es.id])],
-            'guest_user': self.guest_user,
         }])
 
     def get_template_source(self, name):
@@ -197,6 +187,36 @@ class TestRouting(NereidTestCase):
             with app.test_client() as c:
                 response = c.get('/')
                 self.assertEqual(response.data, 'es_ES')
+
+    def test_0050_website_routing(self):
+        """
+        Test should not check for match on single website.
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            self.nereid_website.locales = []
+            self.nereid_website.save()
+            app = self.get_app()
+
+            with app.test_client() as c:
+                response = c.get('http://localhost/')
+                self.assertEqual(response.data, 'en_US')
+
+                response = c.get('http://this_should_work_too/')
+                self.assertEqual(response.data, 'en_US')
+
+                self.nereid_website_obj.create([{
+                    'name': 'another_website',
+                    'url_map': self.url_map_obj.search([], limit=1)[0],
+                    'company': self.company,
+                    'application_user': USER,
+                    'default_locale': self.locale_en_us,
+                }])
+
+                # Should Break, As there are more than 1 website.
+                self.assertRaises(
+                    WebsiteNotFound, c.get, 'http://this_should_break/'
+                )
 
 
 def suite():

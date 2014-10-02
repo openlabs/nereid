@@ -350,6 +350,9 @@ def render_email(
             )
             msg.attach(part)
 
+    if isinstance(to, (list, tuple)):
+        to = ', '.join(to)
+
     # We need to use Header objects here instead of just assigning the strings
     # in order to get our headers properly encoded (with QP).
     msg['Subject'] = Header(unicode(subject), 'ISO-8859-1')

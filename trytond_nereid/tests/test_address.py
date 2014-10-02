@@ -106,16 +106,6 @@ class TestAddress(NereidTestCase):
             'party': self.party,
             'currency': usd,
         }])
-        self.guest_party, = self.party_obj.create([{
-            'name': 'Guest User',
-        }])
-        self.guest_user, = self.nereid_user_obj.create([{
-            'party': self.guest_party,
-            'display_name': 'Guest User',
-            'email': 'guest@openlabs.co.in',
-            'password': 'password',
-            'company': self.company.id,
-        }])
         party, = self.party_obj.create([{
             'name': 'Registered User',
         }])
@@ -145,7 +135,6 @@ class TestAddress(NereidTestCase):
             'application_user': USER,
             'default_locale': locale,
             'locales': [('add', [locale.id])],
-            'guest_user': self.guest_user,
             'countries': [('add', self.available_countries)],
         }])
 
