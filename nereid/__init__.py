@@ -13,7 +13,8 @@ from flask.templating import render_template_string
 from flask.json import jsonify
 
 from .helpers import flash, get_flashed_messages, url_for, \
-    login_required, permissions_required, route, get_version, context_processor
+    login_required, permissions_required, route, get_version, \
+    context_processor, template_filter
 from .application import Nereid, Request, Response
 from .sessions import Session
 from .globals import cache, current_user
