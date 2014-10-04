@@ -212,6 +212,10 @@ class Nereid(Flask):
             nereid_default_template_ctx_processor
         )
 
+        # Add template_filters registered using decorator
+        for name, function in self.get_template_filters():
+            self.jinja_env.filters[name] = function
+
         # Finally set the initialised attribute
         self.initialised = True
 
@@ -275,6 +279,22 @@ class Nereid(Flask):
             return context_processors
 
         return get_ctx
+
+    @root_transaction_if_required
+    def get_template_filters(self):
+        """
+        Returns a list of name, function pairs for template filters registered
+        in the models using :func:`~nereid.helpers.template_filter` decorator.
+        """
+        models = Pool._pool[self.database_name]['model']
+
+        for model_name, model in models.iteritems():
+            for f_name, f in inspect.getmembers(
+                    model, predicate=inspect.ismethod):
+
+                if hasattr(f, '_template_filter'):
+                    filter = getattr(Pool().get(model_name), f_name)
+                    yield filter.func_name, filter
 
     def load_cache(self):
         """

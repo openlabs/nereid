@@ -3,7 +3,7 @@
 import unittest
 
 from .test_templates import TestTemplateLoading, TestLazyRendering
-from .test_helpers import TestURLfor
+from .test_helpers import TestURLfor, TestHelperFunctions
 from .test_signals import SignalsTestCase
 from .test_pagination import TestPagination
 
@@ -15,6 +15,7 @@ def suite():
         unittest.TestLoader().loadTestsFromTestCase(TestTemplateLoading),
         unittest.TestLoader().loadTestsFromTestCase(TestLazyRendering),
         unittest.TestLoader().loadTestsFromTestCase(TestURLfor),
+        unittest.TestLoader().loadTestsFromTestCase(TestHelperFunctions),
         unittest.TestLoader().loadTestsFromTestCase(SignalsTestCase),
         unittest.TestLoader().loadTestsFromTestCase(TestPagination),
     ])
