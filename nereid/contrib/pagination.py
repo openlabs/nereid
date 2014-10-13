@@ -2,6 +2,9 @@
 # This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
 # this repository contains the full copyright notices and license terms.
 from math import ceil
+from sql import Select
+from sql.functions import Function
+from sql.aggregate import Count
 from werkzeug.utils import cached_property
 
 
@@ -186,10 +189,8 @@ class Pagination(BasePagination):
     def all_items(self):
         """Returns complete set of items"""
         if self.ids_domain():
-            ids = self.domain[0][2]
-        else:
-            ids = self.obj.search(self.domain)
-        return self.obj.browse(ids)
+            return self.obj.browse(self.domain[0][2])
+        return self.obj.search(self.domain)
 
     def ids_domain(self):
         """
@@ -223,12 +224,12 @@ class Pagination(BasePagination):
         """
         if self.ids_domain():
             ids = self.domain[0][2][self.offset:self.offset + self.per_page]
+            return self.obj.browse(ids)
         else:
-            ids = self.obj.search(
+            return self.obj.search(
                 self.domain, offset=self.offset, limit=self.per_page,
                 order=self.order
             )
-        return self.obj.browse(ids)
 
     @property
     def prev(self, error_out=False):
@@ -240,52 +241,92 @@ class Pagination(BasePagination):
         return self.obj.paginate(self.page + 1, self.per_page, error_out)
 
 
+class Distinct(Function):
+    __slots__ = ()
+    _function = 'DISTINCT'
+
+
 class QueryPagination(BasePagination):
     """A fast implementation of pagination which uses a SQL query for
-    generating the IDS and hence the pagination"""
+    generating the IDS and hence the pagination
 
-    def __init__(self, obj, search_query, count_query, page, per_page):
+    .. versionchanged::3.2.0.5
+
+        The SQL Query has to be an instance of `sql.Select`.
+    """
+
+    def __init__(self, obj, query, primary_table, page, per_page):
         """
-        :param search_query: Query to be used for search. It must not include
-                             an OFFSET or LIMIT as they would be automatically
-                             added to the query
-        :param count_query: Query to be used to get the count of the pagination
-                            use a query like `SELECT 1234 AS id` for a query
-                            where you do not want to manipulate the count
-        :param per_page: Items per page
+        :param query: Query to be used for search.
+                      It must not include an OFFSET or LIMIT as they
+                      would be automatically added to the query.
+                      It must also not have any columns in the select.
+        :param primary_table: The ~`sql.Table` instance from which the records
+                              have to be selected.
         :param page: The page to be displayed
+        :param per_page: Items per page
         """
         self.obj = obj
-        self.search_query = search_query
-        self.count_query = count_query
+
+        assert isinstance(query, Select), "Query must be python-sql"
+
+        self.query = query
+        self.primary_table = primary_table
         super(QueryPagination, self).__init__(page, per_page)
 
     @cached_property
     def count(self):
         "Return the count of the Items"
         from trytond.transaction import Transaction
-        with Transaction().new_cursor() as transaction:
-            transaction.cursor.execute(self.count_query)
-            return transaction.cursor.fetchone()[0]
+
+        # XXX: Ideal case should make a copy of Select query
+        #
+        # https://code.google.com/p/python-sql/issues/detail?id=22
+        query = self.query
+        query.columns = (Count(Distinct(self.primary_table.id)), )
+
+        cursor = Transaction().cursor
+        cursor.execute(*query)
+        res = cursor.fetchone()
+        if res:
+            return res[0]
+        # There can be a case when query return None and then count
+        # will be zero
+        return 0
 
     def all_items(self):
         """Returns complete set of items"""
         from trytond.transaction import Transaction
-        with Transaction().new_cursor() as transaction:
-            transaction.cursor.execute(self.search_query)
-            rv = [x[0] for x in transaction.cursor.fetchall()]
-        return self.obj.browse(rv)
+
+        # XXX: Ideal case should make a copy of Select query
+        #
+        # https://code.google.com/p/python-sql/issues/detail?id=22
+        query = self.query
+        query.columns = (Distinct(self.primary_table.id), )
+        query.offset = None
+        query.limit = None
+
+        cursor = Transaction().cursor
+        cursor.execute(*query)
+        rv = [x[0] for x in cursor.fetchall()]
+
+        return self.obj.browse(filter(None, rv))
 
     def items(self):
         """
         Returns the list of browse records of items in the page
         """
         from trytond.transaction import Transaction
-        limit_string = ' LIMIT %d' % self.per_page
-        offset_string = ' OFFSET %d' % self.offset
-        with Transaction().new_cursor() as transaction:
-            transaction.cursor.execute(''.join([
-                self.search_query, limit_string, offset_string
-            ]))
-            rv = [x[0] for x in transaction.cursor.fetchall()]
-        return self.obj.browse(rv)
+
+        # XXX: Ideal case should make a copy of Select query
+        #
+        # https://code.google.com/p/python-sql/issues/detail?id=22
+        query = self.query
+        query.columns = (Distinct(self.primary_table.id), )
+        query.offset = self.offset
+        query.limit = self.per_page
+
+        cursor = Transaction().cursor
+        cursor.execute(*query)
+        rv = [x[0] for x in cursor.fetchall()]
+        return self.obj.browse(filter(None, rv))
