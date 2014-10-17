@@ -334,6 +334,7 @@ class NereidUser(ModelSQL, ModelView):
         Invokes registration of an user
         """
         Party = Pool().get('party.party')
+        ContactMechanism = Pool().get('party.contact_mechanism')
 
         registration_form = cls.get_registration_form()
 
@@ -355,6 +356,12 @@ class NereidUser(ModelSQL, ModelView):
             else:
                 party = Party(name=registration_form.name.data)
                 party.addresses = []
+                party.contact_mechanisms = [
+                    ContactMechanism(
+                        type="email",
+                        value=registration_form.email.data
+                    )
+                ]
                 party.save()
                 nereid_user = cls(**{
                     'party': party.id,
