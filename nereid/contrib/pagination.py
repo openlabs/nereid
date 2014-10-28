@@ -2,7 +2,7 @@
 # This file is part of Tryton & Nereid. The COPYRIGHT file at the top level of
 # this repository contains the full copyright notices and license terms.
 from math import ceil
-from sql import Select
+from sql import Select, Column
 from sql.functions import Function
 from sql.aggregate import Count
 from werkzeug.utils import cached_property
@@ -286,7 +286,16 @@ class QueryPagination(BasePagination):
         query.columns = (Count(Distinct(self.primary_table.id)), )
 
         cursor = Transaction().cursor
-        cursor.execute(*query)
+
+        # temporarily remove order_by
+        order_by = query.order_by
+        query.order_by = None
+        try:
+            cursor.execute(*query)
+        finally:
+            # XXX: This can be removed when SQL queries can be copied
+            # See comment above
+            query.order_by = order_by
         res = cursor.fetchone()
         if res:
             return res[0]
@@ -302,7 +311,11 @@ class QueryPagination(BasePagination):
         #
         # https://code.google.com/p/python-sql/issues/detail?id=22
         query = self.query
-        query.columns = (Distinct(self.primary_table.id), )
+        query.columns = (Distinct(self.primary_table.id), ) + tuple(
+            (o.expression for o in query.order_by if isinstance(
+                o.expression, Column
+            ))
+        )
         query.offset = None
         query.limit = None
 
@@ -322,7 +335,11 @@ class QueryPagination(BasePagination):
         #
         # https://code.google.com/p/python-sql/issues/detail?id=22
         query = self.query
-        query.columns = (Distinct(self.primary_table.id), )
+        query.columns = (Distinct(self.primary_table.id), ) + tuple(
+            (o.expression for o in query.order_by if isinstance(
+                o.expression, Column
+            ))
+        )
         query.offset = self.offset
         query.limit = self.per_page
 

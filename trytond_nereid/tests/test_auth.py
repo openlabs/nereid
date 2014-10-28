@@ -126,10 +126,14 @@ class TestAuth(NereidTestCase):
                     EmailQueue.search([], count=True), 1
                 )
 
+            parties = self.party_obj.search([('name', '=', data['name'])])
+
+            self.assertEqual(len(parties), 1)
+            self.assertEqual(len(parties[0].contact_mechanisms), 1)
+            self.assertEqual(parties[0].contact_mechanisms[0].type, 'email')
             self.assertEqual(
-                self.party_obj.search(
-                    [('name', '=', data['name'])], count=True
-                ), 1
+                parties[0].contact_mechanisms[0].value,
+                'regd_user@openlabs.co.in'
             )
 
             with Transaction().set_context(active_test=False):
