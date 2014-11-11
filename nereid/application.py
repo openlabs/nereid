@@ -408,8 +408,9 @@ class Nereid(Flask):
 
         for count in range(int(CONFIG['retry']), -1, -1):
             with Transaction().start(
-                    self.database_name,
-                    user, context={'company': company}) as txn:
+                    self.database_name, user,
+                    context={'company': company},
+                    readonly=(req.method == 'GET')) as txn:
                 try:
                     transaction_start.send(self)
                     rv = self._dispatch_request(req)
