@@ -156,8 +156,10 @@ def get_timezone():
         if babel.timezone_selector_func is None:
             if not current_user.is_anonymous() and current_user.timezone:
                 tzinfo = timezone(current_user.timezone)
+            elif ctx.request.nereid_website.company.timezone:
+                tzinfo = timezone(ctx.request.nereid_website.company.timezone)
             else:
-                tzinfo = timezone(ctx.request.nereid_website.timezone)
+                tzinfo = babel.default_timezone
         else:
             rv = babel.timezone_selector_func()
             if rv is None:
