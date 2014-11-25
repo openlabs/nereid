@@ -93,6 +93,14 @@ class ProfileForm(Form):
     )
 
 
+class ResetAccountForm(Form):
+    """Reset Account Form"""
+    email = TextField(
+        'Email', [validators.Required(), validators.Email()],
+        description="Your Login Email."
+    )
+
+
 class NereidUser(ModelSQL, ModelView):
     """
     Nereid Users
@@ -281,6 +289,20 @@ class NereidUser(ModelSQL, ModelView):
             **options
         )
 
+    @classmethod
+    def build_response(cls, message, response, xhr_status_code):
+        """
+        Method to handle response for jinja and XHR requests.
+
+        message: Message to show as flash and send as json response.
+        response: redirect or render_template method.
+        xhr_status_code: Status code to be sent with json response.
+        """
+        if request.is_xhr or request.is_json:
+            return jsonify(message=message), xhr_status_code
+        flash(_(message))
+        return response
+
     @route("/verify-email/<int:active_id>/<sign>", methods=["GET"])
     def verify_email(self, sign, max_age=24 * 60 * 60):
         """
@@ -446,28 +468,38 @@ class NereidUser(ModelSQL, ModelView):
         which is validated for max_age before allowing the user to set the
         new password.
         """
-        form = NewPasswordForm(request.form)
-
-        if request.method == 'POST' and form.validate():
+        form = NewPasswordForm()
+        if form.validate_on_submit():
             try:
                 unsigned = self._serializer.loads(
                     self._signer.unsign(sign, max_age=max_age),
                     salt='reset-password'
                 )
             except SignatureExpired:
-                flash(_("The password reset link has expired"))
+                return self.build_response(
+                    'The password reset link has expired',
+                    redirect(url_for('nereid.website.login')), 400
+                )
             except BadSignature:
-                flash(_('Invalid reset password code'))
+                return self.build_response(
+                    'Invalid reset password code',
+                    redirect(url_for('nereid.website.login')), 400
+                )
             else:
                 if not self.id == unsigned:
                     current_app.logger.debug('Invalid reset password code')
                     abort(403)
 
                 self.write([self], {'password': form.password.data})
-                flash(_(
+                return self.build_response(
                     'Your password has been successfully changed! '
-                    'Please login again'))
-            return redirect(url_for('nereid.website.login'))
+                    'Please login again',
+                    redirect(url_for('nereid.website.login')), 200
+                )
+        elif form.errors:
+            if request.is_xhr or request.is_json:
+                return jsonify(error=form.errors), 400
+            flash(_('Passwords must match'))
 
         return render_template(
             'new-password.jinja', password_form=form, sign=sign, user=self
@@ -515,23 +547,29 @@ class NereidUser(ModelSQL, ModelView):
             code and sends the link to the email of the user. If the user uses
             the link, he can change his password.
         """
-        if request.method == 'POST':
-            user_ids = cls.search(
-                [
-                    ('email', '=', request.form['email']),
+        form = ResetAccountForm()
+        if form.validate_on_submit():
+            try:
+                nereid_user, = cls.search([
+                    ('email', '=', form.email.data),
                     ('company', '=', request.nereid_website.company.id),
-                ]
-            )
-
-            if not user_ids or not request.form['email']:
-                flash(_('Invalid email address'))
-                return render_template('reset-password.jinja')
-
-            nereid_user, = user_ids
+                ])
+            except ValueError:
+                return cls.build_response(
+                    'Invalid email address',
+                    render_template('reset-password.jinja'),
+                    400
+                )
             nereid_user.send_reset_email()
-            flash(_('An email has been sent to your account for resetting'
-                    ' your credentials'))
-            return redirect(url_for('nereid.website.login'))
+            return cls.build_response(
+                'An email has been sent to your account for resetting'
+                ' your credentials',
+                redirect(url_for('nereid.website.login')), 200
+            )
+        elif form.errors:
+            if request.is_xhr or request.is_json:
+                return jsonify(error=form.errors), 400
+            flash(_('Invalid email address.'))
 
         return render_template('reset-password.jinja')
 
