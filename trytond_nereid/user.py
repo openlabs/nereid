@@ -293,17 +293,28 @@ class NereidUser(ModelSQL, ModelView):
                 salt='verification'
             )
         except SignatureExpired:
-            flash(_("The verification link has expired"))
+            return self.build_response(
+                'The verification link has expired',
+                redirect(url_for('nereid.website.home')), 400
+            )
         except BadSignature:
-            flash(_("The verification token is invalid!"))
+            return self.build_response(
+                'The verification token is invalid!',
+                redirect(url_for('nereid.website.home')), 400
+            )
         else:
             if self.id == unsigned:
                 self.email_verified = True
                 self.save()
-                flash(_("Your email has been verified!"))
+                return self.build_response(
+                    'Your email has been verified!',
+                    redirect(url_for('nereid.website.home')), 200
+                )
             else:
-                flash(_("The verification token is invalid!"))
-        return redirect(url_for('nereid.website.home'))
+                return self.build_response(
+                    'The verification token is invalid!',
+                    redirect(url_for('nereid.website.home')), 400
+                )
 
     @staticmethod
     def get_registration_form():
