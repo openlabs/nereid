@@ -456,6 +456,27 @@ class TestAuth(NereidTestCase):
                 })
                 self.assertEqual(response.status_code, 302)
 
+                response = c.post(
+                    '/reset-account',
+                    data={
+                        'email': data['email'],
+                    },
+                    headers={'X-Requested-With': 'XMLHTTPRequest'}
+                )
+                self.assertEqual(response.status_code, 200)
+
+                rv = c.post(
+                    '/reset-account',
+                    data={
+                        'email': 'made_up_email@test.com',
+                    },
+                    headers={'X-Requested-With': 'XMLHTTPRequest'}
+                )
+                self.assertEqual(rv.status_code, 400)
+                self.assertEqual(
+                    json.loads(rv.data), {'message': 'Invalid email address'}
+                )
+
                 # A successful login after requesting activation code should
                 # not do anything but just allow login
                 response = c.post(
@@ -525,8 +546,17 @@ class TestAuth(NereidTestCase):
                 # Try to reset again - with bad intentions
 
                 # Bad request because there is no email
-                response = c.post('/reset-account', data={})
+                response = c.post(
+                    '/reset-account', data={},
+                    headers={'X-Requested-With': 'XMLHTTPRequest'}
+                )
                 self.assertEqual(response.status_code, 400)
+
+                response = c.post('/reset-account', data={})
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(
+                    'Invalid email address' in response.data
+                )
 
                 # Bad request because there is empty email
                 response = c.post('/reset-account', data={'email': ''})
