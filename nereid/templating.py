@@ -309,36 +309,43 @@ def render_email(
     if not (text_template or html_template):
         raise Exception("Atleast HTML or TEXT template is required")
 
-    # Create the body of the message (a plain-text and an HTML version).
-    # text is your plain-text email
-    # html is your html version of the email
-    # if the reciever is able to view html emails then only the html
-    # email will be displayed
-    if attachments:
-        msg = MIMEMultipart('mixed')
-    else:
-        msg = MIMEMultipart('alternative')
+    text_part = None
     if text_template:
         if isinstance(text_template, Template):
             text = text_template.render(**context)
         else:
             text = unicode(render_template(text_template, **context))
         text_part = MIMEText(text.encode("utf-8"), 'plain', _charset="UTF-8")
-        msg.attach(text_part)
+
+    html_part = None
     if html_template:
         if isinstance(html_template, Template):
             html = html_template.render(**context)
         else:
             html = unicode(render_template(html_template, **context))
         html_part = MIMEText(html.encode("utf-8"), 'html', _charset="UTF-8")
-        msg.attach(html_part)
 
-    if text_template and not (html_template or attachments):
-        msg = text_part
-    elif html_template and not (text_template or attachments):
-        msg = html_part
+    if text_part and html_part:
+        # Construct an alternative part since both the HTML and Text Parts
+        # exist.
+        message = MIMEMultipart('alternative')
+        message.attach(text_part)
+        message.attach(html_part)
+    else:
+        # only one part exists, so use that as the message body.
+        message = text_part or html_part
 
     if attachments:
+        # If an attachment exists, the MimeType should be mixed and the
+        # message body should just be another part of it.
+        message_with_attachments = MIMEMultipart('mixed')
+
+        # Set the message body as the first part
+        message_with_attachments.attach(message)
+
+        # Now the message _with_attachments itself becomes the message
+        message = message_with_attachments
+
         for filename, content in attachments.items():
             part = MIMEBase('application', "octet-stream")
             part.set_payload(content)
@@ -348,17 +355,17 @@ def render_email(
             part.add_header(
                 'Content-Disposition', 'attachment; filename="%s"' % filename
             )
-            msg.attach(part)
+            message.attach(part)
 
     if isinstance(to, (list, tuple)):
         to = ', '.join(to)
 
     # We need to use Header objects here instead of just assigning the strings
     # in order to get our headers properly encoded (with QP).
-    msg['Subject'] = Header(unicode(subject), 'ISO-8859-1')
-    msg['From'] = Header(unicode(from_email), 'ISO-8859-1')
-    msg['To'] = Header(unicode(to), 'ISO-8859-1')
+    message['Subject'] = Header(unicode(subject), 'ISO-8859-1')
+    message['From'] = Header(unicode(from_email), 'ISO-8859-1')
+    message['To'] = Header(unicode(to), 'ISO-8859-1')
     if cc:
-        msg['Cc'] = Header(unicode(cc), 'ISO-8859-1')
+        message['Cc'] = Header(unicode(cc), 'ISO-8859-1')
 
-    return msg
+    return message
