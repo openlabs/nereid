@@ -275,6 +275,169 @@ class TestTemplateLoading(BaseTestCase):
                     (u'reciever@openlabs.co.in'.encode('UTF-8'), None)
                 )
 
+    def test_0080_render_email_text_only(self):
+        '''
+        Render email text part alone
+        '''
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            sender = u'Sender <sender@openlabs.co.in>'
+
+            with app.test_request_context('/'):
+                email_message = render_email(
+                    sender, u'reciever@openlabs.co.in',
+                    u'Dummy subject of email',
+                    text_template='from-local.html',
+                )
+                self.assertEqual(
+                    decode_header(email_message['Subject'])[0],
+                    ('Dummy subject of email', None)
+                )
+
+                # Message type should be text/plain
+                self.assertFalse(email_message.is_multipart())
+                self.assertEqual(
+                    email_message.get_content_type(), 'text/plain'
+                )
+
+    def test_0090_render_email_html_only(self):
+        '''
+        Render email html part alone
+        '''
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            sender = u'Sender <sender@openlabs.co.in>'
+
+            with app.test_request_context('/'):
+                email_message = render_email(
+                    sender, u'reciever@openlabs.co.in',
+                    u'Dummy subject of email',
+                    html_template='from-local.html',
+                )
+                self.assertEqual(
+                    decode_header(email_message['Subject'])[0],
+                    ('Dummy subject of email', None)
+                )
+
+                # Message type should be text/html
+                self.assertFalse(email_message.is_multipart())
+                self.assertEqual(
+                    email_message.get_content_type(), 'text/html'
+                )
+
+    def test_0100_render_email_text_n_html_only(self):
+        '''
+        Render email text and html parts, but no attachments
+        '''
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            sender = u'Sender <sender@openlabs.co.in>'
+
+            with app.test_request_context('/'):
+                email_message = render_email(
+                    sender, u'reciever@openlabs.co.in',
+                    u'Dummy subject of email',
+                    text_template='from-local.html',
+                    html_template='from-local.html',
+                )
+                self.assertEqual(
+                    decode_header(email_message['Subject'])[0],
+                    ('Dummy subject of email', None)
+                )
+
+                # Message type should be multipart/alternative
+                self.assertTrue(email_message.is_multipart())
+                self.assertEqual(
+                    email_message.get_content_type(), 'multipart/alternative'
+                )
+
+                # Ensure that there are two subparts
+                self.assertEqual(
+                    len(email_message.get_payload()), 2
+                )
+
+                # Ensure that the subparts are 1 text and html part
+                payload_types = set([
+                    p.get_content_type() for p in email_message.get_payload()
+                ])
+                self.assertEqual(
+                    set(['text/plain', 'text/html']),
+                    payload_types
+                )
+
+    def test_0110_email_with_attachments(self):
+        '''
+        Send an email with text, html and an attachment
+        '''
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            sender = u'Sender <sender@openlabs.co.in>'
+
+            with app.test_request_context('/'):
+                email_message = render_email(
+                    sender, u'reciever@openlabs.co.in',
+                    u'Dummy subject of email',
+                    text_template='from-local.html',
+                    html_template='from-local.html',
+                    attachments={'filename.pdf': 'my glorious PDF content'},
+                )
+
+                self.assertEqual(
+                    decode_header(email_message['Subject'])[0],
+                    ('Dummy subject of email', None)
+                )
+
+                # Message type should be multipart/alternative
+                self.assertTrue(email_message.is_multipart())
+                self.assertEqual(
+                    email_message.get_content_type(), 'multipart/mixed'
+                )
+
+                # Ensure that there are two subparts
+                self.assertEqual(
+                    len(email_message.get_payload()), 2
+                )
+
+                # Ensure that the subparts are 1 alternative and
+                # octet-stream part
+                payload_types = set([
+                    p.get_content_type() for p in email_message.get_payload()
+                ])
+                self.assertEqual(
+                    set(['multipart/alternative', 'application/octet-stream']),
+                    payload_types
+                )
+
+                # Drill into the alternative part and ensure that there is
+                # both the text part and html part in it.
+                for part in email_message.get_payload():
+                    if part.get_content_type() == 'multipart/alternative':
+                        # Ensure that there are two subparts
+                        # 1. text/plain
+                        # 2. text/html
+                        self.assertEqual(
+                            len(email_message.get_payload()), 2
+                        )
+                        payload_types = set([
+                            p.get_content_type()
+                            for p in part.get_payload()
+                        ])
+                        self.assertEqual(
+                            set(['text/plain', 'text/html']),
+                            payload_types
+                        )
+                        break
+                else:
+                    self.fail('Alternative part not found')
+
 
 class TestLazyRendering(BaseTestCase):
     '''
