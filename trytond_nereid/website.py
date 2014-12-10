@@ -344,7 +344,7 @@ class WebSite(ModelSQL, ModelView):
         return rv
 
     @classmethod
-    @route("/user_status", methods=["GET"])
+    @route("/user_status", methods=["GET", "POST"])
     def user_status(cls):
         """
         Returns a JSON of the user_status
