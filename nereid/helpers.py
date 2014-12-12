@@ -510,7 +510,7 @@ def template_filter(name=None):
 
             @classmethod
             @template_filter('reverse')
-            def reverse_filter(s):
+            def reverse_filter(cls, s):
                 return s[::-1]
 
     Alternatively you can inject it into the jinja environment in your
