@@ -288,6 +288,7 @@ class Nereid(Flask):
         in the models using :func:`~nereid.helpers.template_filter` decorator.
         """
         models = Pool._pool[self.database_name]['model']
+        filters = []
 
         for model_name, model in models.iteritems():
             for f_name, f in inspect.getmembers(
@@ -295,7 +296,9 @@ class Nereid(Flask):
 
                 if hasattr(f, '_template_filter'):
                     filter = getattr(Pool().get(model_name), f_name)
-                    yield filter.func_name, filter
+                    filters.append((filter.func_name, filter))
+
+        return filters
 
     def load_cache(self):
         """
