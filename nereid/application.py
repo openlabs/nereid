@@ -32,6 +32,7 @@ from .templating import nereid_default_template_ctx_processor, \
 from .helpers import url_for, root_transaction_if_required
 from .ctx import RequestContext
 from .signals import transaction_start, transaction_stop
+from .routing import Rule
 
 
 class Nereid(Flask):
@@ -54,6 +55,12 @@ class Nereid(Flask):
     #: The class that is used for response objects.  See
     #: :class:`~nereid.wrappers.Response` for more information.
     response_class = Response
+
+    #: The rule object to use for URL rules created.  This is used by
+    #: :meth:`add_url_rule`.  Defaults to :class:`nereid.routing.Rule`.
+    #:
+    #: .. versionadded:: 3.2.0.9
+    url_rule_class = Rule
 
     #: the session interface to use.  By default an instance of
     #: :class:`~nereid.session.NereidSessionInterface` is used here.
@@ -413,7 +420,7 @@ class Nereid(Flask):
             with Transaction().start(
                     self.database_name, user,
                     context={'company': company},
-                    readonly=(req.method == 'GET')) as txn:
+                    readonly=rule.is_readonly) as txn:
                 try:
                     transaction_start.send(self)
                     rv = self._dispatch_request(req)
