@@ -1,0 +1,1330 @@
+# 
+msgid ""
+msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+msgctxt "error:nereid.permission:"
+msgid "Permissions must be unique by value"
+msgstr "Berechtigungen können nur einmal pro Wert vergeben werden."
+
+msgctxt "error:nereid.static.file:"
+msgid ""
+"Invalid file name:\n"
+"                (1) '..' in file name (OR)\n"
+"                (2) file name contains '/'"
+msgstr ""
+"Ungültiger Dateiname:\n"
+"                (1) wegen '..' im Dateinamen\n"
+"                oder\n"
+"                (2) Dateiname enthält '/'"
+
+msgctxt "error:nereid.static.file:"
+msgid "The Name of the Static File must be unique in a folder.!"
+msgstr ""
+"Der Name einer Statischen Datei kann nur einmal in einem Verzeichnis "
+"vergeben werden."
+
+msgctxt "error:nereid.static.folder:"
+msgid "Folder name cannot be changed"
+msgstr "Verzeichnisname kann nicht geändert werden."
+
+msgctxt "error:nereid.static.folder:"
+msgid "Folder name needs to be unique"
+msgstr "Ein Verzeichnisname kann nur einmal vergeben werden."
+
+msgctxt "error:nereid.static.folder:"
+msgid ""
+"Invalid folder name:\n"
+"                (1) '.' in folder name (OR)\n"
+"                (2) folder name begins with '/'"
+msgstr ""
+"Ungültiger Verzeichnisname:\n"
+"                (1) '.' im Verezichnisnamen\n"
+"                oder\n"
+"                (2) Verzeichnisname beginnt mit '/'"
+
+msgctxt "error:nereid.user:"
+msgid "Email must be unique in a company"
+msgstr ""
+"Eine E-Mailadresse kann nur einmal in einem Unternehmen vergeben werden."
+
+msgctxt "error:nereid.website.locale:"
+msgid "Code must be unique"
+msgstr "Der Code für eine Lokalisierung kann nur einmal vergeben werden."
+
+msgctxt "error:nereid.website:"
+msgid "Another site with the same name already exists!"
+msgstr "Es existiert bereits eine Website mit diesem Namen."
+
+msgctxt "field:ir.translation,comments:"
+msgid "Comments"
+msgstr "Kommentare"
+
+msgctxt "field:nereid.permission,create_date:"
+msgid "Create Date"
+msgstr "Erstellungsdatum"
+
+msgctxt "field:nereid.permission,create_uid:"
+msgid "Create User"
+msgstr "Erstellt durch"
+
+msgctxt "field:nereid.permission,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.permission,name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.permission,nereid_users:"
+msgid "Nereid Users"
+msgstr "Nereid Benutzer"
+
+msgctxt "field:nereid.permission,rec_name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.permission,value:"
+msgid "Value"
+msgstr "Wert"
+
+msgctxt "field:nereid.permission,write_date:"
+msgid "Write Date"
+msgstr "Zuletzt geändert"
+
+msgctxt "field:nereid.permission,write_uid:"
+msgid "Write User"
+msgstr "Letzte Änderung durch"
+
+msgctxt "field:nereid.permission-nereid.user,create_date:"
+msgid "Create Date"
+msgstr "Erstellungsdatum"
+
+msgctxt "field:nereid.permission-nereid.user,create_uid:"
+msgid "Create User"
+msgstr "Erstellt durch"
+
+msgctxt "field:nereid.permission-nereid.user,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.permission-nereid.user,nereid_user:"
+msgid "User"
+msgstr "Benutzer"
+
+msgctxt "field:nereid.permission-nereid.user,permission:"
+msgid "Permission"
+msgstr "Berechtigung"
+
+msgctxt "field:nereid.permission-nereid.user,rec_name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.permission-nereid.user,write_date:"
+msgid "Write Date"
+msgstr "Zuletzt geändert"
+
+msgctxt "field:nereid.permission-nereid.user,write_uid:"
+msgid "Write User"
+msgstr "Letzte Änderung durch"
+
+msgctxt "field:nereid.static.file,create_date:"
+msgid "Create Date"
+msgstr "Erstellungsdatum"
+
+msgctxt "field:nereid.static.file,create_uid:"
+msgid "Create User"
+msgstr "Erstellt durch"
+
+msgctxt "field:nereid.static.file,file_binary:"
+msgid "File"
+msgstr "Datei"
+
+msgctxt "field:nereid.static.file,file_path:"
+msgid "File Path"
+msgstr "Dateipfad"
+
+msgctxt "field:nereid.static.file,folder:"
+msgid "Folder"
+msgstr "Verzeichnis"
+
+msgctxt "field:nereid.static.file,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.static.file,name:"
+msgid "File Name"
+msgstr "Dateiname"
+
+msgctxt "field:nereid.static.file,rec_name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.static.file,remote_path:"
+msgid "Remote File"
+msgstr "Entfernte Datei"
+
+msgctxt "field:nereid.static.file,type:"
+msgid "File Type"
+msgstr "Dateityp"
+
+msgctxt "field:nereid.static.file,url:"
+msgid "URL"
+msgstr "URL"
+
+msgctxt "field:nereid.static.file,write_date:"
+msgid "Write Date"
+msgstr "Zuletzt geändert"
+
+msgctxt "field:nereid.static.file,write_uid:"
+msgid "Write User"
+msgstr "Letzte Änderung durch"
+
+msgctxt "field:nereid.static.folder,create_date:"
+msgid "Create Date"
+msgstr "Erstellungsdatum"
+
+msgctxt "field:nereid.static.folder,create_uid:"
+msgid "Create User"
+msgstr "Erstellt durch"
+
+msgctxt "field:nereid.static.folder,description:"
+msgid "Description"
+msgstr "Bezeichnung"
+
+msgctxt "field:nereid.static.folder,files:"
+msgid "Files"
+msgstr "Dateien"
+
+msgctxt "field:nereid.static.folder,folder_name:"
+msgid "Folder Name"
+msgstr "Verzeichnisname"
+
+msgctxt "field:nereid.static.folder,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.static.folder,rec_name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.static.folder,write_date:"
+msgid "Write Date"
+msgstr "Zuletzt geändert"
+
+msgctxt "field:nereid.static.folder,write_uid:"
+msgid "Write User"
+msgstr "Letzte Änderung durch"
+
+msgctxt "field:nereid.url_map,active:"
+msgid "Active"
+msgstr "Aktiv"
+
+msgctxt "field:nereid.url_map,charset:"
+msgid "Char Set"
+msgstr "Zeichensatz"
+
+msgctxt "field:nereid.url_map,create_date:"
+msgid "Create Date"
+msgstr "Erstellungsdatum"
+
+msgctxt "field:nereid.url_map,create_uid:"
+msgid "Create User"
+msgstr "Erstellt durch"
+
+msgctxt "field:nereid.url_map,default_subdomain:"
+msgid "Default Subdomain"
+msgstr "Standard Unterdomain"
+
+msgctxt "field:nereid.url_map,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.url_map,name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.url_map,rec_name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.url_map,rules:"
+msgid "Rules"
+msgstr "Regeln"
+
+msgctxt "field:nereid.url_map,strict_slashes:"
+msgid "Strict Slashes"
+msgstr "Strikte Schrägstriche"
+
+msgctxt "field:nereid.url_map,unique_urls:"
+msgid "Unique URLs"
+msgstr "Eindeutige URLs"
+
+msgctxt "field:nereid.url_map,write_date:"
+msgid "Write Date"
+msgstr "Zuletzt geändert"
+
+msgctxt "field:nereid.url_map,write_uid:"
+msgid "Write User"
+msgstr "Letzte Änderung durch"
+
+msgctxt "field:nereid.url_rule,active:"
+msgid "Active"
+msgstr "Aktiv"
+
+msgctxt "field:nereid.url_rule,create_date:"
+msgid "Create Date"
+msgstr "Erstellungsdatum"
+
+msgctxt "field:nereid.url_rule,create_uid:"
+msgid "Create User"
+msgstr "Erstellt durch"
+
+msgctxt "field:nereid.url_rule,defaults:"
+msgid "Defaults"
+msgstr "Standards"
+
+msgctxt "field:nereid.url_rule,endpoint:"
+msgid "Endpoint"
+msgstr "Endpunkt"
+
+msgctxt "field:nereid.url_rule,http_method_delete:"
+msgid "DELETE"
+msgstr "DELETE"
+
+msgctxt "field:nereid.url_rule,http_method_get:"
+msgid "GET"
+msgstr "GET"
+
+msgctxt "field:nereid.url_rule,http_method_patch:"
+msgid "PATCH"
+msgstr "PATCH"
+
+msgctxt "field:nereid.url_rule,http_method_post:"
+msgid "POST"
+msgstr "POST"
+
+msgctxt "field:nereid.url_rule,http_method_put:"
+msgid "PUT"
+msgstr "PUT"
+
+msgctxt "field:nereid.url_rule,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.url_rule,only_for_genaration:"
+msgid "Only for Generation"
+msgstr "Nur für Generierung"
+
+msgctxt "field:nereid.url_rule,rec_name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.url_rule,redirect_to:"
+msgid "Redirect To"
+msgstr "Redirect To"
+
+msgctxt "field:nereid.url_rule,rule:"
+msgid "Rule"
+msgstr "Regel"
+
+msgctxt "field:nereid.url_rule,sequence:"
+msgid "Sequence"
+msgstr "Reihenfolge"
+
+msgctxt "field:nereid.url_rule,url_map:"
+msgid "URL Map"
+msgstr "URL Zuordnungstabelle"
+
+msgctxt "field:nereid.url_rule,write_date:"
+msgid "Write Date"
+msgstr "Zuletzt geändert"
+
+msgctxt "field:nereid.url_rule,write_uid:"
+msgid "Write User"
+msgstr "Letzte Änderung durch"
+
+msgctxt "field:nereid.url_rule_defaults,create_date:"
+msgid "Create Date"
+msgstr "Erstellungsdatum"
+
+msgctxt "field:nereid.url_rule_defaults,create_uid:"
+msgid "Create User"
+msgstr "Erstellt durch"
+
+msgctxt "field:nereid.url_rule_defaults,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.url_rule_defaults,key:"
+msgid "Key"
+msgstr "Schlüssel"
+
+msgctxt "field:nereid.url_rule_defaults,rec_name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.url_rule_defaults,rule:"
+msgid "Rule"
+msgstr "Regel"
+
+msgctxt "field:nereid.url_rule_defaults,value:"
+msgid "Value"
+msgstr "Wert"
+
+msgctxt "field:nereid.url_rule_defaults,write_date:"
+msgid "Write Date"
+msgstr "Zuletzt geändert"
+
+msgctxt "field:nereid.url_rule_defaults,write_uid:"
+msgid "Write User"
+msgstr "Letzte Änderung durch"
+
+msgctxt "field:nereid.user,active:"
+msgid "Active"
+msgstr "Aktiv"
+
+msgctxt "field:nereid.user,company:"
+msgid "Company"
+msgstr "Unternehmen"
+
+msgctxt "field:nereid.user,create_date:"
+msgid "Create Date"
+msgstr "Erstellungsdatum"
+
+msgctxt "field:nereid.user,create_uid:"
+msgid "Create User"
+msgstr "Erstellt durch"
+
+msgctxt "field:nereid.user,display_name:"
+msgid "Display Name"
+msgstr "Anzeigename"
+
+msgctxt "field:nereid.user,email:"
+msgid "e-Mail"
+msgstr "E-Mail"
+
+msgctxt "field:nereid.user,email_verified:"
+msgid "Email Verified"
+msgstr "E-Mail verifiziert"
+
+msgctxt "field:nereid.user,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.user,party:"
+msgid "Party"
+msgstr "Partei"
+
+msgctxt "field:nereid.user,password:"
+msgid "Password"
+msgstr "Passwort"
+
+msgctxt "field:nereid.user,permissions:"
+msgid "Permissions"
+msgstr "Berechtigungen"
+
+msgctxt "field:nereid.user,rec_name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.user,salt:"
+msgid "Salt"
+msgstr "Salt"
+
+msgctxt "field:nereid.user,timezone:"
+msgid "Timezone"
+msgstr "Zeitzone"
+
+msgctxt "field:nereid.user,write_date:"
+msgid "Write Date"
+msgstr "Zuletzt geändert"
+
+msgctxt "field:nereid.user,write_uid:"
+msgid "Write User"
+msgstr "Letzte Änderung durch"
+
+msgctxt "field:nereid.user.anonymous,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.website,active:"
+msgid "Active"
+msgstr "Aktiv"
+
+msgctxt "field:nereid.website,application_user:"
+msgid "Application User"
+msgstr "Anwendungsnutzer"
+
+msgctxt "field:nereid.website,company:"
+msgid "Company"
+msgstr "Unternehmen"
+
+msgctxt "field:nereid.website,countries:"
+msgid "Countries Available"
+msgstr "Verfügbare Staaten"
+
+msgctxt "field:nereid.website,create_date:"
+msgid "Create Date"
+msgstr "Erstellungsdatum"
+
+msgctxt "field:nereid.website,create_uid:"
+msgid "Create User"
+msgstr "Erstellt durch"
+
+msgctxt "field:nereid.website,currencies:"
+msgid "Currencies Available"
+msgstr "Verfügbare Währungen"
+
+msgctxt "field:nereid.website,default_locale:"
+msgid "Default Locale"
+msgstr "Standardlokalisierung"
+
+msgctxt "field:nereid.website,guest_user:"
+msgid "Guest user"
+msgstr "Gastnutzer"
+
+msgctxt "field:nereid.website,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.website,locales:"
+msgid "Languages Available"
+msgstr "Verfügbare Sprachen"
+
+msgctxt "field:nereid.website,name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.website,rec_name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.website,timezone:"
+msgid "Timezone"
+msgstr "Zeitzone"
+
+msgctxt "field:nereid.website,url_map:"
+msgid "URL Map"
+msgstr "URL Zuordnungstabelle"
+
+msgctxt "field:nereid.website,write_date:"
+msgid "Write Date"
+msgstr "Zuletzt geändert"
+
+msgctxt "field:nereid.website,write_uid:"
+msgid "Write User"
+msgstr "Letzte Änderung durch"
+
+msgctxt "field:nereid.website-country.country,country:"
+msgid "Country"
+msgstr "Staat"
+
+msgctxt "field:nereid.website-country.country,create_date:"
+msgid "Create Date"
+msgstr "Erstellungsdatum"
+
+msgctxt "field:nereid.website-country.country,create_uid:"
+msgid "Create User"
+msgstr "Erstellt durch"
+
+msgctxt "field:nereid.website-country.country,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.website-country.country,rec_name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.website-country.country,website:"
+msgid "Website"
+msgstr "Website"
+
+msgctxt "field:nereid.website-country.country,write_date:"
+msgid "Write Date"
+msgstr "Zuletzt geändert"
+
+msgctxt "field:nereid.website-country.country,write_uid:"
+msgid "Write User"
+msgstr "Letzte Änderung durch"
+
+msgctxt "field:nereid.website-currency.currency,create_date:"
+msgid "Create Date"
+msgstr "Erstellungsdatum"
+
+msgctxt "field:nereid.website-currency.currency,create_uid:"
+msgid "Create User"
+msgstr "Erstellt durch"
+
+msgctxt "field:nereid.website-currency.currency,currency:"
+msgid "Currency"
+msgstr "Währung"
+
+msgctxt "field:nereid.website-currency.currency,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.website-currency.currency,rec_name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.website-currency.currency,website:"
+msgid "Website"
+msgstr "Website"
+
+msgctxt "field:nereid.website-currency.currency,write_date:"
+msgid "Write Date"
+msgstr "Zuletzt geändert"
+
+msgctxt "field:nereid.website-currency.currency,write_uid:"
+msgid "Write User"
+msgstr "Letzte Änderung durch"
+
+msgctxt "field:nereid.website-nereid.website.locale,create_date:"
+msgid "Create Date"
+msgstr "Erstellungsdatum"
+
+msgctxt "field:nereid.website-nereid.website.locale,create_uid:"
+msgid "Create User"
+msgstr "Erstellt durch"
+
+msgctxt "field:nereid.website-nereid.website.locale,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.website-nereid.website.locale,locale:"
+msgid "Locale"
+msgstr "Lokalisierung"
+
+msgctxt "field:nereid.website-nereid.website.locale,rec_name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.website-nereid.website.locale,website:"
+msgid "Website"
+msgstr "Website"
+
+msgctxt "field:nereid.website-nereid.website.locale,write_date:"
+msgid "Write Date"
+msgstr "Zuletzt geändert"
+
+msgctxt "field:nereid.website-nereid.website.locale,write_uid:"
+msgid "Write User"
+msgstr "Letzte Änderung durch"
+
+msgctxt "field:nereid.website.config.start,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.website.locale,code:"
+msgid "Code"
+msgstr "Code"
+
+msgctxt "field:nereid.website.locale,create_date:"
+msgid "Create Date"
+msgstr "Erstellungsdatum"
+
+msgctxt "field:nereid.website.locale,create_uid:"
+msgid "Create User"
+msgstr "Erstellt durch"
+
+msgctxt "field:nereid.website.locale,currency:"
+msgid "Currency"
+msgstr "Währung"
+
+msgctxt "field:nereid.website.locale,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:nereid.website.locale,language:"
+msgid "Default Language"
+msgstr "Standardsprache"
+
+msgctxt "field:nereid.website.locale,rec_name:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "field:nereid.website.locale,write_date:"
+msgid "Write Date"
+msgstr "Zuletzt geändert"
+
+msgctxt "field:nereid.website.locale,write_uid:"
+msgid "Write User"
+msgstr "Letzte Änderung durch"
+
+msgctxt "field:party.party,nereid_users:"
+msgid "Nereid Users"
+msgstr "Nereid Benutzer"
+
+msgctxt "help:ir.translation,comments:"
+msgid "Comments/Hints for translator"
+msgstr "Kommentare / Hinweise für Übersetzer"
+
+msgctxt "model:ir.action,name:act_nereid_config"
+msgid "Configure Nereid"
+msgstr "Nereid konfigurieren"
+
+msgctxt "model:ir.action,name:act_url_map_form"
+msgid "URL Map"
+msgstr "URL Zuordnungstabelle"
+
+msgctxt "model:ir.action,name:act_url_rule_defaults_tree"
+msgid "URL Rule Defaults"
+msgstr "URL Standardregel"
+
+msgctxt "model:ir.action,name:act_url_rule_form"
+msgid "URL Rules"
+msgstr "URL Regeln"
+
+msgctxt "model:ir.action,name:act_website_form"
+msgid "Web Sites"
+msgstr "Websites"
+
+msgctxt "model:ir.action,name:act_website_locale_form"
+msgid "Web Sites Locale"
+msgstr "Lokalisierung Websites"
+
+msgctxt "model:ir.action,name:action_nereid_static_file_view"
+msgid "Nereid Static Files"
+msgstr "Nereid Statische Dateien"
+
+msgctxt "model:ir.action,name:action_nereid_static_folder_view"
+msgid "Nereid Static Folders"
+msgstr "Nereid Statische Verzeichnisse"
+
+msgctxt "model:ir.action,name:action_nereid_user_view"
+msgid "Nereid User"
+msgstr "Nereid Benutzer"
+
+msgctxt ""
+"model:ir.action.act_window.domain,name:action_nereid_user_view_domain_active"
+msgid "Active"
+msgstr "Aktiv"
+
+msgctxt ""
+"model:ir.action.act_window.domain,name:action_nereid_user_view_domain_disabled"
+msgid "Disabled"
+msgstr "Deaktiviert"
+
+msgctxt "model:ir.trigger,name:trigger_clear_cache_locale"
+msgid "Clear Cache when locale changes"
+msgstr "Cache löschen bei Änderung der Lokalisierung"
+
+msgctxt "model:ir.trigger,name:trigger_clear_cache_url_map"
+msgid "Clear Cache when Map changes"
+msgstr "Cache löschen bei Änderung der Zuordnungstabelle"
+
+msgctxt "model:ir.trigger,name:trigger_clear_cache_url_rule"
+msgid "Clear Cache when url rule changes"
+msgstr "Cache löschen bei Änderung von URL Regeln"
+
+msgctxt "model:ir.trigger,name:trigger_clear_cache_website"
+msgid "Clear Cache when website changes"
+msgstr "Cache löschen bei Änderung der Website"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid"
+msgid "Nereid"
+msgstr "Nereid"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid_config_static_file"
+msgid "Static Files"
+msgstr "Statische Dateien"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid_config_static_folder"
+msgid "Static Folders"
+msgstr "Statische Verzeichnisse "
+
+msgctxt "model:ir.ui.menu,name:menu_nereid_configuration"
+msgid "Configuration"
+msgstr "Einstellungen"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid_routing"
+msgid "Routing"
+msgstr "Routing"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid_static"
+msgid "Static"
+msgstr "Statisch"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid_user"
+msgid "Users"
+msgstr "Benutzer"
+
+msgctxt "model:ir.ui.menu,name:menu_nereid_user1"
+msgid "Nereid Users"
+msgstr "Nereid Benutzer"
+
+msgctxt "model:ir.ui.menu,name:menu_url_map_form"
+msgid "URL Map"
+msgstr "URL Zuordnungstabelle"
+
+msgctxt "model:ir.ui.menu,name:menu_url_rule_form"
+msgid "URL Rules"
+msgstr "URL Regeln"
+
+msgctxt "model:ir.ui.menu,name:menu_website_form"
+msgid "Web Sites"
+msgstr "Websites"
+
+msgctxt "model:ir.ui.menu,name:menu_website_locale_form"
+msgid "Web Sites Locale"
+msgstr "Lokalisierung Websites"
+
+msgctxt "model:nereid.permission,name:"
+msgid "Nereid Permissions"
+msgstr "Nereid Berechtigungen"
+
+msgctxt "model:nereid.permission-nereid.user,name:"
+msgid "Nereid User Permissions"
+msgstr "Nereid Benutzer Berechtigungen"
+
+msgctxt "model:nereid.static.file,name:"
+msgid "Static files for Nereid"
+msgstr "Statische Dateien für Nereid"
+
+msgctxt "model:nereid.static.folder,name:"
+msgid "Static folder for Nereid"
+msgstr "Statisches Verzeichnis für Nereid"
+
+msgctxt "model:nereid.url_map,name:"
+msgid "URL Map"
+msgstr "URL Zuordnungstabelle"
+
+msgctxt "model:nereid.url_rule,name:"
+msgid "URL Rule"
+msgstr "URL Regel"
+
+msgctxt "model:nereid.url_rule_defaults,name:"
+msgid "Defaults for the URL"
+msgstr "Standards für die URL"
+
+msgctxt "model:nereid.user,name:"
+msgid "Nereid Users"
+msgstr "Nereid Benutzer"
+
+msgctxt "model:nereid.user.anonymous,name:"
+msgid "Nereid Anonymous User Object"
+msgstr "Nereid AnonymerBenutzer-Objekt"
+
+msgctxt "model:nereid.website,name:"
+msgid "One of the most powerful features of Nereid is the ability to"
+msgstr "Eine der herausragenden Eigenschaften von Nereid ist die Fähigkeit zu"
+
+msgctxt "model:nereid.website-country.country,name:"
+msgid "Website Country Relations"
+msgstr "Website Länder Verknüpfungen"
+
+msgctxt "model:nereid.website-currency.currency,name:"
+msgid "Currencies to be made available on website"
+msgstr "Währungen, die auf der Website verfügbar sein sollen"
+
+msgctxt "model:nereid.website-nereid.website.locale,name:"
+msgid "Languages to be made available on website"
+msgstr "Sprachen, die auf der Website verfügbar sein sollen."
+
+msgctxt "model:nereid.website.config.start,name:"
+msgid "Nereid Config"
+msgstr "Nereid Konfiguration"
+
+msgctxt "model:nereid.website.locale,name:"
+msgid "Web Site Locale"
+msgstr "Website-Lokalisierung"
+
+msgctxt "model:res.group,name:group_nereid_admin"
+msgid "Nereid Administration"
+msgstr "Administration Nereid"
+
+msgctxt "model:res.user,name:web_user"
+msgid "Nereid Web User"
+msgstr "Nereid Web-Benutzer"
+
+msgctxt "nereid:party.py:"
+msgid "Address has been deleted successfully!"
+msgstr "Adresse erfolgreich entfernt!"
+
+msgctxt "nereid:party.py:"
+msgid "City"
+msgstr "Stadt"
+
+msgctxt "nereid:party.py:"
+msgid "Country"
+msgstr "Staat"
+
+msgctxt "nereid:party.py:"
+msgid "Email"
+msgstr "E-Mail"
+
+msgctxt "nereid:party.py:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "nereid:party.py:"
+msgid "Phone"
+msgstr "Telefon"
+
+msgctxt "nereid:party.py:"
+msgid "Post Code"
+msgstr "Postleitzahl"
+
+msgctxt "nereid:party.py:"
+msgid "State/County"
+msgstr "Land/Gegend"
+
+msgctxt "nereid:party.py:"
+msgid "Street"
+msgstr "Anschrift 1"
+
+msgctxt "nereid:party.py:"
+msgid "Street (Bis)"
+msgstr "Anschrift 2"
+
+msgctxt "nereid:tests/test_i18n.py:"
+msgid "%(num)d apple"
+msgstr "%(num)d apple"
+
+msgctxt "nereid:tests/test_i18n.py:"
+msgid "Hi %(name)s"
+msgstr "Hallo %(name)s"
+
+msgctxt "nereid:tests/test_i18n.py:"
+msgid "en_US"
+msgstr "en_US"
+
+msgctxt "nereid:tests/test_i18n.py:"
+msgid "name"
+msgstr "Name"
+
+msgctxt "nereid:user.py:"
+msgid ""
+"A registration already exists with this email. Please contact customer care"
+msgstr ""
+"Es existiert bereits eine Registrierung mit dieser E-Mailadresse. Bitte "
+"setzen Sie sich mit dem Kundensupport in Verbindung."
+
+msgctxt "nereid:user.py:"
+msgid "Account Activation"
+msgstr "Kontoaktivierung"
+
+msgctxt "nereid:user.py:"
+msgid "Account Password Reset"
+msgstr "Kontopasswort zurücksetzen"
+
+msgctxt "nereid:user.py:"
+msgid "An email has been sent to your account for resetting your credentials"
+msgstr ""
+"Eine E-Mail zur Rücksetzung Ihres Passworts wurde an Ihr E-Mailkonto "
+"gesendet."
+
+msgctxt "nereid:user.py:"
+msgid "Confirm Password"
+msgstr "Passwort bestätigen"
+
+msgctxt "nereid:user.py:"
+msgid "Form has errors"
+msgstr "Das Formular weist Fehler auf."
+
+msgctxt "nereid:user.py:"
+msgid "Invalid Activation Code"
+msgstr "Ungültiger Aktivierungscode"
+
+msgctxt "nereid:user.py:"
+msgid "Invalid email address"
+msgstr "Ungültige E-Mailadresse"
+
+msgctxt "nereid:user.py:"
+msgid "Invalid reset password code"
+msgstr "Ungültiger Passwortrücksetzungscode"
+
+msgctxt "nereid:user.py:"
+msgid "Name"
+msgstr "Name"
+
+msgctxt "nereid:user.py:"
+msgid "New Password"
+msgstr "Neues Passwort"
+
+msgctxt "nereid:user.py:"
+msgid "Old Password"
+msgstr "Altes Passwort"
+
+msgctxt "nereid:user.py:"
+msgid "Passwords must match"
+msgstr "Passworte müssen übereinstimmen"
+
+msgctxt "nereid:user.py:"
+msgid "Registration Complete. Check your email for activation"
+msgstr ""
+"Registrierung abgeschlossen. Überprüfen Sie Ihre E-Mails für den "
+"Aktivierungscode."
+
+msgctxt "nereid:user.py:"
+msgid "Repeat Password"
+msgstr "Passwort wiederholen"
+
+msgctxt "nereid:user.py:"
+msgid "The activation link has expired"
+msgstr "Der Aktivierungslink ist abgelaufen."
+
+msgctxt "nereid:user.py:"
+msgid "The activation token is invalid!"
+msgstr "Der Aktivierungstoken ist ungültig."
+
+msgctxt "nereid:user.py:"
+msgid "The current password you entered is invalid"
+msgstr "Das eingegebene Passwort ist ungültig."
+
+msgctxt "nereid:user.py:"
+msgid "The password reset link has expired"
+msgstr "Der Passwortrücksetzungslink ist abgelaufen."
+
+msgctxt "nereid:user.py:"
+msgid "The verification link has expired"
+msgstr "Der Verifizierungslink ist abgelaufen."
+
+msgctxt "nereid:user.py:"
+msgid "The verification token is invalid!"
+msgstr "Der Verifizierungstoken ist ungültig."
+
+msgctxt "nereid:user.py:"
+msgid "Your account has been activated. Please login now."
+msgstr "Ihr Konto wurde aktiviert. Bitte melden Sie sich jetzt an."
+
+msgctxt "nereid:user.py:"
+msgid "Your email has been verified!"
+msgstr "Ihre E-Mailadresse wurde verifiziert."
+
+msgctxt "nereid:user.py:"
+msgid "Your password has been successfully changed! Please login again"
+msgstr ""
+"Ihr Passwort wurde erfolgreich geändert. Bitte melden Sie sich neu an."
+
+msgctxt "nereid:user.py:"
+msgid "e-mail"
+msgstr "E-Mail"
+
+msgctxt "nereid:website.py:"
+msgid "Invalid login credentials"
+msgstr "Ungültige Logindaten"
+
+msgctxt "nereid:website.py:"
+msgid "Password"
+msgstr "Passwort"
+
+msgctxt "nereid:website.py:"
+msgid "Remember me"
+msgstr "An mich erinnern"
+
+msgctxt "nereid:website.py:"
+msgid "You are now logged in. Welcome %(name)s"
+msgstr "Sie sind nun angemeldet. Willkommen %(name)s"
+
+msgctxt "nereid:website.py:"
+msgid "You have been logged out successfully. Thanks for visiting us"
+msgstr "Sie sind erfolgreich abgemeldet worden. Danke für Ihren Besuch!"
+
+msgctxt "nereid:website.py:"
+msgid "Your account has not been activated yet!"
+msgstr "Ihr Konto wurde noch nicht aktiviert."
+
+msgctxt "nereid:website.py:"
+msgid "e-mail"
+msgstr "E-Mail"
+
+msgctxt "selection:ir.translation,type:"
+msgid "Nereid Code"
+msgstr "Nereid Code"
+
+msgctxt "selection:ir.translation,type:"
+msgid "Nereid Template"
+msgstr "Nereid Vorlage"
+
+msgctxt "selection:ir.translation,type:"
+msgid "WTforms built-in Messages"
+msgstr "WTforms eingebaute Nachrichten"
+
+msgctxt "selection:nereid.static.file,type:"
+msgid "Local File"
+msgstr "Lokale Datei"
+
+msgctxt "selection:nereid.static.file,type:"
+msgid "Remote File"
+msgstr "Entfernte Datei"
+
+msgctxt "view:nereid.static.file:"
+msgid "Paths"
+msgstr "Pfade"
+
+msgctxt "view:nereid.static.file:"
+msgid "Preview"
+msgstr "Vorschau"
+
+msgctxt "view:nereid.static.folder:"
+msgid "Files"
+msgstr "Dateien"
+
+msgctxt "view:nereid.static.folder:"
+msgid "Static Folder"
+msgstr "Statisches Verzeichnis "
+
+msgctxt "view:nereid.url_map:"
+msgid "Advanced"
+msgstr "Erweitert"
+
+msgctxt "view:nereid.url_map:"
+msgid "Rules"
+msgstr "Regeln"
+
+msgctxt "view:nereid.url_map:"
+msgid "URL Map"
+msgstr "URL Zuordnungstabelle"
+
+msgctxt "view:nereid.url_rule:"
+msgid "Advanced"
+msgstr "Erweitert"
+
+msgctxt "view:nereid.url_rule:"
+msgid "Defaults"
+msgstr "Standards"
+
+msgctxt "view:nereid.url_rule:"
+msgid "URL Rule"
+msgstr "URL Regel"
+
+msgctxt "view:nereid.url_rule:"
+msgid "URL Rules"
+msgstr "URL Regeln"
+
+msgctxt "view:nereid.url_rule_defaults:"
+msgid "URL Rules Defaults"
+msgstr "URL Standardregeln"
+
+msgctxt "view:nereid.user:"
+msgid "Nereid User"
+msgstr "Nereid Benutzer"
+
+msgctxt "view:nereid.user:"
+msgid "Permissions"
+msgstr "Berechtigungen"
+
+msgctxt "view:nereid.website.config.start:"
+msgid "Create Nereid Website"
+msgstr "Nereid-Website erstellen"
+
+msgctxt "view:nereid.website.config.start:"
+msgid "You can now add nereid website into the system."
+msgstr "Sie können nun eine Nereid Website zum System hinzufügen."
+
+msgctxt "view:nereid.website.locale:"
+msgid "Web Site Locale"
+msgstr "Website-Lokalisierung"
+
+msgctxt "view:nereid.website.locale:"
+msgid "Web Sites Locale"
+msgstr "Lokalisierung Websites"
+
+msgctxt "view:nereid.website:"
+msgid "Configuration"
+msgstr "Einstellungen"
+
+msgctxt "view:nereid.website:"
+msgid "Countries"
+msgstr "Staaten"
+
+msgctxt "view:nereid.website:"
+msgid "General"
+msgstr "Allgemein"
+
+msgctxt "view:nereid.website:"
+msgid "Locales"
+msgstr "Lokalisierungen"
+
+msgctxt "view:nereid.website:"
+msgid "Web Site"
+msgstr "Website"
+
+msgctxt "view:nereid.website:"
+msgid "Web Sites"
+msgstr "Websites"
+
+msgctxt "view:party.party:"
+msgid "Nereid"
+msgstr "Nereid"
+
+msgctxt "view:party.party:"
+msgid "Nereid Users"
+msgstr "Nereid Benutzer"
+
+msgctxt "wizard_button:nereid.website.config,start,end:"
+msgid "Cancel"
+msgstr "Annulliert"
+
+msgctxt "wizard_button:nereid.website.config,start,website:"
+msgid "Ok"
+msgstr "OK"
+
+msgctxt "wizard_button:nereid.website.config,website,add:"
+msgid "Add"
+msgstr "Hinzufügen"
+
+msgctxt "wizard_button:nereid.website.config,website,end:"
+msgid "Cancel"
+msgstr "Abbrechen"
+
+msgctxt "wtforms:ext/appengine/fields.py:"
+msgid "Not a valid choice"
+msgstr "Ungültige Auswahl"
+
+msgctxt "wtforms:ext/appengine/fields.py:"
+msgid "Not a valid integer list"
+msgstr "Ungültige Ganzzahlliste"
+
+msgctxt "wtforms:ext/appengine/fields.py:"
+msgid "Not a valid list"
+msgstr "Ungültige Liste"
+
+msgctxt "wtforms:ext/csrf/form.py:"
+msgid "Invalid CSRF Token"
+msgstr "Websiteübergreifende Anfragenfälschung (CSFR) Token ungültig"
+
+msgctxt "wtforms:ext/csrf/session.py:"
+msgid "CSRF failed"
+msgstr "Websiteübergreifende Anfragenfälschung (CSFR) fehlgeschlagen"
+
+msgctxt "wtforms:ext/csrf/session.py:"
+msgid "CSRF token expired"
+msgstr "Websiteübergreifende Anfragenfälschung (CSFR) Token verfallen"
+
+msgctxt "wtforms:ext/csrf/session.py:"
+msgid "CSRF token missing"
+msgstr "Websiteübergreifende Anfragenfälschung (CSFR) fehlend"
+
+msgctxt "wtforms:ext/dateutil/fields.py:"
+msgid "Invalid date/time input"
+msgstr "Ungültige Eingabe von Datum/Zeit"
+
+msgctxt "wtforms:ext/dateutil/fields.py:"
+msgid "Please input a date/time value"
+msgstr "Bitte einen Wert für Datum/Zeit eingeben."
+
+msgctxt "wtforms:ext/django/fields.py:"
+msgid "Not a valid choice"
+msgstr "Ungültige Auswahl"
+
+msgctxt "wtforms:ext/sqlalchemy/fields.py:"
+msgid "Not a valid choice"
+msgstr "Ungültige Auswahl"
+
+msgctxt "wtforms:ext/sqlalchemy/validators.py:"
+msgid "Already exists."
+msgstr "Existiert bereits."
+
+msgctxt "wtforms:fields/core.py:"
+msgid "'%(value)s' is not a valid choice for this field"
+msgstr "'%(value)s' ist keine gültige Auswahl für dieses Feld."
+
+msgctxt "wtforms:fields/core.py:"
+msgid "Invalid Choice: could not coerce"
+msgstr "Ungültige Auswahl: konnte nicht erzwungen werden."
+
+msgctxt "wtforms:fields/core.py:"
+msgid "Invalid choice(s): one or more data inputs could not be coerced"
+msgstr "Ungültige Auswahl: eine oder mehrere Eingaben."
+
+msgctxt "wtforms:fields/core.py:"
+msgid "Not a valid choice"
+msgstr "Ungültige Auswahl"
+
+msgctxt "wtforms:fields/core.py:"
+msgid "Not a valid date value"
+msgstr "Ungültiger Wert für Datum"
+
+msgctxt "wtforms:fields/core.py:"
+msgid "Not a valid datetime value"
+msgstr "Ungültiger Wert für Datum/Zeit"
+
+msgctxt "wtforms:fields/core.py:"
+msgid "Not a valid decimal value"
+msgstr "Ungültiger Wert für Dezimalzahl"
+
+msgctxt "wtforms:fields/core.py:"
+msgid "Not a valid float value"
+msgstr "Ungültiger Wert für Fließkommazahl"
+
+msgctxt "wtforms:fields/core.py:"
+msgid "Not a valid integer value"
+msgstr "Ungültiger Wert für Ganzzahl"
+
+msgctxt "wtforms:validators.py:"
+msgid "Field cannot be longer than %(max)d character."
+msgstr "Feld kann nicht mehr als %(max)d Zeichen enthalten."
+
+msgctxt "wtforms:validators.py:"
+msgid "Field cannot be longer than %(max)d characters."
+msgstr "Feld kann nicht mehr als %(max)d Zeichen enthalten."
+
+msgctxt "wtforms:validators.py:"
+msgid "Field must be at least %(min)d character long."
+msgstr "Feld muss mindestens %(min)d Zeichen enthalten."
+
+msgctxt "wtforms:validators.py:"
+msgid "Field must be at least %(min)d characters long."
+msgstr "Feld muss mindestens %(min)d Zeichen enthalten."
+
+msgctxt "wtforms:validators.py:"
+msgid "Field must be between %(min)d and %(max)d characters long."
+msgstr "Feld muss zwischen %(min)d und %(max)d Zeichen enthalten."
+
+msgctxt "wtforms:validators.py:"
+msgid "Field must be equal to %(other_name)s."
+msgstr "Feld muss gleich wie %(other_name)s sein."
+
+msgctxt "wtforms:validators.py:"
+msgid "Invalid IP address."
+msgstr "Ungültige IP-Adresse."
+
+msgctxt "wtforms:validators.py:"
+msgid "Invalid Mac address."
+msgstr "Ungültige MAC-Adresse"
+
+msgctxt "wtforms:validators.py:"
+msgid "Invalid URL."
+msgstr "Ungültige URL."
+
+msgctxt "wtforms:validators.py:"
+msgid "Invalid UUID."
+msgstr "Ungültige UUID."
+
+msgctxt "wtforms:validators.py:"
+msgid "Invalid email address."
+msgstr "Ungültige E-Mailadresse"
+
+msgctxt "wtforms:validators.py:"
+msgid "Invalid field name '%s'."
+msgstr "Ungültiger Feldname '%s'."
+
+msgctxt "wtforms:validators.py:"
+msgid "Invalid input."
+msgstr "Ungültige Eingabe."
+
+msgctxt "wtforms:validators.py:"
+msgid "Invalid value, can't be any of: %(values)s."
+msgstr "Ungültiger Wert, kann keiner der Folgenden sein: %(values)s."
+
+msgctxt "wtforms:validators.py:"
+msgid "Invalid value, must be one of: %(values)s."
+msgstr "Ungültiger Wert, muss einer der Folgenden sein: %(values)s."
+
+msgctxt "wtforms:validators.py:"
+msgid "Number must be at least %(min)s."
+msgstr "Nummer muss mindestens %(min)s lang sein."
+
+msgctxt "wtforms:validators.py:"
+msgid "Number must be at most %(max)s."
+msgstr "Nummer darf höchstens %(max)s lang sein."
+
+msgctxt "wtforms:validators.py:"
+msgid "Number must be between %(min)s and %(max)s."
+msgstr "Nummer muss zwischen %(min)s und %(max)s lang sein."
+
+msgctxt "wtforms:validators.py:"
+msgid "This field is required."
+msgstr "Dieses Feld ist erforderlich."
