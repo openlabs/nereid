@@ -6,7 +6,9 @@ import unittest
 import trytond.tests.test_tryton
 from trytond.transaction import Transaction
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
-from nereid.contrib.pagination import Pagination, BasePagination
+from nereid.contrib.pagination import Pagination, BasePagination, \
+    QueryPagination
+from sql import Table
 
 
 class TestPagination(unittest.TestCase):
@@ -128,7 +130,34 @@ class TestPagination(unittest.TestCase):
             self.assert_('id' in serialized['items'][0])
             self.assert_('rec_name' in serialized['items'][0])
 
+    def test_0050_query_pagination(self):
+        """
+        Test pagination via `nereid.contrib.QueryPagination.`
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+
+            # Create a 100 addresses
+            for id in xrange(0, 100):
+                self.address_obj.create([{
+                    'party': self.guest_party,
+                    'name': 'User %s' % id,
+                }])
+
+            table = Table('party_address')
+            select_query = table.select()
+
+            pagination = QueryPagination(
+                self.address_obj, select_query, table, page=1, per_page=10
+            )
+
+            self.assertEqual(pagination.count, 100)
+            self.assertEqual(pagination.pages, 10)
+            self.assertEqual(pagination.begin_count, 1)
+            self.assertEqual(pagination.end_count, 10)
+
     # TODO: Test the order handling of serialization
+
 
 if __name__ == '__main__':
     unittest.main()
