@@ -12,6 +12,7 @@
     :license: BSD, see LICENSE for more details.
 """
 from werkzeug import routing
+from nereid import request
 
 
 class Map(routing.Map):
@@ -41,16 +42,15 @@ class Map(routing.Map):
 
 class Rule(routing.Rule):
 
-    def suitable_for(self, values, method=None, host=None):
-        """Check if the dict of values has enough data for url generation.
+    def __init__(self, *args, **kwargs):
+        self.readonly = kwargs.pop('readonly', None)
+        super(Rule, self).__init__(*args, **kwargs)
 
-        :internal:
-        """
-        rv = super(Rule, self).build(values, method)
-
-        # if host matching is enabled and the hosts dont match, then
-        # this is not a suitable match
-        if rv and self.map and self.map.host_matching and self.host != host:
-            return False
-
-        return rv
+    @property
+    def is_readonly(self):
+        if self.readonly is not None:
+            # If a value that is not None is explicitly set for the URL,
+            # then return that.
+            return self.readonly
+        # By default GET and HEAD requests are allocated a readonly cursor
+        return request.method in ('HEAD', 'GET')
