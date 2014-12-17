@@ -302,7 +302,10 @@ class NereidUser(ModelSQL, ModelView):
         flash(_(message))
         return response
 
-    @route("/verify-email/<int:active_id>/<sign>", methods=["GET"])
+    @route(
+        "/verify-email/<int:active_id>/<sign>", methods=["GET"],
+        readonly=False
+    )
     def verify_email(self, sign, max_age=24 * 60 * 60):
         """
         Verifies the email and redirects to home page. This is a method in
@@ -522,7 +525,10 @@ class NereidUser(ModelSQL, ModelView):
             'new-password.jinja', password_form=form, sign=sign, user=self
         )
 
-    @route("/activate-account/<int:active_id>/<sign>", methods=["GET"])
+    @route(
+        "/activate-account/<int:active_id>/<sign>", methods=["GET"],
+        readonly=False
+    )
     def activate(self, sign, max_age=24 * 60 * 60):
         """A web request handler for activation of the user account. This
         method verifies the email and if it succeeds, activates the account.
