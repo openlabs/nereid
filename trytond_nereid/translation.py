@@ -59,13 +59,20 @@ class Translation:
             if nereid_type not in cls.type.selection:
                 cls.type.selection.append(nereid_type)
 
+    @property
+    def unique_key(self):
+        if self.type in ('odt', 'view', 'wizard_button', 'selection', 'error'):
+            return (self.name, self.res_id, self.type, self.src)
+        elif self.type in ('field', 'model', 'help'):
+            return (self.name, self.res_id, self.type)
+
     @classmethod
     def translation_import(cls, lang, module, po_path):
         pool = Pool()
         ModelData = pool.get('ir.model.data')
         models_data = ModelData.search([
-            ('module', '=', module),
-        ])
+                ('module', '=', module),
+                ])
         fs_id2prop = {}
         for model_data in models_data:
             fs_id2prop.setdefault(model_data.model, {})
@@ -83,54 +90,45 @@ class Translation:
         id2translation = {}
         key2ids = {}
         module_translations = cls.search([
-            ('lang', '=', lang),
-            ('module', '=', module),
-        ], order=[])
+                ('lang', '=', lang),
+                ('module', '=', module),
+                ], order=[])
         for translation in module_translations:
-            if translation.type in (
-                    'odt', 'view', 'wizard_button',
-                    'selection', 'error',
-                    'nereid_template', 'wtforms', 'nereid'):
-                key = (
-                    translation.name,
-                    translation.res_id,
-                    translation.type,
-                    translation.src,
-                )
-            elif translation.type in ('field', 'model', 'help'):
-                key = (translation.name, translation.res_id, translation.type)
-            else:
-                raise Exception(
-                    'Unknown translation type: %s' % translation.type
-                )
+            key = translation.unique_key
+            if not key:
+                raise ValueError('Unknow translation type: %s' %
+                    translation.type)
             key2ids.setdefault(key, []).append(translation.id)
             if len(module_translations) <= RECORD_CACHE_SIZE:
                 id2translation[translation.id] = translation
 
-        def override_translation(ressource_id, new_translation, fuzzy):
+        def override_translation(ressource_id, new_translation):
             res_id_module, res_id = ressource_id.split('.')
             if res_id:
                 model_data, = ModelData.search([
-                    ('module', '=', res_id_module),
-                    ('fs_id', '=', res_id),
-                ])
+                        ('module', '=', res_id_module),
+                        ('fs_id', '=', res_id),
+                        ])
                 res_id = model_data.db_id
             else:
                 res_id = -1
-            with contextlib.nested(
-                    Transaction().set_user(0),
-                    Transaction().set_context(module=res_id_module)):
-                translation, = cls.search([
-                    ('name', '=', name),
+            with Transaction().set_user(0), \
+                    Transaction().set_context(module=res_id_module):
+                domain = [
+                    ('name', '=', new_translation.name),
                     ('res_id', '=', res_id),
-                    ('lang', '=', lang),
-                    ('type', '=', ttype),
+                    ('lang', '=', new_translation.lang),
+                    ('type', '=', new_translation.type),
                     ('module', '=', res_id_module),
-                ])
-                if translation.value != new_translation:
-                    translation.value = new_translation
+                    ]
+                if new_translation.type in ('odt', 'view', 'wizard_button',
+                        'selection', 'error'):
+                    domain.append(('src', '=', new_translation.src))
+                translation, = cls.search(domain)
+                if translation.value != new_translation.value:
+                    translation.value = new_translation.value
                     translation.overriding_module = module
-                    translation.fuzzy = fuzzy
+                    translation.fuzzy = new_translation.fuzzy
                     translation.save()
 
         # Make a first loop to retreive translation ids in the right order to
@@ -142,21 +140,19 @@ class Translation:
             processes = (False, True)
         for processing in processes:
             if processing and len(module_translations) > RECORD_CACHE_SIZE:
-                id2translation = dict(
-                    (t.id, t) for t in cls.browse(translation_ids)
-                )
+                id2translation = dict((t.id, t)
+                    for t in cls.browse(translation_ids))
             for entry in pofile:
-                ttype, name, res_id = entry.msgctxt.split(':')
-                src = entry.msgid
-                value = entry.msgstr
-                fuzzy = 'fuzzy' in entry.flags
+                translation, res_id = cls.from_poentry(entry)
+                translation.lang = lang
+                translation.module = module
                 noupdate = False
 
                 if '.' in res_id:
-                    override_translation(res_id, value, fuzzy)
+                    override_translation(res_id, translation)
                     continue
 
-                model = name.split(',')[0]
+                model = translation.name.split(',')[0]
                 if (model in fs_id2prop
                         and res_id in fs_id2prop[model]):
                     res_id, noupdate = fs_id2prop[model][res_id]
@@ -165,79 +161,63 @@ class Translation:
                     try:
                         res_id = int(res_id)
                     except ValueError:
-                        continue
+                        res_id = None
                 if not res_id:
                     res_id = -1
 
-                if ttype in (
-                        'odt', 'view', 'wizard_button', 'selection',
-                        'error', 'nereid', 'nereid_template',
-                        'wtforms'):
-                    key = (name, res_id, ttype, src)
-                elif ttype in('field', 'model', 'help'):
-                    key = (name, res_id, ttype)
-                else:
-                    raise Exception('Unknown translation type: %s' % ttype)
+                translation.res_id = res_id
+                key = translation.unique_key
+                if not key:
+                    raise ValueError('Unknow translation type: %s' %
+                        translation.type)
                 ids = key2ids.get(key, [])
 
                 if not processing:
                     translation_ids.extend(ids)
                     continue
 
-                with contextlib.nested(
-                        Transaction().set_user(0),
-                        Transaction().set_context(module=module)):
-                    if not ids:
-                        to_create.append({
-                            'name': name,
-                            'res_id': res_id,
-                            'lang': lang,
-                            'type': ttype,
-                            'src': src,
-                            'value': value,
-                            'fuzzy': fuzzy,
-                            'module': module,
-                            'overriding_module': None,
-                        })
-                    else:
-                        translations2 = []
-                        for translation_id in ids:
-                            translation = id2translation[translation_id]
-                            if translation.value != value \
-                                    or translation.fuzzy != fuzzy:
-                                translations2.append(translation)
-                        if translations2 and not noupdate:
-                            cls.write(translations2, {
-                                'value': value,
-                                'fuzzy': fuzzy,
-                            })
+                if not ids:
+                    to_create.append(translation._save_values)
+                else:
+                    to_write = []
+                    for translation_id in ids:
+                        old_translation = id2translation[translation_id]
+                        if (old_translation.value != translation.value
+                                or old_translation.fuzzy !=
+                                translation.fuzzy):
+                            to_write.append(old_translation)
+                    with Transaction().set_user(0), \
+                            Transaction().set_context(module=module):
+                        if to_write and not noupdate:
+                            cls.write(to_write, {
+                                    'value': translation.value,
+                                    'fuzzy': translation.fuzzy,
+                                    })
                         translations |= set(cls.browse(ids))
 
         if to_create:
-            translations |= set(cls.create(to_create))
+            with Transaction().set_user(0), \
+                    Transaction().set_context(module=module):
+                translations |= set(cls.create(to_create))
 
         if translations:
             all_translations = set(cls.search([
-                ('module', '=', module),
-                ('lang', '=', lang),
-            ]))
+                        ('module', '=', module),
+                        ('lang', '=', lang),
+                        ]))
             translations_to_delete = all_translations - translations
             cls.delete(list(translations_to_delete))
         return len(translations)
 
     @classmethod
     def translation_export(cls, lang, module):
-        """
-        Override the entire method just to avoid lookup for nereid
-        related functionality.
-        """
         pool = Pool()
         ModelData = pool.get('ir.model.data')
         Config = pool.get('ir.configuration')
 
         models_data = ModelData.search([
-            ('module', '=', module),
-        ])
+                ('module', '=', module),
+                ])
         db_id2fs_id = {}
         for model_data in models_data:
             db_id2fs_id.setdefault(model_data.model, {})
@@ -249,43 +229,36 @@ class Translation:
         pofile = TrytonPOFile(wrapwidth=78)
         pofile.metadata = {
             'Content-Type': 'text/plain; charset=utf-8',
-        }
+            }
 
         with Transaction().set_context(language=Config.get_language()):
             translations = cls.search([
                 ('lang', '=', lang),
                 ('module', '=', module),
-            ], order=[])
+                ], order=[])
         for translation in translations:
             if (translation.overriding_module
                     and translation.overriding_module != module):
                 cls.raise_user_error('translation_overridden', {
-                    'name': translation.name,
-                    'name': translation.overriding_module,
-                })
+                        'name': translation.name,
+                        'name': translation.overriding_module,
+                        })
             flags = [] if not translation.fuzzy else ['fuzzy']
             trans_ctxt = '%(type)s:%(name)s:' % {
                 'type': translation.type,
                 'name': translation.name,
-            }
+                }
             res_id = translation.res_id
-
-            # This is the line where logic change is introduced by nereid
-            nereid_types = ('nereid', 'nereid_template', 'wtforms')
-            if res_id >= 0 and \
-                    translation.type not in nereid_types:
+            if res_id >= 0:
                 model, _ = translation.name.split(',')
                 if model in db_id2fs_id:
                     res_id = db_id2fs_id[model].get(res_id)
                 else:
                     continue
                 trans_ctxt += '%s' % res_id
-            entry = polib.POEntry(
-                msgid=(translation.src or ''),
-                msgstr=(translation.value or ''),
-                msgctxt=trans_ctxt,
-                flags=flags
-            )
+            entry = polib.POEntry(msgid=(translation.src or ''),
+                msgstr=(translation.value or ''), msgctxt=trans_ctxt,
+                flags=flags)
             pofile.append(entry)
 
         if pofile:
@@ -293,10 +266,6 @@ class Translation:
             return unicode(pofile).encode('utf-8')
         else:
             return
-
-    _nereid_translation_cache = Cache(
-        'ir.translation', size_limit=10240, context=False
-    )
 
     @classmethod
     def get_translation_4_nereid(cls, module, ttype, lang, source):
