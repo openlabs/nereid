@@ -133,7 +133,7 @@ class Translation:
                 if new_translation.type in ('odt', 'view', 'wizard_button',
                         'selection', 'error', 'nereid', 'nereid_template',
                         'wtforms'):
-                # End nereid changes
+                        # End nereid changes
                     domain.append(('src', '=', new_translation.src))
                 translation, = cls.search(domain)
                 if translation.value != new_translation.value:
@@ -619,6 +619,7 @@ class TranslationSet:
                     })
         if to_create:
             Translation.create(to_create)
+
 
 class TranslationUpdate:
     __name__ = "ir.translation.update"
