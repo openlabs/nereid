@@ -104,7 +104,7 @@ class Translation:
         for translation in module_translations:
             key = translation.unique_key
             if not key:
-                raise ValueError('Unknow translation type: %s' %
+                raise ValueError('Unknown translation type: %s' %
                     translation.type)
             key2ids.setdefault(key, []).append(translation.id)
             if len(module_translations) <= RECORD_CACHE_SIZE:
