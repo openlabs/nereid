@@ -88,13 +88,13 @@ class TestHelperFunctions(BaseTestCase):
             NereidWebsite,
             module='nereid', type_='model'
         )
-        POOL.init(update=True)
+        POOL.init(update=['nereid'])
 
     @classmethod
     def tearDownClss(cls):
         mpool = Pool.classes['model'].setdefault('nereid', [])
         mpool.remove(NereidWebsite)
-        POOL.init(update=True)
+        POOL.init(update=['nereid'])
 
     def test_template_filter(self):
         '''

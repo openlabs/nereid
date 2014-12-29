@@ -47,13 +47,13 @@ class TestStaticFile(NereidTestCase):
             StaticFileServingHomePage,
             module='nereid', type_='model'
         )
-        POOL.init(update=True)
+        POOL.init(update=['nereid'])
 
     @classmethod
     def tearDownClss(cls):
         mpool = Pool.classes['model'].setdefault('nereid', [])
         mpool.remove(StaticFileServingHomePage)
-        POOL.init(update=True)
+        POOL.init(update=['nereid'])
 
     def setUp(self):
         trytond.tests.test_tryton.install_module('nereid')
