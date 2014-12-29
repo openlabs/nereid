@@ -123,6 +123,11 @@ class Nereid(Flask):
     #: of the cache could be passed here as a `dict`
     cache_init_kwargs = ConfigAttribute('CACHE_INIT_KWARGS')
 
+    #: Load the template eagerly. This would render the template
+    #: immediately and still return a LazyRenderer. This is useful
+    #: in debugging issues that may be hard to debug with lazy rendering
+    eager_template_render = ConfigAttribute('EAGER_TEMPLATE_RENDER')
+
     #: boolean attribute to indicate if the initialisation of backend
     #: connection and other nereid support features are loaded. The
     #: application can work only after the initialisation is done.
@@ -164,6 +169,8 @@ class Nereid(Flask):
             'CACHE_THRESHOLD': 500,
             'CACHE_INIT_KWARGS': {},
             'CACHE_KEY_PREFIX': '',
+
+            'EAGER_TEMPLATE_RENDER': False,
         })
 
     def initialise(self):
