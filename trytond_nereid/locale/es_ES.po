@@ -238,170 +238,6 @@ msgctxt "field:nereid.template.context_processor,write_uid:"
 msgid "Write User"
 msgstr "Usuario modificación"
 
-msgctxt "field:nereid.url_map,active:"
-msgid "Active"
-msgstr "Activo"
-
-msgctxt "field:nereid.url_map,charset:"
-msgid "Char Set"
-msgstr "Codificación de caracteres"
-
-msgctxt "field:nereid.url_map,create_date:"
-msgid "Create Date"
-msgstr "Fecha creación"
-
-msgctxt "field:nereid.url_map,create_uid:"
-msgid "Create User"
-msgstr "Usuario creación"
-
-msgctxt "field:nereid.url_map,default_subdomain:"
-msgid "Default Subdomain"
-msgstr "Subdominio"
-
-msgctxt "field:nereid.url_map,id:"
-msgid "ID"
-msgstr "ID"
-
-msgctxt "field:nereid.url_map,name:"
-msgid "Name"
-msgstr "Nombre"
-
-msgctxt "field:nereid.url_map,rec_name:"
-msgid "Name"
-msgstr "Nombre"
-
-msgctxt "field:nereid.url_map,rules:"
-msgid "Rules"
-msgstr "Reglas"
-
-msgctxt "field:nereid.url_map,strict_slashes:"
-msgid "Strict Slashes"
-msgstr "Barras estrictas"
-
-msgctxt "field:nereid.url_map,unique_urls:"
-msgid "Unique URLs"
-msgstr "URLs únicas"
-
-msgctxt "field:nereid.url_map,write_date:"
-msgid "Write Date"
-msgstr "Fecha modificación"
-
-msgctxt "field:nereid.url_map,write_uid:"
-msgid "Write User"
-msgstr "Usuario modificación"
-
-msgctxt "field:nereid.url_rule,active:"
-msgid "Active"
-msgstr "Activo"
-
-msgctxt "field:nereid.url_rule,create_date:"
-msgid "Create Date"
-msgstr "Fecha creación"
-
-msgctxt "field:nereid.url_rule,create_uid:"
-msgid "Create User"
-msgstr "Usuario creación"
-
-msgctxt "field:nereid.url_rule,defaults:"
-msgid "Defaults"
-msgstr "Valores por defecto"
-
-msgctxt "field:nereid.url_rule,endpoint:"
-msgid "Endpoint"
-msgstr "Método"
-
-msgctxt "field:nereid.url_rule,http_method_delete:"
-msgid "DELETE"
-msgstr "ELIMINAR"
-
-msgctxt "field:nereid.url_rule,http_method_get:"
-msgid "GET"
-msgstr "GET"
-
-msgctxt "field:nereid.url_rule,http_method_patch:"
-msgid "PATCH"
-msgstr "PATCH"
-
-msgctxt "field:nereid.url_rule,http_method_post:"
-msgid "POST"
-msgstr "POST"
-
-msgctxt "field:nereid.url_rule,http_method_put:"
-msgid "PUT"
-msgstr "PUT"
-
-msgctxt "field:nereid.url_rule,id:"
-msgid "ID"
-msgstr "ID"
-
-msgctxt "field:nereid.url_rule,only_for_genaration:"
-msgid "Only for Generation"
-msgstr "Sólo para generar"
-
-msgctxt "field:nereid.url_rule,rec_name:"
-msgid "Name"
-msgstr "Nombre"
-
-msgctxt "field:nereid.url_rule,redirect_to:"
-msgid "Redirect To"
-msgstr "Redireccionar a"
-
-msgctxt "field:nereid.url_rule,rule:"
-msgid "Rule"
-msgstr "Regla"
-
-msgctxt "field:nereid.url_rule,sequence:"
-msgid "Sequence"
-msgstr "Secuencia"
-
-msgctxt "field:nereid.url_rule,url_map:"
-msgid "URL Map"
-msgstr "Mapa URL"
-
-msgctxt "field:nereid.url_rule,write_date:"
-msgid "Write Date"
-msgstr "Fecha modificación"
-
-msgctxt "field:nereid.url_rule,write_uid:"
-msgid "Write User"
-msgstr "Usuario modificación"
-
-msgctxt "field:nereid.url_rule_defaults,create_date:"
-msgid "Create Date"
-msgstr "Fecha creación"
-
-msgctxt "field:nereid.url_rule_defaults,create_uid:"
-msgid "Create User"
-msgstr "Usuario creación"
-
-msgctxt "field:nereid.url_rule_defaults,id:"
-msgid "ID"
-msgstr "ID"
-
-msgctxt "field:nereid.url_rule_defaults,key:"
-msgid "Key"
-msgstr "Clave"
-
-msgctxt "field:nereid.url_rule_defaults,rec_name:"
-msgid "Name"
-msgstr "Nombre"
-
-msgctxt "field:nereid.url_rule_defaults,rule:"
-msgid "Rule"
-msgstr "Regla"
-
-msgctxt "field:nereid.url_rule_defaults,value:"
-msgid "Value"
-msgstr "Valor"
-
-msgctxt "field:nereid.url_rule_defaults,write_date:"
-msgid "Write Date"
-msgstr "Fecha modificación"
-
-msgctxt "field:nereid.url_rule_defaults,write_uid:"
-msgid "Write User"
-msgstr "Usuario modificación"
-
 msgctxt "field:nereid.user,activation_code:"
 msgid "Unique Activation Code"
 msgstr "Código activación único"
@@ -514,10 +350,6 @@ msgctxt "field:nereid.website,timezone:"
 msgid "Timezone"
 msgstr "Zona horaria"
 
-msgctxt "field:nereid.website,url_map:"
-msgid "URL Map"
-msgstr "Mapa URL"
-
 msgctxt "field:nereid.website,write_date:"
 msgid "Write Date"
 msgstr "Fecha modificación"
@@ -612,18 +444,6 @@ msgstr ""
 "Esto restringirá la carga cuando las direcciones URL con el modelo que se "
 "llame"
 
-msgctxt "model:ir.action,name:act_url_map_form"
-msgid "URL Map"
-msgstr "Mapas URL"
-
-msgctxt "model:ir.action,name:act_url_rule_defaults_tree"
-msgid "URL Rule Defaults"
-msgstr "Reglas URL por defecto"
-
-msgctxt "model:ir.action,name:act_url_rule_form"
-msgid "URL Rules"
-msgstr "Reglas URL"
-
 msgctxt "model:ir.action,name:act_website_form"
 msgid "Web Sites"
 msgstr "Sitios web"
@@ -672,14 +492,6 @@ msgctxt "model:ir.ui.menu,name:menu_nereid_user1"
 msgid "Nereid Users"
 msgstr "Usuarios"
 
-msgctxt "model:ir.ui.menu,name:menu_url_map_form"
-msgid "URL Map"
-msgstr "Mapas URL"
-
-msgctxt "model:ir.ui.menu,name:menu_url_rule_form"
-msgid "URL Rules"
-msgstr "Reglas URL"
-
 msgctxt "model:ir.ui.menu,name:menu_website_form"
 msgid "Web Sites"
 msgstr "Sitios web"
@@ -703,18 +515,6 @@ msgstr "Directorios estáticos para Nereid"
 msgctxt "model:nereid.template.context_processor,name:"
 msgid "Temlate Context Processor Registry"
 msgstr ""
-
-msgctxt "model:nereid.url_map,name:"
-msgid "URL Map"
-msgstr "Mapa URL"
-
-msgctxt "model:nereid.url_rule,name:"
-msgid "URL Rule"
-msgstr "Regla URL"
-
-msgctxt "model:nereid.url_rule_defaults,name:"
-msgid "Defaults for the URL"
-msgstr "Valores por defecto por la URL"
 
 msgctxt "model:nereid.user,name:"
 msgid "Nereid Users"
@@ -743,22 +543,6 @@ msgstr "Fichero local"
 msgctxt "selection:nereid.static.file,type:"
 msgid "Remote File"
 msgstr "Fichero remoto"
-
-msgctxt "view:nereid.url_map:"
-msgid "Advanced"
-msgstr "Avanzado"
-
-msgctxt "view:nereid.url_map:"
-msgid "Rules"
-msgstr "Reglas"
-
-msgctxt "view:nereid.url_rule:"
-msgid "Advanced"
-msgstr "Avanzado"
-
-msgctxt "view:nereid.url_rule:"
-msgid "Defaults"
-msgstr "Por defecto"
 
 msgctxt "view:nereid.website:"
 msgid "Configuration"

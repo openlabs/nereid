@@ -86,78 +86,6 @@
         <menuitem parent="menu_nereid_configuration" action="act_website_locale_form"
             id="menu_website_locale_form" sequence="5"/>
 
-        <!--  URL Map  -->
-        <record model="ir.ui.view" id="url_map_view_form">
-            <field name="model">nereid.url_map</field>
-            <field name="type">form</field>
-            <field name="name">url_map_form</field>
-        </record>
-        <record model="ir.ui.view" id="url_map_view_tree">
-            <field name="model">nereid.url_map</field>
-            <field name="type">tree</field>
-            <field name="name">url_map_tree</field>
-        </record>
-        <record model="ir.action.act_window" id="act_url_map_form">
-            <field name="name">URL Map</field>
-            <field name="res_model">nereid.url_map</field>
-        </record>
-        <record model="ir.action.act_window.view" id="act_url_map_form_view1">
-            <field name="sequence" eval="10" />
-            <field name="view" ref="url_map_view_tree" />
-            <field name="act_window" ref="act_url_map_form" />
-        </record>
-        <record model="ir.action.act_window.view" id="act_url_map_form_view2">
-            <field name="sequence" eval="20" />
-            <field name="view" ref="url_map_view_form" />
-            <field name="act_window" ref="act_url_map_form" />
-        </record>
-        <menuitem parent="menu_nereid_routing" action="act_url_map_form"
-            id="menu_url_map_form" />
-
-        <!--  URL Rule  -->
-        <record model="ir.ui.view" id="url_rule_view_form">
-            <field name="model">nereid.url_rule</field>
-            <field name="type">form</field>
-            <field name="name">url_rule_form</field>
-        </record>
-        <record model="ir.ui.view" id="url_rule_view_tree">
-            <field name="model">nereid.url_rule</field>
-            <field name="type">tree</field>
-            <field name="name">url_rule_tree</field>
-        </record>
-        <record model="ir.action.act_window" id="act_url_rule_form">
-            <field name="name">URL Rules</field>
-            <field name="res_model">nereid.url_rule</field>
-        </record>
-        <record model="ir.action.act_window.view" id="act_url_rule_form_view1">
-            <field name="sequence" eval="10" />
-            <field name="view" ref="url_rule_view_tree" />
-            <field name="act_window" ref="act_url_rule_form" />
-        </record>
-        <record model="ir.action.act_window.view" id="act_url_rule_form_view2">
-            <field name="sequence" eval="20" />
-            <field name="view" ref="url_rule_view_form" />
-            <field name="act_window" ref="act_url_rule_form" />
-        </record>
-        <menuitem parent="menu_nereid_routing" action="act_url_rule_form"
-            id="menu_url_rule_form" />
-
-        <!--  URL Rule Defaults -->
-        <record model="ir.ui.view" id="url_rule_defaults_view_tree">
-            <field name="model">nereid.url_rule_defaults</field>
-            <field name="type">tree</field>
-            <field name="name">url_rule_defaults_tree</field>
-        </record>
-        <record model="ir.action.act_window" id="act_url_rule_defaults_tree">
-            <field name="name">URL Rule Defaults</field>
-            <field name="res_model">nereid.url_rule_defaults</field>
-        </record>
-        <record model="ir.action.act_window.view" id="act_url_rule_defaults_tree_view2">
-            <field name="sequence" eval="20" />
-            <field name="view" ref="url_rule_defaults_view_tree" />
-            <field name="act_window" ref="act_url_rule_defaults_tree" />
-        </record>
-
         <!-- Nereid Configuration wizard -->
         <record model="ir.ui.view" id="website_config_start_view_form">
             <field name="model">nereid.website.config.start</field>
@@ -172,11 +100,6 @@
             id="config_wizard_item_nereid">
             <field name="action" ref="act_nereid_config"/>
             <field name="sequence" eval="20"/>
-        </record>
-
-        <!-- Create Default UrlMap record -->
-        <record id="default_url_map" model="nereid.url_map">
-            <field name="name">Default</field>
         </record>
 
     </data>

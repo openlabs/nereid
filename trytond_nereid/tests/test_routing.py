@@ -19,7 +19,6 @@ class TestRouting(NereidTestCase):
         self.nereid_website_obj = POOL.get('nereid.website')
         self.locale_obj = POOL.get('nereid.website.locale')
         self.nereid_user_obj = POOL.get('nereid.user')
-        self.url_map_obj = POOL.get('nereid.url_map')
         self.company_obj = POOL.get('company.company')
         self.language_obj = POOL.get('ir.lang')
         self.currency_obj = POOL.get('currency.currency')
@@ -63,8 +62,6 @@ class TestRouting(NereidTestCase):
             'company': self.company,
         }])
 
-        url_map_id, = self.url_map_obj.search([], limit=1)
-
         self.en_us, = self.language_obj.search([('code', '=', 'en_US')])
         self.es_es, = self.language_obj.search([('code', '=', 'es_ES')])
         self.locale_en_us, self.locale_es_es = self.locale_obj.create([{
@@ -79,7 +76,6 @@ class TestRouting(NereidTestCase):
 
         self.nereid_website, = self.nereid_website_obj.create([{
             'name': 'localhost',
-            'url_map': url_map_id,
             'company': self.company,
             'application_user': USER,
             'default_locale': self.locale_en_us,
@@ -207,7 +203,6 @@ class TestRouting(NereidTestCase):
 
                 self.nereid_website_obj.create([{
                     'name': 'another_website',
-                    'url_map': self.url_map_obj.search([], limit=1)[0],
                     'company': self.company,
                     'application_user': USER,
                     'default_locale': self.locale_en_us,
