@@ -9,12 +9,12 @@ import json
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from trytond.transaction import Transaction
-from trytond.config import CONFIG
+from trytond.config import config
 from nereid.testing import NereidTestCase
 from nereid import permissions_required
 from werkzeug.exceptions import Forbidden
 
-CONFIG['smtp_from'] = 'from@xyz.com'
+config.set('email', 'from', 'from@xyz.com')
 
 
 class TestAuth(NereidTestCase):

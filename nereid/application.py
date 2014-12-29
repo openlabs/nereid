@@ -20,7 +20,7 @@ from flask.ext.login import LoginManager
 from trytond import backend
 from trytond.pool import Pool
 from trytond.cache import Cache
-from trytond.config import CONFIG
+from trytond.config import config
 from trytond.exceptions import UserError
 from trytond.modules import register_classes
 from trytond.transaction import Transaction
@@ -351,7 +351,7 @@ class Nereid(Flask):
             warnings.warn(DeprecationWarning(
                 'TRYTON_CONFIG configuration will be deprecated in future.'
             ))
-            CONFIG.update_etc(self.tryton_configfile)
+            config.update_etc(self.tryton_configfile)
 
         register_classes()
 
@@ -423,7 +423,7 @@ class Nereid(Flask):
 
             user, company = website.application_user.id, website.company.id
 
-        for count in range(int(CONFIG['retry']), -1, -1):
+        for count in range(int(config.get('database', 'retry')), -1, -1):
             with Transaction().start(
                     self.database_name, user,
                     context={'company': company},
