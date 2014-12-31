@@ -7,7 +7,9 @@ mock
 pycountry
 
 # Install the test package which depends on this package
-trytond_nereid_test>=3.2,<3.3
+# Install from github since 3.4 and above will not have nereid-test
+# as a separate package
+git+git://github.com/openlabs/nereid-test.git@develop
 
 # Quality check
 flake8
