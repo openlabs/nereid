@@ -6,8 +6,6 @@ this repository contains the full copyright notices and license terms. -->
     <field name="name" />
     <notebook colspan="4">
         <page id="general" string="General">
-            <label name="url_map" />
-            <field name="url_map" />
             <label name="active" />
             <field name="active" />
             <label name="company"/>

@@ -3,6 +3,5 @@
 this repository contains the full copyright notices and license terms. -->
 <tree string="Web Sites">
     <field name="name" />
-    <field name="url_map" />
     <field name="active" />
 </tree>
