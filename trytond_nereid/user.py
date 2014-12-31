@@ -27,7 +27,7 @@ from trytond.model import ModelView, ModelSQL, fields
 from trytond.pool import Pool
 from trytond.pyson import Eval, Bool, Not
 from trytond.transaction import Transaction
-from trytond.config import CONFIG
+from trytond.config import config
 from trytond import backend
 from itsdangerous import URLSafeSerializer, TimestampSigner, SignatureExpired, \
     BadSignature, TimedJSONWebSignatureSerializer
@@ -45,10 +45,11 @@ class RegistrationForm(Form):
         validators.EqualTo('confirm', message=_('Passwords must match'))])
     confirm = PasswordField(_('Confirm Password'))
 
-    if 're_captcha_public' in CONFIG.options:
+    if config.has_option('nereid', 're_captcha_public_key') and \
+            config.has_option('nereid', 're_captcha_private_key'):
         captcha = RecaptchaField(
-            public_key=CONFIG.options['re_captcha_public'],
-            private_key=CONFIG.options['re_captcha_private'],
+            public_key=config.get('nereid', 're_captcha_public_key'),
+            private_key=config.get('nereid', 're_captcha_private_key'),
             secure=True
         )
 
@@ -354,7 +355,7 @@ class NereidUser(ModelSQL, ModelView):
 
         """
         # Add re_captcha if the configuration has such an option
-        if 're_captcha_public' in CONFIG.options:
+        if config.has_option('nereid', 're_captcha_public_key'):
             registration_form = RegistrationForm(
                 captcha={'ip_address': request.remote_addr}
             )
@@ -438,13 +439,14 @@ class NereidUser(ModelSQL, ModelView):
         EmailQueue = Pool().get('email.queue')
 
         email_message = render_email(
-            CONFIG['smtp_from'], self.email, _('Account Activation'),
+            config.get('email', 'from'),
+            self.email, _('Account Activation'),
             text_template='emails/activation-text.jinja',
             html_template='emails/activation-html.jinja',
             nereid_user=self
         )
         EmailQueue.queue_mail(
-            CONFIG['smtp_from'], self.email, email_message.as_string()
+            config.get('email', 'from'), self.email, email_message.as_string()
         )
 
     @classmethod
@@ -605,13 +607,14 @@ class NereidUser(ModelSQL, ModelView):
         EmailQueue = Pool().get('email.queue')
 
         email_message = render_email(
-            CONFIG['smtp_from'], self.email, _('Account Password Reset'),
+            config.get('email', 'from'),
+            self.email, _('Account Password Reset'),
             text_template='emails/reset-text.jinja',
             html_template='emails/reset-html.jinja',
             nereid_user=self
         )
         EmailQueue.queue_mail(
-            CONFIG['smtp_from'], self.email, email_message.as_string()
+            config.get('email', 'from'), self.email, email_message.as_string()
         )
 
     def match_password(self, password):

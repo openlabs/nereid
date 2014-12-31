@@ -14,17 +14,12 @@ import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from trytond.transaction import Transaction
 from trytond.pool import PoolMeta, Pool
-from trytond.config import CONFIG
+from trytond.config import config
 from nereid.testing import NereidTestCase
 from nereid import render_template, route
 
-CONFIG['smtp_server'] = 'smtpserver'
-CONFIG['smtp_user'] = 'test@xyz.com'
-CONFIG['smtp_password'] = 'testpassword'
-CONFIG['smtp_port'] = 587
-CONFIG['smtp_tls'] = True
-CONFIG['smtp_from'] = 'from@xyz.com'
-CONFIG.options['data_path'] = '/tmp/temp_tryton_data/'
+config.set('email', 'from', 'from@xyz.com')
+config.set('database', 'path', '/tmp/temp_tryton_data/')
 
 
 class StaticFileServingHomePage:
@@ -52,13 +47,13 @@ class TestStaticFile(NereidTestCase):
             StaticFileServingHomePage,
             module='nereid', type_='model'
         )
-        POOL.init(update=True)
+        POOL.init(update=['nereid'])
 
     @classmethod
     def tearDownClss(cls):
         mpool = Pool.classes['model'].setdefault('nereid', [])
         mpool.remove(StaticFileServingHomePage)
-        POOL.init(update=True)
+        POOL.init(update=['nereid'])
 
     def setUp(self):
         trytond.tests.test_tryton.install_module('nereid')

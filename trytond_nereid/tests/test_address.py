@@ -8,15 +8,10 @@ from mock import patch
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from trytond.transaction import Transaction
-from trytond.config import CONFIG
+from trytond.config import config
 from nereid.testing import NereidTestCase
 
-CONFIG['smtp_server'] = 'smtpserver'
-CONFIG['smtp_user'] = 'test@xyz.com'
-CONFIG['smtp_password'] = 'testpassword'
-CONFIG['smtp_port'] = 587
-CONFIG['smtp_tls'] = True
-CONFIG['smtp_from'] = 'from@xyz.com'
+config.set('email', 'from', 'from@xyz.com')
 
 
 class TestAddress(NereidTestCase):
