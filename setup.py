@@ -103,7 +103,6 @@ minor_version = int(minor_version)
 
 install_requires = [
     'pytz',
-    'distribute',
     'flask>=0.10',
     'flask-wtf',
     'babel',
