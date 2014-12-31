@@ -142,11 +142,6 @@ tests_require = [
     'mock',
     'pycountry',
 ]
-tests_require.append(
-    'trytond_nereid_test >= %s.%s, < %s.%s' %
-    (major_version, minor_version, major_version, minor_version + 1)
-)
-
 
 setup(
     name='trytond_nereid',
@@ -175,6 +170,7 @@ setup(
         'nereid.tests',
         'trytond.modules.nereid',
         'trytond.modules.nereid.tests',
+        'trytond.modules.nereid_test',
     ],
     package_dir={
         'nereid': 'nereid',
@@ -182,18 +178,23 @@ setup(
         'nereid.tests': 'nereid/tests',
         'trytond.modules.nereid': 'trytond_nereid',
         'trytond.modules.nereid.tests': 'trytond_nereid/tests',
+        'trytond.modules.nereid_test': 'nereid_test_module',
     },
     package_data={
         'trytond.modules.nereid': info.get('xml', [])
-        + ['tryton.cfg', 'view/*.xml', 'locale/*.po', 'tests/*.rst']
-        + ['i18n/*.pot', 'i18n/pt_BR/LC_MESSAGES/*']
-        + ['templates/*.*', 'templates/tests/*.*'],
+            + ['tryton.cfg', 'view/*.xml', 'locale/*.po', 'tests/*.rst']
+            + ['i18n/*.pot', 'i18n/pt_BR/LC_MESSAGES/*']
+            + ['templates/*.*', 'templates/tests/*.*'],
+        'trytond.modules.nereid_test': ['*.xml']
+            + ['tryton.cfg', 'locale/*.po', 'tests/*.rst']
+            + ['templates/*.*', 'templates/tests/*.*'],
     },
     zip_safe=False,
     platforms='any',
     entry_points="""
     [trytond.modules]
     nereid = trytond.modules.nereid
+    nereid_test = trytond.modules.nereid_test
     """,
     test_suite='tests.suite',
     test_loader='trytond.test_loader:Loader',

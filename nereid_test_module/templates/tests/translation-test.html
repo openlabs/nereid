@@ -1,0 +1,33 @@
+{#
+
+  ** If you want to add additional tests add at the end as
+     line numbers are checked in the test suite **
+
+#}
+{{ _('gettext') }}
+
+{# trans: gettext with comment b4 #}
+{{ _('gettext with comment b4') }}
+
+{{ _('gettext with comment inline') }} {# trans: gettext with comment inline #}
+
+{{ _('gettext without comment') }} {# just a comment, not for translator #}
+
+{# with gettext #}
+{{ gettext('Hello World!') }}
+
+{# with ngettext #}
+{{ ngettext('%(num)d apple', '%(num)d apples', apples|count) }}
+
+{# trans: Translation with trans tag #}
+<p>{% trans %}Hello {{ username }}!{% endtrans %}</p>
+
+{# trans: Translation with an expression #}
+<p>{% trans name=user.username %}Hello {{ name }}!{% endtrans %}</p>
+
+{# trans: trans tag with pluralisation #}
+{% trans count=list|length %}
+There is {{ count }} {{ objname }} object.
+{% pluralize %}
+There are {{ count }} {{ objname }} objects.
+{% endtrans %}
