@@ -16,6 +16,7 @@ recursive-include trytond_nereid *.cfg
 include trytond_nereid/locale/*.po
 include trytond_nereid/icons/*
 recursive-include tests *.py
+recursive-include nereid_test_module *.rst
 graft trytond_nereid/templates
 
 include tox.ini
