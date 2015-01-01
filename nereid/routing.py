@@ -46,6 +46,21 @@ class Rule(routing.Rule):
         self.readonly = kwargs.pop('readonly', None)
         super(Rule, self).__init__(*args, **kwargs)
 
+    def empty(self):
+        """Return an unbound copy of this rule.  This can be useful if you
+        want to reuse an already bound URL for another map.
+
+        Ref: https://github.com/mitsuhiko/werkzeug/pull/645
+        """
+        defaults = None
+        if self.defaults:
+            defaults = dict(self.defaults)
+        return self.__class__(
+            self.rule, defaults, self.subdomain, self.methods,
+            self.build_only, self.endpoint, self.strict_slashes,
+            self.redirect_to, self.alias, self.host
+        )
+
     @property
     def is_readonly(self):
         if self.readonly is not None:
