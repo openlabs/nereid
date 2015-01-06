@@ -5,6 +5,7 @@
 
     :copyright: (c) 2013-14 by Openlabs Technologies & Consulting (P) Ltd.
     :copyright: (c) 2011-2012 NaN Projectes de Programari Lliure, S.L.
+    :copyright: (c) 2014 MBSolutions
     :license: BSD, see LICENSE for more details
 
     This work is mostly inspired by the jasper_reports module of the tryton
@@ -14,12 +15,12 @@
 import os
 import polib
 import logging
-import contextlib
 
 import wtforms
 from jinja2 import FileSystemLoader, Environment
 from jinja2.ext import babel_extract, GETTEXT_FUNCTIONS
 from babel.messages.extract import extract_from_dir
+from babel.messages.extract import extract_from_file
 from trytond.model import fields
 from trytond.wizard import Wizard
 from trytond.transaction import Transaction
@@ -36,6 +37,14 @@ __all__ = [
     'TranslationClean',
 ]
 
+NEREID_TRANSLATION_TYPES = [
+    ('nereid_template', 'Nereid Template'),
+    ('wtforms', 'WTforms built-in Messages'),
+    ('nereid', 'Nereid Code'),
+]
+
+_nereid_types = [type[0] for type in NEREID_TRANSLATION_TYPES]
+
 __metaclass__ = PoolMeta
 
 
@@ -50,22 +59,28 @@ class Translation:
     @classmethod
     def __setup__(cls):
         super(Translation, cls).__setup__()
-        new_types = [
-            ('nereid_template', 'Nereid Template'),
-            ('wtforms', 'WTforms built-in Messages'),
-            ('nereid', 'Nereid Code'),
-        ]
-        for nereid_type in new_types:
+        for nereid_type in NEREID_TRANSLATION_TYPES:
             if nereid_type not in cls.type.selection:
                 cls.type.selection.append(nereid_type)
 
+    @property
+    def unique_key(self):
+        if self.type in _nereid_types:
+            return (self.name, self.res_id, self.type, self.src)
+        super(Translation, self).unique_key()
+
     @classmethod
     def translation_import(cls, lang, module, po_path):
+        """
+        Override the entire method: upstream code needs refactoring to allow
+        for customization.
+        Based on trytond version: 3.2.4
+        """
         pool = Pool()
         ModelData = pool.get('ir.model.data')
         models_data = ModelData.search([
-            ('module', '=', module),
-        ])
+                ('module', '=', module),
+                ])
         fs_id2prop = {}
         for model_data in models_data:
             fs_id2prop.setdefault(model_data.model, {})
@@ -83,54 +98,48 @@ class Translation:
         id2translation = {}
         key2ids = {}
         module_translations = cls.search([
-            ('lang', '=', lang),
-            ('module', '=', module),
-        ], order=[])
+                ('lang', '=', lang),
+                ('module', '=', module),
+                ], order=[])
         for translation in module_translations:
-            if translation.type in (
-                    'odt', 'view', 'wizard_button',
-                    'selection', 'error',
-                    'nereid_template', 'wtforms', 'nereid'):
-                key = (
-                    translation.name,
-                    translation.res_id,
-                    translation.type,
-                    translation.src,
-                )
-            elif translation.type in ('field', 'model', 'help'):
-                key = (translation.name, translation.res_id, translation.type)
-            else:
-                raise Exception(
-                    'Unknown translation type: %s' % translation.type
-                )
+            key = translation.unique_key
+            if not key:
+                raise ValueError('Unknown translation type: %s' %
+                    translation.type)
             key2ids.setdefault(key, []).append(translation.id)
             if len(module_translations) <= RECORD_CACHE_SIZE:
                 id2translation[translation.id] = translation
 
-        def override_translation(ressource_id, new_translation, fuzzy):
+        def override_translation(ressource_id, new_translation):
             res_id_module, res_id = ressource_id.split('.')
             if res_id:
                 model_data, = ModelData.search([
-                    ('module', '=', res_id_module),
-                    ('fs_id', '=', res_id),
-                ])
+                        ('module', '=', res_id_module),
+                        ('fs_id', '=', res_id),
+                        ])
                 res_id = model_data.db_id
             else:
                 res_id = -1
-            with contextlib.nested(
-                    Transaction().set_user(0),
-                    Transaction().set_context(module=res_id_module)):
-                translation, = cls.search([
-                    ('name', '=', name),
+            with Transaction().set_user(0), \
+                    Transaction().set_context(module=res_id_module):
+                domain = [
+                    ('name', '=', new_translation.name),
                     ('res_id', '=', res_id),
-                    ('lang', '=', lang),
-                    ('type', '=', ttype),
+                    ('lang', '=', new_translation.lang),
+                    ('type', '=', new_translation.type),
                     ('module', '=', res_id_module),
-                ])
-                if translation.value != new_translation:
-                    translation.value = new_translation
+                    ]
+                # Begin nereid changes
+                if new_translation.type in ('odt', 'view', 'wizard_button',
+                        'selection', 'error', 'nereid', 'nereid_template',
+                        'wtforms'):
+                        # End nereid changes
+                    domain.append(('src', '=', new_translation.src))
+                translation, = cls.search(domain)
+                if translation.value != new_translation.value:
+                    translation.value = new_translation.value
                     translation.overriding_module = module
-                    translation.fuzzy = fuzzy
+                    translation.fuzzy = new_translation.fuzzy
                     translation.save()
 
         # Make a first loop to retreive translation ids in the right order to
@@ -142,21 +151,19 @@ class Translation:
             processes = (False, True)
         for processing in processes:
             if processing and len(module_translations) > RECORD_CACHE_SIZE:
-                id2translation = dict(
-                    (t.id, t) for t in cls.browse(translation_ids)
-                )
+                id2translation = dict((t.id, t)
+                    for t in cls.browse(translation_ids))
             for entry in pofile:
-                ttype, name, res_id = entry.msgctxt.split(':')
-                src = entry.msgid
-                value = entry.msgstr
-                fuzzy = 'fuzzy' in entry.flags
+                translation, res_id = cls.from_poentry(entry)
+                translation.lang = lang
+                translation.module = module
                 noupdate = False
 
                 if '.' in res_id:
-                    override_translation(res_id, value, fuzzy)
+                    override_translation(res_id, translation)
                     continue
 
-                model = name.split(',')[0]
+                model = translation.name.split(',')[0]
                 if (model in fs_id2prop
                         and res_id in fs_id2prop[model]):
                     res_id, noupdate = fs_id2prop[model][res_id]
@@ -165,62 +172,50 @@ class Translation:
                     try:
                         res_id = int(res_id)
                     except ValueError:
-                        continue
+                        res_id = None
                 if not res_id:
                     res_id = -1
 
-                if ttype in (
-                        'odt', 'view', 'wizard_button', 'selection',
-                        'error', 'nereid', 'nereid_template',
-                        'wtforms'):
-                    key = (name, res_id, ttype, src)
-                elif ttype in('field', 'model', 'help'):
-                    key = (name, res_id, ttype)
-                else:
-                    raise Exception('Unknown translation type: %s' % ttype)
+                translation.res_id = res_id
+                key = translation.unique_key
+                if not key:
+                    raise ValueError('Unknow translation type: %s' %
+                        translation.type)
                 ids = key2ids.get(key, [])
 
                 if not processing:
                     translation_ids.extend(ids)
                     continue
 
-                with contextlib.nested(
-                        Transaction().set_user(0),
-                        Transaction().set_context(module=module)):
-                    if not ids:
-                        to_create.append({
-                            'name': name,
-                            'res_id': res_id,
-                            'lang': lang,
-                            'type': ttype,
-                            'src': src,
-                            'value': value,
-                            'fuzzy': fuzzy,
-                            'module': module,
-                            'overriding_module': None,
-                        })
-                    else:
-                        translations2 = []
-                        for translation_id in ids:
-                            translation = id2translation[translation_id]
-                            if translation.value != value \
-                                    or translation.fuzzy != fuzzy:
-                                translations2.append(translation)
-                        if translations2 and not noupdate:
-                            cls.write(translations2, {
-                                'value': value,
-                                'fuzzy': fuzzy,
-                            })
+                if not ids:
+                    to_create.append(translation._save_values)
+                else:
+                    to_write = []
+                    for translation_id in ids:
+                        old_translation = id2translation[translation_id]
+                        if (old_translation.value != translation.value
+                                or old_translation.fuzzy !=
+                                translation.fuzzy):
+                            to_write.append(old_translation)
+                    with Transaction().set_user(0), \
+                            Transaction().set_context(module=module):
+                        if to_write and not noupdate:
+                            cls.write(to_write, {
+                                    'value': translation.value,
+                                    'fuzzy': translation.fuzzy,
+                                    })
                         translations |= set(cls.browse(ids))
 
         if to_create:
-            translations |= set(cls.create(to_create))
+            with Transaction().set_user(0), \
+                    Transaction().set_context(module=module):
+                translations |= set(cls.create(to_create))
 
         if translations:
             all_translations = set(cls.search([
-                ('module', '=', module),
-                ('lang', '=', lang),
-            ]))
+                        ('module', '=', module),
+                        ('lang', '=', lang),
+                        ]))
             translations_to_delete = all_translations - translations
             cls.delete(list(translations_to_delete))
         return len(translations)
@@ -228,8 +223,9 @@ class Translation:
     @classmethod
     def translation_export(cls, lang, module):
         """
-        Override the entire method just to avoid lookup for nereid
-        related functionality.
+        Override the entire method: upstream code needs refactoring to allow
+        for customization.
+        Based on trytond version: 3.2.4
         """
         pool = Pool()
         ModelData = pool.get('ir.model.data')
@@ -270,16 +266,23 @@ class Translation:
             }
             res_id = translation.res_id
 
-            # This is the line where logic change is introduced by nereid
-            nereid_types = ('nereid', 'nereid_template', 'wtforms')
-            if res_id >= 0 and \
-                    translation.type not in nereid_types:
-                model, _ = translation.name.split(',')
-                if model in db_id2fs_id:
-                    res_id = db_id2fs_id[model].get(res_id)
-                else:
-                    continue
+            # Begin nereid changes
+            # don't export nereid items with res_id == -1, because there
+            # is definitely something wrong with them (messages that weren't
+            # updated, but just imported)
+            if res_id == -1 and translation.type in _nereid_types:
+                continue
+            # append res_id generally for nereid items
+            if res_id >= 0:
+                if translation.type not in _nereid_types:
+                    model, _ = translation.name.split(',')
+                    if model in db_id2fs_id:
+                        res_id = db_id2fs_id[model].get(res_id)
+                    else:
+                        continue
                 trans_ctxt += '%s' % res_id
+            # End nereid changes
+
             entry = polib.POEntry(
                 msgid=(translation.src or ''),
                 msgstr=(translation.value or ''),
@@ -294,8 +297,10 @@ class Translation:
         else:
             return
 
+    # Begin nereid changes
     _nereid_translation_cache = Cache(
         'ir.translation', size_limit=10240, context=False
+    # End nereid changes
     )
 
     @classmethod
@@ -455,6 +460,19 @@ class TranslationSet:
                         ['trans:'], extract_options):
                     yield (module, template) + message_tuple
 
+    @staticmethod
+    def _get_nereid_template_messages_from_file(self, template_dir, template):
+        """
+        Same generator as _get_nereid_template_messages, but for specific files.
+        """
+        extract_options = self._get_nereid_template_extract_options()
+        loader = FileSystemLoader(template_dir)
+        file_obj = open(loader.get_source({}, template)[1])
+        for message_tuple in babel_extract(
+                file_obj, GETTEXT_FUNCTIONS,
+                ['trans:'], extract_options):
+            yield (template,) + message_tuple
+
     def set_nereid_template(self):
         """
         Loads all nereid templates translatable strings into the database. The
@@ -482,6 +500,7 @@ class TranslationSet:
                     ('name', '=', template),
                     ('src', '=', message),
                     ('module', '=', module),
+                    ('res_id', '=', lineno),
                 ], limit=1)
                 if translations:
                     continue
@@ -542,6 +561,17 @@ class TranslationSet:
         if to_create:
             Translation.create(to_create)
 
+    @staticmethod
+    def _get_babel_messages_from_file(self, template):
+        """
+        Get babel messages from a specific file.
+        """
+        for (lineno, messages, _, _) in extract_from_file('python', template):
+            if isinstance(messages, basestring):
+                messages = (messages, )
+            for message in messages:
+                yield (template, lineno, message)
+
     def set_nereid(self):
         """
         There are messages within the tryton code used in flash messages,
@@ -554,6 +584,9 @@ class TranslationSet:
         to_create = []
 
         for module, directory in self._get_installed_module_directories():
+            # skip messages from test files
+            if 'tests' in directory:
+                continue
             for (filename, lineno, messages, comments, context) in \
                     extract_from_dir(directory,):
 
@@ -665,6 +698,21 @@ class TranslationClean(Wizard):
         if translation.name not in loader.list_templates():
             return True
 
+        # Clean if the translation has changed (avoid duplicates)
+        # (translation has no equivalent in template)
+        found = False
+        for template, lineno, function, message, comments in \
+            TranslationSet._get_nereid_template_messages_from_file(
+                TranslationSet, template_dir, translation.name):
+            if (template, lineno, message, comments and
+                    '\n'.join(comments) or None) == \
+                (translation.name, translation.res_id, translation.src,
+                    translation.comments):
+                found = True
+                break
+        if not found:
+            return True
+
     @staticmethod
     def _clean_wtforms(translation):
         """
@@ -680,6 +728,22 @@ class TranslationClean(Wizard):
         else:
             return True
 
+        # Clean if the translation has changed (avoid duplicates)
+        # (translation has no equivalent in template)
+        babel_file = os.path.join(os.path.dirname(wtforms.__file__),
+            translation.name)
+        if not os.path.exists(babel_file):
+            return True
+        found = False
+        for template, lineno, message in \
+            TranslationSet._get_babel_messages_from_file(TranslationSet,
+                babel_file):
+            if (lineno, message) == (translation.res_id, translation.src):
+                found = True
+                break
+        if not found:
+            return True
+
     @staticmethod
     def _clean_nereid(translation):
         """
@@ -693,4 +757,23 @@ class TranslationClean(Wizard):
             if translation.module == module:
                 break
         else:
+            return True
+
+        # Clean any messages from tests
+        if 'tests' in translation.name.split('/'):
+            return True
+
+        # Clean if the translation has changed (avoid duplicates)
+        # (translation has no equivalent in template)
+        babel_file = os.path.join(directory, translation.name)
+        if not os.path.exists(babel_file):
+            return True
+        found = False
+        for template, lineno, message in \
+            TranslationSet._get_babel_messages_from_file(TranslationSet,
+                babel_file):
+            if (lineno, message) == (translation.res_id, translation.src):
+                found = True
+                break
+        if not found:
             return True

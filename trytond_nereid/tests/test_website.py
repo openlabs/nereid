@@ -19,7 +19,6 @@ class TestWebsite(NereidTestCase):
         self.NereidWebsiteLocale = POOL.get('nereid.website.locale')
         self.NereidPermission = POOL.get('nereid.permission')
         self.NereidUser = POOL.get('nereid.user')
-        self.URLMap = POOL.get('nereid.url_map')
         self.Company = POOL.get('company.company')
         self.Currency = POOL.get('currency.currency')
         self.Language = POOL.get('ir.lang')
@@ -42,7 +41,6 @@ class TestWebsite(NereidTestCase):
             'currency': usd,
         }])
 
-        url_map, = self.URLMap.search([], limit=1)
         en_us, = self.Language.search([('code', '=', 'en_US')])
         currency, = self.Currency.search([('code', '=', 'USD')])
         locale, = self.NereidWebsiteLocale.create([{
@@ -52,7 +50,6 @@ class TestWebsite(NereidTestCase):
         }])
         self.NereidWebsite.create([{
             'name': 'localhost',
-            'url_map': url_map,
             'company': self.company,
             'application_user': USER,
             'default_locale': locale,

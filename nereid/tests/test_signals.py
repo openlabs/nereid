@@ -188,7 +188,7 @@ class SignalsTestCase(BaseTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        POOL.init(update=True)
+        POOL.init(update=['nereid'])
 
 
 def suite():

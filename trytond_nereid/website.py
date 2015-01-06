@@ -56,11 +56,6 @@ class WebSite(ModelSQL, ModelView):
     #: other settings for the website. Needs to be unique
     name = fields.Char('Name', required=True, select=True)
 
-    #: The URLMap is made as a different object which functions as a
-    #: collection of Rules. This will allow easy replication of sites
-    #: which perform with same URL structures but different templates
-    url_map = fields.Many2One('nereid.url_map', 'URL Map', required=True)
-
     #: The company to which the website belongs. Useful when creating
     #: records like sale order which require a company to be present
     company = fields.Many2One('company.company', 'Company', required=True)
@@ -111,12 +106,6 @@ class WebSite(ModelSQL, ModelView):
     @staticmethod
     def default_active():
         return True
-
-    @staticmethod
-    def default_url_map():
-        ModelData = Pool().get('ir.model.data')
-
-        return ModelData.get_id("nereid", "default_url_map")
 
     @staticmethod
     def default_company():
@@ -176,17 +165,6 @@ class WebSite(ModelSQL, ModelView):
         return jsonify(
             result=[s.serialize() for s in subdivisions]
         )
-
-    def get_urls(self, name):
-        """
-        Return complete list of URLs
-        """
-        URLMap = Pool().get('nereid.url_map')
-        websites = self.search([('name', '=', name)])
-        if not websites:
-            raise RuntimeError("Website with Name %s not found" % name)
-
-        return URLMap.get_rules_arguments(websites[0].url_map.id)
 
     def stats(self, **arguments):
         """
@@ -395,14 +373,6 @@ class WebSite(ModelSQL, ModelView):
                 endpoint='static',
             )
         )
-
-        for url_kwargs in self.url_map.get_rules_arguments():
-            rule = app.url_rule_class(
-                url_kwargs.pop('rule'),
-                **url_kwargs
-            )
-            rule.provide_automatic_options = True
-            url_rules.append(rule)   # Add rule to map
 
         url_map = Map()
         if self.locales:

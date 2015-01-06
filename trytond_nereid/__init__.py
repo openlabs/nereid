@@ -6,7 +6,6 @@ from .party import Address, Party, ContactMechanism
 from .user import NereidUser, Permission, UserPermission, NereidAnonymousUser
 from .website import WebSite, WebSiteLocale, WebsiteCountry, \
     WebsiteCurrency, WebsiteWebsiteLocale
-from .urls import URLMap, URLRule, URLRuleDefaults
 from .static_file import NereidStaticFolder, NereidStaticFile
 from .currency import Currency
 from .configuration import NereidConfigStart, NereidConfig
@@ -25,11 +24,8 @@ def register():
         NereidAnonymousUser,
         Permission,
         UserPermission,
-        URLMap,
         WebSiteLocale,
         WebSite,
-        URLRule,
-        URLRuleDefaults,
         WebsiteCountry,
         WebsiteCurrency,
         WebsiteWebsiteLocale,

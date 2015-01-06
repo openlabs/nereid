@@ -20,7 +20,7 @@ from flask.ext.login import LoginManager
 from trytond import backend
 from trytond.pool import Pool
 from trytond.cache import Cache
-from trytond.config import CONFIG
+from trytond.config import config
 from trytond.exceptions import UserError
 from trytond.modules import register_classes
 from trytond.transaction import Transaction
@@ -123,6 +123,11 @@ class Nereid(Flask):
     #: of the cache could be passed here as a `dict`
     cache_init_kwargs = ConfigAttribute('CACHE_INIT_KWARGS')
 
+    #: Load the template eagerly. This would render the template
+    #: immediately and still return a LazyRenderer. This is useful
+    #: in debugging issues that may be hard to debug with lazy rendering
+    eager_template_render = ConfigAttribute('EAGER_TEMPLATE_RENDER')
+
     #: boolean attribute to indicate if the initialisation of backend
     #: connection and other nereid support features are loaded. The
     #: application can work only after the initialisation is done.
@@ -164,6 +169,8 @@ class Nereid(Flask):
             'CACHE_THRESHOLD': 500,
             'CACHE_INIT_KWARGS': {},
             'CACHE_KEY_PREFIX': '',
+
+            'EAGER_TEMPLATE_RENDER': False,
         })
 
     def initialise(self):
@@ -344,7 +351,7 @@ class Nereid(Flask):
             warnings.warn(DeprecationWarning(
                 'TRYTON_CONFIG configuration will be deprecated in future.'
             ))
-            CONFIG.update_etc(self.tryton_configfile)
+            config.update_etc(self.tryton_configfile)
 
         register_classes()
 
@@ -416,7 +423,7 @@ class Nereid(Flask):
 
             user, company = website.application_user.id, website.company.id
 
-        for count in range(int(CONFIG['retry']), -1, -1):
+        for count in range(int(config.get('database', 'retry')), -1, -1):
             with Transaction().start(
                     self.database_name, user,
                     context={'company': company},

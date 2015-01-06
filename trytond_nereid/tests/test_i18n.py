@@ -32,7 +32,6 @@ class TestI18N(NereidTestCase):
         self.nereid_website_locale_obj = POOL.get('nereid.website.locale')
         self.nereid_permission_obj = POOL.get('nereid.permission')
         self.nereid_user_obj = POOL.get('nereid.user')
-        self.url_map_obj = POOL.get('nereid.url_map')
         self.company_obj = POOL.get('company.company')
         self.currency_obj = POOL.get('currency.currency')
         self.language_obj = POOL.get('ir.lang')
@@ -58,7 +57,6 @@ class TestI18N(NereidTestCase):
             'party': self.party,
             'currency': usd,
         }])
-        url_map_id, = self.url_map_obj.search([], limit=1)
         en_us, = self.language_obj.search([('code', '=', 'en_US')])
         fr_fr, = self.language_obj.search([('code', '=', 'fr_FR')])
         usd, = self.currency_obj.search([('code', '=', 'USD')])
@@ -74,7 +72,6 @@ class TestI18N(NereidTestCase):
         }])
         self.nereid_website_obj.create([{
             'name': 'localhost',
-            'url_map': url_map_id,
             'company': self.company.id,
             'application_user': USER,
             'default_locale': locale,

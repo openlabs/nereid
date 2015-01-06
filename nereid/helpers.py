@@ -14,7 +14,7 @@ from hashlib import md5
 
 import trytond.modules
 from trytond.transaction import Transaction
-from trytond.config import CONFIG
+from trytond.config import config
 from speaklater import is_lazy_string
 from flask.helpers import (_PackageBoundObject, locked_cached_property,  # noqa
         get_flashed_messages, flash as _flash, url_for as flask_url_for)
@@ -206,7 +206,7 @@ def send_file(filename_or_fp, mimetype=None, as_attachment=False,
     if filename is not None:
         if not os.path.isabs(filename):
             filename = os.path.join(
-                CONFIG['data_path'],
+                config.get('database', 'path'),
                 current_app.database_name,
                 filename)
     if mimetype is None and (filename or attachment_filename):

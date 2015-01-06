@@ -8,15 +8,10 @@ from mock import patch
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from trytond.transaction import Transaction
-from trytond.config import CONFIG
+from trytond.config import config
 from nereid.testing import NereidTestCase
 
-CONFIG['smtp_server'] = 'smtpserver'
-CONFIG['smtp_user'] = 'test@xyz.com'
-CONFIG['smtp_password'] = 'testpassword'
-CONFIG['smtp_port'] = 587
-CONFIG['smtp_tls'] = True
-CONFIG['smtp_from'] = 'from@xyz.com'
+config.set('email', 'from', 'from@xyz.com')
 
 
 class TestAddress(NereidTestCase):
@@ -28,7 +23,6 @@ class TestAddress(NereidTestCase):
         self.nereid_website_obj = POOL.get('nereid.website')
         self.nereid_website_locale_obj = POOL.get('nereid.website.locale')
         self.nereid_user_obj = POOL.get('nereid.user')
-        self.url_map_obj = POOL.get('nereid.url_map')
         self.company_obj = POOL.get('company.company')
         self.currency_obj = POOL.get('currency.currency')
         self.language_obj = POOL.get('ir.lang')
@@ -120,7 +114,6 @@ class TestAddress(NereidTestCase):
         self.create_countries()
         self.available_countries = self.country_obj.search([], limit=5)
 
-        url_map_id, = self.url_map_obj.search([], limit=1)
         en_us, = self.language_obj.search([('code', '=', 'en_US')])
         currency, = self.currency_obj.search([('code', '=', 'USD')])
         locale, = self.nereid_website_locale_obj.create([{
@@ -130,7 +123,6 @@ class TestAddress(NereidTestCase):
         }])
         self.nereid_website_obj.create([{
             'name': 'localhost',
-            'url_map': url_map_id,
             'company': self.company,
             'application_user': USER,
             'default_locale': locale,

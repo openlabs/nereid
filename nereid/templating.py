@@ -68,7 +68,9 @@ class LazyRenderer(_LazyString):
 
     __slots__ = ('template_name_or_list', 'context', 'headers', 'status')
 
-    def __init__(self, template_name_or_list, context, headers=None):
+    def __init__(
+        self, template_name_or_list, context, headers=None, eager=False
+    ):
         """
         :param template_name_or_list: the name of the template to be
                                       rendered, or an iterable with template
@@ -76,14 +78,25 @@ class LazyRenderer(_LazyString):
                                       rendered
         :param context: the variables that should be available in the
                         context of the template.
+        :param eager: If True a call is made on instantiation to the value to
+                      render the template right away with the given context.
+                      Useful for debugging.
         """
         self.template_name_or_list = template_name_or_list
         self.context = context
         self.headers = {}
         self.status = 200
+        if eager:
+            self.render()
 
     @property
     def value(self):
+        """
+        Return the rendered template with the current context
+        """
+        return self.render()
+
+    def render(self):
         """
         Return the rendered template with the current context
         """
@@ -126,7 +139,11 @@ def render_template(template_name_or_list, **context):
             '/'.join([request.nereid_website.name, template_name_or_list]),
             template_name_or_list
         ]
-    return LazyRenderer(template_name_or_list, context)
+    return LazyRenderer(
+        template_name_or_list,
+        context,
+        eager=current_app.eager_template_render
+    )
 
 
 def nereid_default_template_ctx_processor():

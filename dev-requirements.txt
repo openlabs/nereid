@@ -6,9 +6,6 @@ tox
 mock
 pycountry
 
-# Install the test package which depends on this package
-trytond_nereid_test>=3.2,<3.3
-
 # Quality check
 flake8
 coverage

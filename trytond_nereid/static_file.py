@@ -9,7 +9,7 @@ from nereid.globals import _request_ctx_stack
 from werkzeug import abort
 
 from trytond.model import ModelSQL, ModelView, fields
-from trytond.config import CONFIG
+from trytond.config import config
 from trytond.transaction import Transaction
 from trytond.pyson import Eval, Not, Equal
 
@@ -166,7 +166,7 @@ class NereidStaticFile(ModelSQL, ModelView):
         """
         cursor = Transaction().cursor
         return os.path.join(
-            CONFIG['data_path'], cursor.database_name, "nereid"
+            config.get('database', 'path'), cursor.database_name, "nereid"
         )
 
     def _set_file_binary(self, value):
