@@ -67,7 +67,7 @@ class Translation:
     def unique_key(self):
         if self.type in _nereid_types:
             return (self.name, self.res_id, self.type, self.src)
-        super(Translation, self).unique_key()
+        return super(Translation, self).unique_key
 
     @classmethod
     def translation_import(cls, lang, module, po_path):
