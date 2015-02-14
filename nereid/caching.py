@@ -4,9 +4,9 @@ from functools import wraps
 from hashlib import md5
 import inspect
 from warnings import warn
-warn(DeprecationWarning("This API will be deprecated"))
-
 from flask.globals import current_app
+
+warn(DeprecationWarning("This API will be deprecated"))
 
 
 class Cache(object):

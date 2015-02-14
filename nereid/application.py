@@ -415,7 +415,9 @@ class Nereid(Flask):
            and req.method == 'OPTIONS':
             return self.make_default_options_response()
 
-        Cache.clean(self.database_name)
+        with Transaction().start(self.database_name, 0):
+            Cache.clean(self.database_name)
+            Cache.resets(self.database_name)
 
         with Transaction().start(self.database_name, 0, readonly=True):
             Website = Pool().get('nereid.website')
