@@ -29,8 +29,8 @@ __all__ = ['WebSite', 'WebSiteLocale', 'WebsiteCountry',
 
 class LoginForm(Form):
     "Default Login Form"
-    email = TextField(_('e-mail'), [validators.Required(), validators.Email()])
-    password = PasswordField(_('Password'), [validators.Required()])
+    email = TextField(_('e-mail'), [validators.DataRequired(), validators.Email()])
+    password = PasswordField(_('Password'), [validators.DataRequired()])
     remember = BooleanField(_('Remember me'), default=False)
 
 

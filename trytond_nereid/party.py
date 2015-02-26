@@ -23,13 +23,13 @@ class AddressForm(Form):
     """
     A form resembling the party.address
     """
-    name = TextField(_('Name'), [validators.Required(), ])
-    street = TextField(_('Street'), [validators.Required(), ])
+    name = TextField(_('Name'), [validators.DataRequired(), ])
+    street = TextField(_('Street'), [validators.DataRequired(), ])
     streetbis = TextField(_('Street (Bis)'))
-    zip = TextField(_('Post Code'), [validators.Required(), ])
-    city = TextField(_('City'), [validators.Required(), ])
-    country = SelectField(_('Country'), [validators.Required(), ], coerce=int)
-    subdivision = IntegerField(_('State/County'), [validators.Required()])
+    zip = TextField(_('Post Code'), [validators.DataRequired(), ])
+    city = TextField(_('City'), [validators.DataRequired(), ])
+    country = SelectField(_('Country'), [validators.DataRequired(), ], coerce=int)
+    subdivision = IntegerField(_('State/County'), [validators.DataRequired()])
     email = TextField(_('Email'))
     phone = TextField(_('Phone'))
 
@@ -289,8 +289,8 @@ class Party(ModelSQL, ModelView):
 
 
 class ContactMechanismForm(Form):
-    type = SelectField('Type', [validators.Required()])
-    value = TextField('Value', [validators.Required()])
+    type = SelectField('Type', [validators.DataRequired()])
+    value = TextField('Value', [validators.DataRequired()])
     comment = TextField('Comment')
 
 
