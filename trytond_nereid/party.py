@@ -28,7 +28,7 @@ class AddressForm(Form):
     streetbis = TextField(_('Street (Bis)'))
     zip = TextField(_('Post Code'), [validators.DataRequired(), ])
     city = TextField(_('City'), [validators.DataRequired(), ])
-    country = SelectField(_('Country'), [validators.DataRequired(), ], coerce=int)
+    country = SelectField(_('Country'), [validators.DataRequired(), ], coerce=int)  # noqa
     subdivision = IntegerField(_('State/County'), [validators.DataRequired()])
     email = TextField(_('Email'))
     phone = TextField(_('Phone'))

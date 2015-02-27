@@ -39,7 +39,7 @@ __all__ = ['NereidUser', 'NereidAnonymousUser', 'Permission', 'UserPermission']
 class RegistrationForm(Form):
     "Simple Registration form"
     name = TextField(_('Name'), [validators.DataRequired(), ])
-    email = TextField(_('e-mail'), [validators.DataRequired(), validators.Email()])
+    email = TextField(_('e-mail'), [validators.DataRequired(), validators.Email()])  # noqa
     password = PasswordField(_('New Password'), [
         validators.DataRequired(),
         validators.EqualTo('confirm', message=_('Passwords must match'))])
