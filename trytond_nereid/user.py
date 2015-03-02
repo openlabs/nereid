@@ -38,10 +38,10 @@ __all__ = ['NereidUser', 'NereidAnonymousUser', 'Permission', 'UserPermission']
 
 class RegistrationForm(Form):
     "Simple Registration form"
-    name = TextField(_('Name'), [validators.Required(), ])
-    email = TextField(_('e-mail'), [validators.Required(), validators.Email()])
+    name = TextField(_('Name'), [validators.DataRequired(), ])
+    email = TextField(_('e-mail'), [validators.DataRequired(), validators.Email()])  # noqa
     password = PasswordField(_('New Password'), [
-        validators.Required(),
+        validators.DataRequired(),
         validators.EqualTo('confirm', message=_('Passwords must match'))])
     confirm = PasswordField(_('Confirm Password'))
 
@@ -59,7 +59,7 @@ class NewPasswordForm(Form):
     Form to set a new password
     """
     password = PasswordField(_('New Password'), [
-        validators.Required(),
+        validators.DataRequired(),
         validators.EqualTo('confirm', message=_('Passwords must match'))])
     confirm = PasswordField(_('Repeat Password'))
 
@@ -68,7 +68,7 @@ class ChangePasswordForm(NewPasswordForm):
     """
     Form to change the password
     """
-    old_password = PasswordField(_('Old Password'), [validators.Required()])
+    old_password = PasswordField(_('Old Password'), [validators.DataRequired()])
 
 
 STATES = {
@@ -79,7 +79,7 @@ STATES = {
 class ProfileForm(Form):
     """User Profile Form"""
     display_name = TextField(
-        'Display Name', [validators.Required(), ],
+        'Display Name', [validators.DataRequired(), ],
         description="Your display name"
     )
     timezone = SelectField(
@@ -88,7 +88,7 @@ class ProfileForm(Form):
         coerce=unicode, description="Your timezone"
     )
     email = TextField(
-        'Email', [validators.Required(), validators.Email()],
+        'Email', [validators.DataRequired(), validators.Email()],
         description="Your Login Email. This Cannot be edited."
     )
 
@@ -96,7 +96,7 @@ class ProfileForm(Form):
 class ResetAccountForm(Form):
     """Reset Account Form"""
     email = TextField(
-        'Email', [validators.Required(), validators.Email()],
+        'Email', [validators.DataRequired(), validators.Email()],
         description="Your Login Email."
     )
 

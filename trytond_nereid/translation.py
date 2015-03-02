@@ -164,8 +164,8 @@ class Translation:
                     continue
 
                 model = translation.name.split(',')[0]
-                if (model in fs_id2prop
-                        and res_id in fs_id2prop[model]):
+                if (model in fs_id2prop and
+                        res_id in fs_id2prop[model]):
                     res_id, noupdate = fs_id2prop[model][res_id]
 
                 if res_id:
@@ -193,8 +193,8 @@ class Translation:
                     to_write = []
                     for translation_id in ids:
                         old_translation = id2translation[translation_id]
-                        if (old_translation.value != translation.value
-                                or old_translation.fuzzy !=
+                        if (old_translation.value != translation.value or
+                                old_translation.fuzzy !=
                                 translation.fuzzy):
                             to_write.append(old_translation)
                     with Transaction().set_user(0), \
@@ -253,8 +253,8 @@ class Translation:
                 ('module', '=', module),
             ], order=[])
         for translation in translations:
-            if (translation.overriding_module
-                    and translation.overriding_module != module):
+            if (translation.overriding_module and
+                    translation.overriding_module != module):
                 cls.raise_user_error('translation_overridden', {
                     'name': translation.name,
                     'name': translation.overriding_module,
@@ -319,12 +319,12 @@ class Translation:
         cursor = Transaction().cursor
         table = cls.__table__()
         where = (
-            (table.lang == lang)
-            & (table.type == ttype)
-            & (table.value != '')
-            & (table.value != None)
-            & (table.fuzzy == False)
-            & (table.src == source)
+            (table.lang == lang) &
+            (table.type == ttype) &
+            (table.value != '') &
+            (table.value != None) &
+            (table.fuzzy == False) &
+            (table.src == source)
         )
         if module is not None:
             where &= (table.module == module)
@@ -644,12 +644,12 @@ class TranslationUpdate:
         cursor.execute(*(
             translation.select(
                 *columns,
-                where=(translation.lang == 'en_US')
-                & translation.type.in_(types))
-            - translation.select(
+                where=(translation.lang == 'en_US') &
+                translation.type.in_(types)) -
+            translation.select(
                 *columns,
-                where=(translation.lang == lang)
-                & translation.type.in_(types))
+                where=(translation.lang == lang) &
+                translation.type.in_(types))
         ))
         to_create = []
         for row in cursor.dictfetchall():
