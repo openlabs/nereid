@@ -2,6 +2,7 @@
 # this repository contains the full copyright notices and license terms.
 import os
 import urllib
+import mimetypes
 
 from nereid import route
 from nereid.helpers import slugify, send_file, url_for
@@ -122,6 +123,12 @@ class NereidStaticFile(ModelSQL, ModelView):
     #: In other words the URL is valid only when called in a nereid request.
     url = fields.Function(fields.Char('URL'), 'get_url')
 
+    # Sequence
+    sequence = fields.Integer('Sequence', select=True)
+
+    # File mimetype
+    mimetype = fields.Function(fields.Char('Mimetype'), getter='get_mimetype')
+
     @classmethod
     def __setup__(cls):
         super(NereidStaticFile, cls).__setup__()
@@ -136,8 +143,29 @@ class NereidStaticFile(ModelSQL, ModelView):
         })
 
     @staticmethod
+    def default_sequence():
+        return 10
+
+    @staticmethod
     def default_type():
         return 'local'
+
+    def get_mimetype(self, name):
+        """
+        This method detects and returns the mimetype for the static file.
+
+        The python mimetypes module returns a tuple of the form -:
+
+        >>> mimetypes.guess_type(file_name)
+        (file_mimetype, encoding)
+
+        which can then be used to fill the `mimetype` field. Some example types
+        are -:
+            * image/png
+            * application/pdf
+        etc.
+        """
+        return mimetypes.guess_type(self.name)[0]
 
     def get_url(self, name):
         """Return the url if within an active request context or return

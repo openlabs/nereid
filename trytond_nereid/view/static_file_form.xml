@@ -4,10 +4,14 @@ this repository contains the full copyright notices and license terms. -->
 <form>
     <label name="name" />
     <field name="name" />
+    <label name="sequence" />
+    <field name="sequence" />
     <label name="folder" />
     <field name="folder" />
     <label name="type" />
     <field name="type" />
+    <label name="mimetype" />
+    <field name="mimetype" />
     <separator colspan="4" id="paths" string="Paths"/>
     <label name="remote_path" />
     <field name="remote_path" />
