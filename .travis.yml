@@ -12,5 +12,6 @@ env:
   - TOXENV=py27pg
   - TOXENV=flake8
   - TOXENV=packaging
+  - TOXENV=docs
 after_success:
   coveralls
