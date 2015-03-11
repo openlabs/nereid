@@ -311,6 +311,4 @@ intersphinx_mapping = {
 
 
 # --- Tryton specific configuration ----
-from trytond.config import CONFIG
-CONFIG.options['db_type'] = 'sqlite'
-CONFIG.options['data_path'] = '/tmp/temp_tryton_data/'
+os.environ['TRYTOND_DATABASE_URI'] = 'sqlite://'
