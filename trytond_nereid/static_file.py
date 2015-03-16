@@ -5,7 +5,7 @@ import urllib
 import mimetypes
 
 from nereid import route
-from nereid.helpers import slugify, send_file, url_for
+from nereid.helpers import send_file, url_for
 from nereid.globals import _request_ctx_stack
 from werkzeug import abort
 
@@ -41,16 +41,6 @@ class NereidStaticFolder(ModelSQL, ModelView):
                 (2) folder name begins with '/'""",
             'folder_cannot_change': "Folder name cannot be changed"
         })
-
-    @fields.depends('name', 'folder_name')
-    def on_change_with_folder_name(self):
-        """
-        Fills the name field with a slugified name
-        """
-        if self.get('name'):
-            if not self.get('folder_name'):
-                self['folder_name'] = slugify(self['name'])
-            return self['folder_name']
 
     @classmethod
     def validate(cls, folders):
