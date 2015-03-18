@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Nereid'
-copyright = u'2012, Openlabs Technologies & Consulting (P) Limited'
+copyright = u'2012-2015, Openlabs Technologies & Consulting (P) Limited'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -265,7 +265,7 @@ texinfo_documents = [
 epub_title = u'Nereid'
 epub_author = u'Openlabs Technologies & Consulting (P) Limited'
 epub_publisher = u'Openlabs Technologies & Consulting (P) Limited'
-epub_copyright = u'2012, Openlabs Technologies & Consulting (P) Limited'
+epub_copyright = u'2012-2015, Openlabs Technologies & Consulting (P) Limited'
 
 # The language of the text. It defaults to the language option
 # or en if the language is not set.
@@ -311,6 +311,4 @@ intersphinx_mapping = {
 
 
 # --- Tryton specific configuration ----
-from trytond.config import CONFIG
-CONFIG.options['db_type'] = 'sqlite'
-CONFIG.options['data_path'] = '/tmp/temp_tryton_data/'
+os.environ['TRYTOND_DATABASE_URI'] = 'sqlite://'

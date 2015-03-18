@@ -3,7 +3,7 @@
 Tryton Module API
 =================
 
-.. module:: trytond_nereid.routing
+.. module:: trytond_nereid.website
 
 
 Website Object
