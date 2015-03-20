@@ -11,7 +11,7 @@ this repository contains the full copyright notices and license terms. -->
     <label name="email"/>
     <field name="email"/>
     <label name="password"/>
-    <field name="password"/>
+    <field name="password" widget="char"/>
     <label name="timezone" />
     <field name="timezone" />
     <label name="email_verified"/>

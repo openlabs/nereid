@@ -16,6 +16,7 @@ from werkzeug import import_string, abort
 from flask_wtf.csrf import CsrfProtect
 import flask.ext.login
 from flask.ext.login import LoginManager
+from flask.ext.babel import Babel
 
 from trytond import backend
 from trytond.pool import Pool
@@ -230,6 +231,9 @@ class Nereid(Flask):
         # Add template_filters registered using decorator
         for name, function in self.get_template_filters():
             self.jinja_env.filters[name] = function
+
+        # Initialize Babel
+        Babel(self)
 
         # Finally set the initialised attribute
         self.initialised = True
