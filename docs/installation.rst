@@ -3,9 +3,9 @@
 Installation
 ============
 
-Nereid depends on a handfull of Python libraries including Tryton.
+Nereid depends on a handful of Python libraries including Tryton.
 
-So how do you get all that on your computer quickly?  There are many ways you
+So how do you get all that on your system quickly?  There are many ways you
 could do that, but the most kick-ass method is `virtualenv`_. The `Flask
 Documentation`_ has a detailed `section on using virtualenv`_ to install
 Flask. You could refer to the same and then follow the instructions below.
@@ -18,7 +18,7 @@ virtualenv
 `virtualenvs`_ are isolated Python environments.
 
 If you are on Mac OS X or Linux, chances are that one of the following two
-commands will work for you in creating a virtualenv
+commands will work for you in creating a virtualenv:
 
 .. code-block:: sh
 
@@ -38,7 +38,7 @@ in your package manager.  If you use Ubuntu, try
     $ sudo apt-get install python-virtualenv
 
 If you are on Windows and don't have the `easy_install` command, you must
-install it first.  Check the :ref:`windows-easy-install` section for more
+install it first.  Check :ref:`windows-easy-install` section for more
 information about how to do that.  Once you have it installed, run the same
 commands as above, but without the `sudo` prefix.
 
@@ -56,13 +56,13 @@ folder within
     Installing distribute............done.
 
 Now, whenever you want to work on a project, you only have to activate the
-corresponding environment.  On OS X and Linux, do the following
+corresponding environment.  On OS X and Linux, do the following:
 
 .. code-block:: sh
 
     $ . venv/bin/activate
 
-If you are a Windows user, the following command is for you
+If you are a Windows user, the following command is for you:
 
 .. code-block:: sh
 
@@ -72,14 +72,14 @@ Either way, you should now be using your virtualenv (notice how the prompt of
 your shell has changed to show the active environment).
 
 Now you can just enter the following command to get Nereid activated in your
-virtualenv
+virtualenv:
 
 
 .. code-block:: sh
 
     $ pip install Nereid 
 
-A few seconds later and you are good to go.
+A few seconds, and you are good to go.
 
 
 System-Wide Installation
@@ -127,8 +127,8 @@ origin`` to update to the latest version.
 `pip` and `distribute` on Windows
 -----------------------------------
 
-On Windows, installation of `easy_install` is a little bit trickier, but still
-quite easy.  Read the section on `pip and distribute on Windows`_ on the
+On Windows, installation of `easy_install` is a bit tricky, but still
+achievable.  Read the section on `pip and distribute on Windows`_ on the
 Flask documentation for a better understanding.
 
 
@@ -139,7 +139,7 @@ Cloning for Development
 
 If you are cloning the repository for development or updating the
 documentation, you also need to initialise the git submodules for the
-theme used in the documentation
+theme used in the documentation.
 
 .. code-block:: sh
     :emphasize-lines: 4,6 

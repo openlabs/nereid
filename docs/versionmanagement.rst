@@ -3,7 +3,7 @@
 Version Management
 ==================
 
-The Version number of Nereid and its module has two parts. The first part
+The Version number of Nereid and its module have two parts. The first part
 indicates the version of Tryton the module is written for and the second
 part indicates the revision of the module for that series of Tryton.
 
@@ -11,7 +11,7 @@ Let us consider the version number `2.0.0.3`, `2.0` indicates that the
 module works with the Version `2.0` of Tryton and that the module is in
 the `0.3` revision for the `2.0` series of Tryton.
 
-When a newer version of Tryton is stable and relased by the maintainers,
+When a newer, stable version of Tryton is relased by the maintainers,
 nereid will also be updated to be compatible for the new version. When
 this is done, the previous version of the module is pushed to `maintenance
 branch`_.
@@ -47,7 +47,7 @@ Maintenance Branch
 
 Maintenance branches of current revisions are created whenever a newer 
 version of Tryton is available and the module is updated to the newer 
-version. As of this writing the latest available stable release of 
+version. As of now, the latest available stable release of 
 Tryton is 2.4 and the upcoming 2.6 release has a major change to include 
 the active record design pattern. When the 2.6 version is released the 
 current master branch will be checked out to a new branch called 
@@ -60,4 +60,4 @@ stops maintaining version `2.0`, the same would happen with Nereid.
 .. note::
 
    Critical bug fixes and security updates will be performed on maintenace
-   releases
+   releases.

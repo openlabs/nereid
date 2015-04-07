@@ -4,7 +4,7 @@ Internationalized Websites
 ==========================
 
 The locale model which is part of nereid allows you to build web
-applications capable of being used across users of different language and
+applications capable of being used across users of different languages and
 currencies. This guide explains the design behind locales.
 
 
@@ -19,7 +19,7 @@ Multiple Locales
 ----------------
 
 If your application caters to multiple locales, the first step would be
-creating the required locales. Locales once created can be resued across
+creating the required locales. Locales once created can be reused across
 multiple websites.
 
 Creating a locale
@@ -54,7 +54,7 @@ URLs
 
 Once the locales are added to available locales of a website, the
 application begins to prefix the code to the URLs. For example, the home
-page which was previous available on `http://example.com/` would now be
+page which was previously available on `http://example.com/` would now be
 available on `http://example.com/en-us` assuming en-us is the code of a
 locale in your setup.
 
@@ -62,7 +62,7 @@ locale in your setup.
 .. tip::
 
    The application needs to be restarted if it is already running for the
-   URL changes to get effect.
+   URL changes to take effect.
 
 Pro-Tip: Migrating from Single Locale to Multiple Locales
 ---------------------------------------------------------
