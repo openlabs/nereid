@@ -427,12 +427,16 @@ class Nereid(Flask):
             Website = Pool().get('nereid.website')
             website = Website.get_from_host(req.host)
 
-            user, company = website.application_user.id, website.company.id
+            user = website.application_user.id
+            website_context = website.get_context()
+            website_context.update({
+                'company': website.company.id,
+            })
 
         for count in range(int(config.get('database', 'retry')), -1, -1):
             with Transaction().start(
                     self.database_name, user,
-                    context={'company': company},
+                    context=website_context,
                     readonly=rule.is_readonly) as txn:
                 try:
                     transaction_start.send(self)
