@@ -44,6 +44,7 @@ class Rule(routing.Rule):
 
     def __init__(self, *args, **kwargs):
         self.readonly = kwargs.pop('readonly', None)
+        self.is_csrf_exempt = kwargs.pop('exempt_csrf', False)
         super(Rule, self).__init__(*args, **kwargs)
 
     def empty(self):

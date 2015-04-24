@@ -14,7 +14,7 @@ class TestRouting(NereidTestCase):
     'Test URL Routing'
 
     def setUp(self):
-        trytond.tests.test_tryton.install_module('nereid')
+        trytond.tests.test_tryton.install_module('nereid_test')
 
         self.nereid_website_obj = POOL.get('nereid.website')
         self.locale_obj = POOL.get('nereid.website.locale')
@@ -233,6 +233,69 @@ class TestRouting(NereidTestCase):
 
                 response = c.get('/countries/6/subdivisions')  # Invalid record
                 self.assertEqual(response.status_code, 404)
+
+    def test_0070_csrf(self):
+        """
+        Test that the csrf for POST request
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            self.nereid_website.locales = []
+            self.nereid_website.save()
+            app = self.get_app()
+            # Enable CSRF
+            app.config['WTF_CSRF_ENABLED'] = True
+
+            with app.test_client() as c:
+                # NO csrf-token
+                response = c.post('/test-csrf', data={
+                    'name': 'dummy name'
+                })
+                self.assertEqual(response.status_code, 400)
+
+                # csrf token with invalid form
+                csrf_token = c.get('/gen-csrf').data
+                response = c.post('/test-csrf', data={
+                    'csrf_token': csrf_token,
+                })
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.data, 'Failure')
+
+                # csrf token with valid form
+                csrf_token = c.get('/gen-csrf').data
+                response = c.post('/test-csrf', data={
+                    'name': 'dummy name',
+                    'csrf_token': csrf_token,
+                })
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.data, 'Success')
+
+    def test_0070_csrf_exempt(self):
+        """
+        Test that the csrf exempt for POST request
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            self.nereid_website.locales = []
+            self.nereid_website.save()
+            app = self.get_app()
+            # Enable CSRF
+            app.config['WTF_CSRF_ENABLED'] = True
+
+            with app.test_client() as c:
+                # invalid form
+                response = c.post('/test-csrf-exempt', data={
+                    'name': '',
+                })
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.data, 'Failure')
+
+                # valid form
+                response = c.post('/test-csrf-exempt', data={
+                    'name': 'dummy name',
+                })
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.data, 'Success')
 
 
 def suite():

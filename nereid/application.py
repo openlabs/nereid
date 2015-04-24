@@ -13,7 +13,6 @@ from flask.globals import _request_ctx_stack, current_app
 from flask.helpers import locked_cached_property
 from jinja2 import MemcachedBytecodeCache
 from werkzeug import import_string, abort
-from flask_wtf.csrf import CsrfProtect
 import flask.ext.login
 from flask.ext.login import LoginManager
 from flask.ext.babel import Babel
@@ -32,6 +31,7 @@ from .templating import nereid_default_template_ctx_processor, \
     NEREID_TEMPLATE_FILTERS, ModuleTemplateLoader, LazyRenderer
 from .helpers import url_for, root_transaction_if_required
 from .ctx import RequestContext
+from .csrf import NereidCsrfProtect
 from .signals import transaction_start, transaction_stop
 from .routing import Rule
 
@@ -189,7 +189,7 @@ class Nereid(Flask):
         self.load_cache()
 
         #: Initialise the CSRF handling
-        self.csrf_protection = CsrfProtect()
+        self.csrf_protection = NereidCsrfProtect()
         self.csrf_protection.init_app(self)
 
         self.view_functions['static'] = self.send_static_file
@@ -258,13 +258,16 @@ class Nereid(Flask):
                     continue
 
                 for rule in f._url_rules:
-                    rules.append(
-                        self.url_rule_class(
-                            rule[0],
-                            endpoint='.'.join([model_name, f_name]),
-                            **rule[1]
-                        )
+                    rule_obj = self.url_rule_class(
+                        rule[0],
+                        endpoint='.'.join([model_name, f_name]),
+                        **rule[1]
                     )
+                    rules.append(rule_obj)
+                    if rule_obj.is_csrf_exempt:
+                        self.csrf_protection._exempt_views.add(
+                            rule_obj.endpoint
+                        )
 
         return rules
 
