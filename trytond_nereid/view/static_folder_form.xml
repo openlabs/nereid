@@ -6,6 +6,8 @@ this repository contains the full copyright notices and license terms. -->
     <field name="folder_name" />
     <label name="description" />
     <field name="description" />
+    <label name="type"/>
+    <field name="type"/>
     <notebook>
         <page string="Files" id="files">
             <field name="files" colspan="4" />

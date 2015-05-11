@@ -8,13 +8,9 @@ this repository contains the full copyright notices and license terms. -->
     <field name="sequence" />
     <label name="folder" />
     <field name="folder" />
-    <label name="type" />
-    <field name="type" />
     <label name="mimetype" />
     <field name="mimetype" />
     <separator colspan="4" id="paths" string="Paths"/>
-    <label name="remote_path" />
-    <field name="remote_path" />
     <label name="file_path" />
     <field name="file_path" />
     <separator string="Preview" 
