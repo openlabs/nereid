@@ -5,7 +5,7 @@
 
     Test the static file feature of nereid
 
-    :copyright: (c) 2012-2013 by Openlabs Technologies & Consulting (P) LTD
+    :copyright: (c) 2012-2015 by Openlabs Technologies & Consulting (P) LTD
     :license: GPLv3, see LICENSE for more details.
 """
 import unittest
@@ -160,33 +160,6 @@ class TestStaticFile(NereidTestCase):
                 rv = c.get('/en_US/static-file-test')
                 self.assertEqual(rv.status_code, 200)
                 self.assertTrue('/en_US/static-file/test/test.png' in rv.data)
-
-    def test_0030_static_file_remote_url(self):
-        """
-        Test a static file with remote type
-        """
-        with Transaction().start(DB_NAME, USER, CONTEXT):
-            self.setup_defaults()
-
-            folder_id, = self.static_folder_obj.create([{
-                'folder_name': 'test',
-                'description': 'Test Folder'
-            }])
-            file, = self.static_file_obj.create([{
-                'name': 'remote.png',
-                'folder': folder_id,
-                'type': 'remote',
-                'remote_path': 'http://openlabs.co.in/logo.png',
-            }])
-            self.assertFalse(file.url)
-
-            app = self.get_app()
-            with app.test_client() as c:
-                rv = c.get('/en_US/static-file-test')
-                self.assertEqual(rv.status_code, 200)
-                self.assertTrue(
-                    'http://openlabs.co.in/logo.png' in rv.data
-                )
 
 
 def suite():
