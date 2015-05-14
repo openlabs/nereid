@@ -432,6 +432,16 @@ class Nereid(Flask):
 
             user, company = website.application_user.id, website.company.id
 
+        language = 'en_US'
+        if req.nereid_website:
+            # If this is a request specific to a website
+            # then take the locale from the website
+            language = req.nereid_locale.language.code
+
+        # pop locale if specified in the view_args
+        req.view_args.pop('locale', None)
+        active_id = req.view_args.pop('active_id', None)
+
         for count in range(int(config.get('database', 'retry')), -1, -1):
             with Transaction().start(
                     self.database_name, user,
@@ -439,7 +449,9 @@ class Nereid(Flask):
                     readonly=rule.is_readonly) as txn:
                 try:
                     transaction_start.send(self)
-                    rv = self._dispatch_request(req)
+                    rv = self._dispatch_request(
+                        req, language=language, active_id=active_id
+                    )
                     txn.cursor.commit()
                 except DatabaseOperationalError:
                     # Strict transaction handling may cause this.
@@ -458,21 +470,11 @@ class Nereid(Flask):
                 finally:
                     transaction_stop.send(self)
 
-    def _dispatch_request(self, req):
+    def _dispatch_request(self, req, language, active_id):
         """
         Implement the nereid specific _dispatch
         """
-
-        language = 'en_US'
-        if req.nereid_website:
-            # If this is a request specific to a website
-            # then take the locale from the website
-            language = req.nereid_locale.language.code
-
         with Transaction().set_context(language=language):
-
-            # pop locale if specified in the view_args
-            req.view_args.pop('locale', None)
 
             # otherwise dispatch to the handler for that endpoint
             if req.url_rule.endpoint in self.view_functions:
@@ -488,7 +490,7 @@ class Nereid(Flask):
                 # instance method, extract active_id from the url
                 # arguments and pass the model instance as first argument
                 model = Pool().get(req.url_rule.endpoint.rsplit('.', 1)[0])
-                i = model(req.view_args.pop('active_id'))
+                i = model(active_id)
                 try:
                     i.rec_name
                 except UserError:

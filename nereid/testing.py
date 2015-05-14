@@ -56,7 +56,17 @@ class NereidTestApp(Nereid):
            and req.method == 'OPTIONS':
             return self.make_default_options_response()
 
-        return self._dispatch_request(req)
+        language = 'en_US'
+        if req.nereid_website:
+            # If this is a request specific to a website
+            # then take the locale from the website
+            language = req.nereid_locale.language.code
+
+        # pop locale if specified in the view_args
+        req.view_args.pop('locale', None)
+        active_id = req.view_args.pop('active_id', None)
+
+        return self._dispatch_request(req, language, active_id)
 
 
 class NereidTestCase(unittest.TestCase):
