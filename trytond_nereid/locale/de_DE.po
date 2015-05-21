@@ -553,10 +553,6 @@ msgctxt "model:ir.ui.menu,name:menu_nereid_routing"
 msgid "Routing"
 msgstr "Routing"
 
-msgctxt "model:ir.ui.menu,name:menu_nereid_static"
-msgid "Static"
-msgstr "Statisch"
-
 msgctxt "model:ir.ui.menu,name:menu_nereid_user"
 msgid "Users"
 msgstr "Benutzer"

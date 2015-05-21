@@ -480,10 +480,6 @@ msgctxt "model:ir.ui.menu,name:menu_nereid_routing"
 msgid "Routing"
 msgstr "Rutas"
 
-msgctxt "model:ir.ui.menu,name:menu_nereid_static"
-msgid "Static"
-msgstr "Estático"
-
 msgctxt "model:ir.ui.menu,name:menu_nereid_user"
 msgid "Users"
 msgstr "Usuarios"
