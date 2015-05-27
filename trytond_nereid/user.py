@@ -703,7 +703,7 @@ class NereidUser(ModelSQL, ModelView):
             except TypeError:
                 pass
             else:
-                return cls.authenticate(*header_val.split(':'))
+                return cls.authenticate(*header_val.split(':', 1))
 
         # TODO: Digest authentication
 

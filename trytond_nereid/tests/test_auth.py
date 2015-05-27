@@ -849,6 +849,39 @@ class TestAuth(NereidTestCase):
                 )
                 self.assertEqual(response.data, data['display_name'])
 
+    def test_205_basic_authentication_with_separator(self):
+        """
+        Test if basic authentication works with a separator in the password
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            party, = self.party_obj.create([{'name': 'Registered user'}])
+            data = {
+                'party': party,
+                'display_name': 'Registered User',
+                'email': 'email@example.com',
+                'password': 'pass:word',
+                'company': self.company,
+            }
+            nereid_user, = self.nereid_user_obj.create([data.copy()])
+
+            with app.test_client() as c:
+                # Login without any auth
+                response = c.get('/me')
+                self.assertEqual(response.status_code, 302)
+
+                # Send the same request with correct basic authentication
+                basic_auth = base64.b64encode(b'email@example.com:pass:word')
+                response = c.get(
+                    '/me', headers={
+                        'Authorization': 'Basic ' + basic_auth.decode(
+                            'utf-8').strip('\r\n')
+                    }
+                )
+                self.assertEqual(response.data, data['display_name'])
+
     def test_210_token_authentication(self):
         """
         Test if token authentication works
