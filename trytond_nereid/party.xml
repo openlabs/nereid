@@ -34,7 +34,7 @@
     </record>
 
     <record model="ir.action.act_window" id="action_nereid_user_view">
-        <field name="name">Nereid User</field>
+        <field name="name">Web User</field>
         <field name="res_model">nereid.user</field>
         <field name="context">{'active_test': False}</field>
     </record>
@@ -65,7 +65,7 @@
         parent="menu_nereid"
         name="Users" />
 
-    <menuitem name="Nereid Users" sequence="20" 
+    <menuitem name="Web Users" sequence="20"
         id="menu_nereid_user1" 
         action="action_nereid_user_view"
         parent="menu_nereid_user" /> 
