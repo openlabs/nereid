@@ -4,7 +4,7 @@ this repository contains the full copyright notices and license terms. -->
 <data>
     <xpath expr="/form/notebook" position="inside">
         <page string="Nereid" id="nereid">
-            <separator string="Nereid Users" colspan="4" id="users"/>
+            <separator string="Web Users" colspan="4" id="users"/>
             <field name="nereid_users"/>
         </page>
     </xpath>

@@ -264,7 +264,7 @@ class Party(ModelSQL, ModelView):
     "Party"
     __name__ = 'party.party'
 
-    nereid_users = fields.One2Many('nereid.user', 'party', 'Nereid Users')
+    nereid_users = fields.One2Many('nereid.user', 'party', 'Web Users')
 
     def add_contact_mechanism_if_not_exists(self, type, value):
         """
