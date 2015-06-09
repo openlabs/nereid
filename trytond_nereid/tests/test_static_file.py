@@ -117,7 +117,7 @@ class TestStaticFile(NereidTestCase):
         Creates the static file for testing
         """
         folder_id, = self.static_folder_obj.create([{
-            'folder_name': 'test',
+            'name': 'test',
             'description': 'Test Folder'
         }])
 
