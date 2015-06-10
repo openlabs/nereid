@@ -11,42 +11,55 @@ from werkzeug import abort
 from trytond.model import ModelSQL, ModelView, fields
 from trytond.config import config
 from trytond.transaction import Transaction
+from trytond.pyson import Eval, Bool
+from trytond import backend
 
 __all__ = ['NereidStaticFolder', 'NereidStaticFile']
+
+READONLY_IF_FILES = {
+    'readonly': Bool(Eval('files'))
+}
 
 
 class NereidStaticFolder(ModelSQL, ModelView):
     "Static folder for Nereid"
     __name__ = "nereid.static.folder"
-    _rec_name = 'folder_name'
 
-    folder_name = fields.Char(
-        'Folder Name', required=True, select=1,
+    name = fields.Char(
+        'Name', required=True, select=True, states=READONLY_IF_FILES,
+        depends=['files']
     )
-    description = fields.Char('Description', select=1)
+    description = fields.Char(
+        'Description', select=True, states=READONLY_IF_FILES,
+        depends=['files']
+    )
     files = fields.One2Many('nereid.static.file', 'folder', 'Files')
     type = fields.Selection([
         ('local', 'Local File'),
-    ], 'File Type')
+    ], 'File Type', states=READONLY_IF_FILES, depends=['files'])
 
     @classmethod
     def __setup__(cls):
         super(NereidStaticFolder, cls).__setup__()
         cls._sql_constraints += [
-            ('unique_folder', 'UNIQUE(folder_name)',
+            ('unique_folder', 'UNIQUE(name)',
              'Folder name needs to be unique')
         ]
         cls._error_messages.update({
-            'invalid_folder_name': """Invalid folder name:
+            'invalid_name': """Invalid folder name:
                 (1) '.' in folder name (OR)
                 (2) folder name begins with '/'""",
-            'folder_name_change': (
-                "Folder name cannot be changed as files exist"
-            ),
-            'folder_type_change': (
-                "Folder type cannot be changed as files exist"
-            ),
         })
+
+    @classmethod
+    def __register__(cls, module_name):
+        TableHandler = backend.get('TableHandler')
+        cursor = Transaction().cursor
+        table = TableHandler(cursor, cls, module_name)
+
+        table.column_rename('folder_name', 'name')
+
+        super(NereidStaticFolder, cls).__register__(module_name)
 
     @classmethod
     def validate(cls, folders):
@@ -57,36 +70,20 @@ class NereidStaticFolder(ModelSQL, ModelView):
         """
         super(NereidStaticFolder, cls).validate(folders)
         for folder in folders:
-            folder.check_folder_name()
+            folder.check_name()
 
     @staticmethod
     def default_type():
         return 'local'
 
-    def check_folder_name(self):
+    def check_name(self):
         '''
         Check the validity of folder name
         Allowing the use of / or . will be risky as that could
         eventually lead to previlege escalation
         '''
-        if ('.' in self.folder_name) or (self.folder_name.startswith('/')):
-            self.raise_user_error('invalid_folder_name')
-
-    @classmethod
-    def write(cls, folders, vals):
-        """
-        Check if the folder_name or type has been modified.
-        If yes, and files already exist in the folder, raise an error.
-
-        :param vals: values of the current record
-        """
-        for folder in filter(lambda folder: folder.files, folders):
-            if vals.get('folder_name'):
-                cls.raise_user_error('folder_name_change')
-            if vals.get('type'):
-                cls.raise_user_error('file_type_change')
-
-        return super(NereidStaticFolder, cls).write(folders, vals)
+        if ('.' in self.name) or (self.name.startswith('/')):
+            self.raise_user_error('invalid_name')
 
 
 class NereidStaticFile(ModelSQL, ModelView):
@@ -162,7 +159,7 @@ class NereidStaticFile(ModelSQL, ModelView):
 
         return url_for(
             'nereid.static.file.send_static_file',
-            folder=self.folder.folder_name, name=self.name
+            folder=self.folder.name, name=self.name
         )
 
     @staticmethod
@@ -228,7 +225,7 @@ class NereidStaticFile(ModelSQL, ModelView):
         return os.path.abspath(
             os.path.join(
                 self.get_nereid_base_path(),
-                self.folder.folder_name, self.name
+                self.folder.name, self.name
             ))
 
     @classmethod
@@ -260,13 +257,13 @@ class NereidStaticFile(ModelSQL, ModelView):
         efficient as possible. For example nereid will use the X-Send_file
         header to make nginx send the file if possible.
 
-        :param folder: folder_name of the folder
+        :param folder: name of the folder
         :param name: name of the file
         """
         # TODO: Separate this search and find into separate cached method
 
         files = cls.search([
-            ('folder.folder_name', '=', folder),
+            ('folder.name', '=', folder),
             ('name', '=', name)
         ])
         if not files:

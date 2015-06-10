@@ -186,9 +186,9 @@ msgctxt "field:nereid.static.folder,files:"
 msgid "Files"
 msgstr "Ficheros"
 
-msgctxt "field:nereid.static.folder,folder_name:"
-msgid "Folder Name"
-msgstr "Nombre del directorio"
+msgctxt "field:nereid.static.folder,name:"
+msgid "Name"
+msgstr "Nombre"
 
 msgctxt "field:nereid.static.folder,id:"
 msgid "ID"
