@@ -871,6 +871,87 @@ class TestAuth(NereidTestCase):
                 )
                 self.assertEqual(response.data, data['display_name'])
 
+    def test_205_basic_authentication_with_separator(self):
+        """
+        Test if basic authentication works with a separator in the password
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            party, = self.party_obj.create([{'name': 'Registered user'}])
+            data = {
+                'party': party,
+                'display_name': 'Registered User',
+                'email': 'email@example.com',
+                'password': 'pass:word',
+                'company': self.company,
+            }
+            nereid_user, = self.nereid_user_obj.create([data.copy()])
+
+            with app.test_client() as c:
+                # Login without any auth
+                response = c.get('/me')
+                self.assertEqual(response.status_code, 302)
+
+                # Send the same request with correct basic authentication
+                basic_auth = base64.b64encode(b'email@example.com:pass:word')
+                response = c.get(
+                    '/me', headers={
+                        'Authorization': 'Basic ' + basic_auth.decode(
+                            'utf-8').strip('\r\n')
+                    }
+                )
+                self.assertEqual(response.data, data['display_name'])
+
+    def test_207_login_basic_authentication_and_active_field(self):
+        """
+        Check if the active field stop the user from logging in.
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            party, = self.party_obj.create([{'name': 'Registered user'}])
+            data = {
+                'party': party,
+                'display_name': 'Registered User',
+                'email': 'email@example.com',
+                'password': 'pass:word',
+                'company': self.company,
+                'active': False,
+            }
+            nereid_user, = self.nereid_user_obj.create([data.copy()])
+
+            with app.test_client() as c:
+                # Send the same request with correct basic authentication
+                basic_auth = base64.b64encode(b'email@example.com:pass:word')
+                headers = {
+                    'Authorization': 'Basic ' + basic_auth.decode(
+                        'utf-8').strip('\r\n')
+                }
+
+                # By default user accounts are active. So login should
+                # work.
+                response = c.get('/me', headers=headers)
+                self.assertEqual(response.status_code, 302)
+
+            nereid_user.active = True
+            nereid_user.save()
+
+            with app.test_client() as c:
+                # Send the same request with correct basic authentication
+                basic_auth = base64.b64encode(b'email@example.com:pass:word')
+                headers = {
+                    'Authorization': 'Basic ' + basic_auth.decode(
+                        'utf-8').strip('\r\n')
+                }
+
+                # By default user accounts are active. So login should
+                # work.
+                response = c.get('/me', headers=headers)
+                self.assertEqual(response.status_code, 200)
+
     def test_210_token_authentication(self):
         """
         Test if token authentication works
@@ -911,9 +992,10 @@ class TestAuth(NereidTestCase):
 
                 # Send the same request with correct token authentication
                 # but using capital 'T' in 'Token'
+                token = nereid_user.get_auth_token()
                 response = c.get(
                     '/me', headers={
-                        'Authorization': 'Token ' + nereid_user.get_auth_token()
+                        'Authorization': 'Token ' + token
                     }
                 )
                 self.assertEqual(response.data, data['display_name'])
