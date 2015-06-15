@@ -14,8 +14,7 @@ except ImportError:
 import pytz
 from flask_wtf import Form, RecaptchaField
 from wtforms import TextField, SelectField, validators, PasswordField
-from flask.ext.login import logout_user, AnonymousUserMixin, login_url, \
-    login_user
+from flask.ext.login import logout_user, AnonymousUserMixin, login_url
 from werkzeug import redirect, abort
 
 from nereid import request, url_for, render_template, login_required, flash, \
@@ -705,7 +704,7 @@ class NereidUser(ModelSQL, ModelView):
                 pass
             else:
                 user = cls.authenticate(*header_val.split(':', 1))
-                if user and login_user(user):
+                if user and user.is_active():
                     return user
 
         # TODO: Digest authentication
@@ -742,7 +741,7 @@ class NereidUser(ModelSQL, ModelView):
             # should also be invalid.
             return None
 
-        if login_user(user):
+        if user.is_active():
             # Login only if the login_user method returns True for the user
             return user
 
