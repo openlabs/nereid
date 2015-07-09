@@ -69,6 +69,29 @@ class NereidTestApp(Nereid):
         return self._dispatch_request(req, language, active_id)
 
 
+def get_app(**options):
+    app = NereidTestApp()
+    if 'SECRET_KEY' not in options:
+        options['SECRET_KEY'] = 'secret-key'
+    app.config.update(options)
+    from trytond.tests.test_tryton import DB_NAME
+    app.config['DATABASE_NAME'] = DB_NAME
+    app.config['DEBUG'] = True
+    app.session_interface.session_store = \
+        FilesystemSessionStore('/tmp', session_class=Session)
+
+    # loaders is usually lazy loaded
+    # Pre-fetch it so that the instance attribute _loaders will exist
+    app.jinja_loader.loaders
+
+    # Initialise the app now
+    app.initialise()
+
+    # Load babel as its a required extension anyway
+    Babel(app)
+    return app
+
+
 class NereidTestCase(unittest.TestCase):
 
     @property
@@ -78,24 +101,6 @@ class NereidTestCase(unittest.TestCase):
         return {}
 
     def get_app(self, **options):
-        app = NereidTestApp()
-        if 'SECRET_KEY' not in options:
-            options['SECRET_KEY'] = 'secret-key'
-        app.config.update(options)
-        from trytond.tests.test_tryton import DB_NAME
-        app.config['DATABASE_NAME'] = DB_NAME
-        app.config['DEBUG'] = True
-        app.session_interface.session_store = \
-            FilesystemSessionStore('/tmp', session_class=Session)
-
-        # loaders is usually lazy loaded
-        # Pre-fetch it so that the instance attribute _loaders will exist
-        app.jinja_loader.loaders
+        app = get_app(**options)
         app.jinja_loader._loaders.insert(0, jinja2.DictLoader(self._templates))
-
-        # Initialise the app now
-        app.initialise()
-
-        # Load babel as its a required extension anyway
-        Babel(app)
         return app
