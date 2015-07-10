@@ -432,11 +432,11 @@ class Nereid(Flask):
 
             user, company = website.application_user.id, website.company.id
 
-        language = 'en_US'
-        if req.nereid_website:
-            # If this is a request specific to a website
-            # then take the locale from the website
-            language = req.nereid_locale.language.code
+            language = 'en_US'
+            if website:
+                # If this is a request specific to a website
+                # then take the locale from the website
+                language = website.get_current_locale(req).language.code
 
         # pop locale if specified in the view_args
         req.view_args.pop('locale', None)
