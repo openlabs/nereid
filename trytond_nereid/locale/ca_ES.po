@@ -180,9 +180,9 @@ msgctxt "field:nereid.static.folder,files:"
 msgid "Files"
 msgstr "Fitxers"
 
-msgctxt "field:nereid.static.folder,folder_name:"
-msgid "Folder Name"
-msgstr "Nom del directori"
+msgctxt "field:nereid.static.folder,name:"
+msgid "Name"
+msgstr "Nom"
 
 msgctxt "field:nereid.static.folder,id:"
 msgid "ID"
@@ -471,10 +471,6 @@ msgstr "Configuració"
 msgctxt "model:ir.ui.menu,name:menu_nereid_routing"
 msgid "Routing"
 msgstr "Rutes"
-
-msgctxt "model:ir.ui.menu,name:menu_nereid_static"
-msgid "Static"
-msgstr "Estàtic"
 
 msgctxt "model:ir.ui.menu,name:menu_nereid_user"
 msgid "Users"

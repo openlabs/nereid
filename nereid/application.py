@@ -13,7 +13,6 @@ from flask.globals import _request_ctx_stack, current_app
 from flask.helpers import locked_cached_property
 from jinja2 import MemcachedBytecodeCache
 from werkzeug import import_string, abort
-from flask_wtf.csrf import CsrfProtect
 import flask.ext.login
 from flask.ext.login import LoginManager
 from flask.ext.babel import Babel
@@ -32,6 +31,7 @@ from .templating import nereid_default_template_ctx_processor, \
     NEREID_TEMPLATE_FILTERS, ModuleTemplateLoader, LazyRenderer
 from .helpers import url_for, root_transaction_if_required
 from .ctx import RequestContext
+from .csrf import NereidCsrfProtect
 from .signals import transaction_start, transaction_stop
 from .routing import Rule
 
@@ -189,7 +189,7 @@ class Nereid(Flask):
         self.load_cache()
 
         #: Initialise the CSRF handling
-        self.csrf_protection = CsrfProtect()
+        self.csrf_protection = NereidCsrfProtect()
         self.csrf_protection.init_app(self)
 
         self.view_functions['static'] = self.send_static_file
@@ -258,13 +258,16 @@ class Nereid(Flask):
                     continue
 
                 for rule in f._url_rules:
-                    rules.append(
-                        self.url_rule_class(
-                            rule[0],
-                            endpoint='.'.join([model_name, f_name]),
-                            **rule[1]
-                        )
+                    rule_obj = self.url_rule_class(
+                        rule[0],
+                        endpoint='.'.join([model_name, f_name]),
+                        **rule[1]
                     )
+                    rules.append(rule_obj)
+                    if rule_obj.is_csrf_exempt:
+                        self.csrf_protection._exempt_views.add(
+                            rule_obj.endpoint
+                        )
 
         return rules
 
@@ -429,6 +432,16 @@ class Nereid(Flask):
 
             user, company = website.application_user.id, website.company.id
 
+            language = 'en_US'
+            if website:
+                # If this is a request specific to a website
+                # then take the locale from the website
+                language = website.get_current_locale(req).language.code
+
+        # pop locale if specified in the view_args
+        req.view_args.pop('locale', None)
+        active_id = req.view_args.pop('active_id', None)
+
         for count in range(int(config.get('database', 'retry')), -1, -1):
             with Transaction().start(
                     self.database_name, user,
@@ -436,7 +449,9 @@ class Nereid(Flask):
                     readonly=rule.is_readonly) as txn:
                 try:
                     transaction_start.send(self)
-                    rv = self._dispatch_request(req)
+                    rv = self._dispatch_request(
+                        req, language=language, active_id=active_id
+                    )
                     txn.cursor.commit()
                 except DatabaseOperationalError:
                     # Strict transaction handling may cause this.
@@ -455,21 +470,11 @@ class Nereid(Flask):
                 finally:
                     transaction_stop.send(self)
 
-    def _dispatch_request(self, req):
+    def _dispatch_request(self, req, language, active_id):
         """
         Implement the nereid specific _dispatch
         """
-
-        language = 'en_US'
-        if req.nereid_website:
-            # If this is a request specific to a website
-            # then take the locale from the website
-            language = req.nereid_locale.language.code
-
         with Transaction().set_context(language=language):
-
-            # pop locale if specified in the view_args
-            req.view_args.pop('locale', None)
 
             # otherwise dispatch to the handler for that endpoint
             if req.url_rule.endpoint in self.view_functions:
@@ -485,7 +490,7 @@ class Nereid(Flask):
                 # instance method, extract active_id from the url
                 # arguments and pass the model instance as first argument
                 model = Pool().get(req.url_rule.endpoint.rsplit('.', 1)[0])
-                i = model(req.view_args.pop('active_id'))
+                i = model(active_id)
                 try:
                     i.rec_name
                 except UserError:

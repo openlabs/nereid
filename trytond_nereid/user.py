@@ -460,7 +460,7 @@ class NereidUser(ModelSQL, ModelView):
             On changing the password, the user is logged out and the login page
             is thrown at the user
         """
-        form = ChangePasswordForm(request.form)
+        form = ChangePasswordForm()
 
         if request.method == 'POST' and form.validate():
             if request.nereid_user.match_password(form.old_password.data):
@@ -468,14 +468,22 @@ class NereidUser(ModelSQL, ModelView):
                     [request.nereid_user],
                     {'password': form.password.data}
                 )
-                flash(
-                    _('Your password has been successfully changed! '
-                        'Please login again')
-                )
                 logout_user()
-                return redirect(url_for('nereid.website.login'))
+                return cls.build_response(
+                    'Your password has been successfully changed! '
+                        'Please login again',
+                    redirect(url_for('nereid.website.login')), 200
+                )
             else:
-                flash(_("The current password you entered is invalid"))
+                return cls.build_response(
+                    'The current password you entered is invalid',
+                    render_template(
+                        'change-password.jinja', change_password_form=form
+                    ), 400
+                )
+
+        if form.errors and (request.is_xhr or request.is_json):
+            return jsonify(errors=form.errors), 400
 
         return render_template(
             'change-password.jinja', change_password_form=form
@@ -706,7 +714,9 @@ class NereidUser(ModelSQL, ModelView):
             except TypeError:
                 pass
             else:
-                return cls.authenticate(*header_val.split(':'))
+                user = cls.authenticate(*header_val.split(':', 1))
+                if user and user.is_active():
+                    return user
 
         # TODO: Digest authentication
 
@@ -742,7 +752,9 @@ class NereidUser(ModelSQL, ModelView):
             # should also be invalid.
             return None
 
-        return user
+        if user.is_active():
+            # Login only if the login_user method returns True for the user
+            return user
 
     def get_auth_token(self):
         """
@@ -797,7 +809,7 @@ class NereidUser(ModelSQL, ModelView):
         return bool(self.id)
 
     def is_active(self):
-        return self.active
+        return bool(self.active)
 
     def is_anonymous(self):
         return not self.id

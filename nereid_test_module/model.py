@@ -2,7 +2,15 @@
 # this repository contains the full copyright notices and license terms.
 from trytond.model import ModelSQL, fields
 from trytond.pool import Pool
+from flask_wtf import Form
+from flask_wtf.csrf import generate_csrf
+from wtforms import StringField
+from wtforms.validators import DataRequired
 from nereid import route
+
+
+class MyForm(Form):
+    name = StringField("Name", validators=[DataRequired()])
 
 
 class TestModel(ModelSQL):
@@ -32,3 +40,33 @@ class TestModel(ModelSQL):
         rv.headers['X-Test-Header'] = 'TestValue'
         rv.status = 201
         return rv
+
+    @classmethod
+    @route('/gen-csrf', methods=['GET'])
+    def gen_csrf(cls):
+        """
+        return a csrf token
+        """
+        return '%s' % generate_csrf()
+
+    @classmethod
+    @route('/test-csrf', methods=['POST'])
+    def test_csrf(cls):
+        """
+        Just return 'OK' if post request succesed
+        """
+        form = MyForm()
+        if form.validate_on_submit():
+            return 'Success'
+        return 'Failure'
+
+    @classmethod
+    @route('/test-csrf-exempt', methods=['POST'], exempt_csrf=True)
+    def test_csrf_exempt(cls):
+        """
+        Just return 'OK' if post request succesed
+        """
+        form = MyForm(csrf_enabled=False)
+        if form.validate_on_submit():
+            return 'Success'
+        return 'Failure'

@@ -3,7 +3,7 @@
 this repository contains the full copyright notices and license terms. -->
 <data>
     <xpath expr="/form" position="replace_attributes">
-        <form string="Nereid User" />
+        <form string="Web User" />
     </xpath>
     <xpath expr="/form/group[@id='checkboxes']" position="after">
         <label name="email" />

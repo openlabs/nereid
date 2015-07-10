@@ -1,4 +1,12 @@
-  * The method type of user_status() has been changed to POST 
+  * The 'type' field was moved from nereid.static.file to nereid.static.folder
+  * Remote file and all attributes associated with it were removed
+
+Version 3.2.0.9
+===============
+
+  * The method type of user_status() has been changed to POST
+  * Tests were added for QueryPagination
+  * template_filter decorator was fixed
 
 Version 3.0.1.0
 ===============

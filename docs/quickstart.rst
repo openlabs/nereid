@@ -3,16 +3,16 @@
 Quickstart
 ==========
 
-Eager to get started?  This page gives a good introduction to Nereid.  It
+Eager to get started? This page gives a good introduction to Nereid.  It
 assumes you already have Nereid installed.  If you do not, head over to the
 :ref:`installation` section.
 
 A minimal application
-=====================
+======================
 
 A minimal Nereid application first requries a Tryton database with the
 Nereid module installed. If you already have a database with Nereid
-installed head over to `creating website`_.
+installed, head over to `creating website`_.
 
 Setting up a database
 `````````````````````
