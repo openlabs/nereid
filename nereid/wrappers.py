@@ -98,18 +98,8 @@ class Request(RequestBase):
 
     @cached_property
     def nereid_locale(self):
-        """
-        Returns the active record of the current locale.
-        The locale could either be from the URL if the locale was specified
-        in the URL, or the default locale from the website.
-        """
-        if self.view_args and 'locale' in self.view_args:
-            for locale in self.nereid_website.locales:
-                if locale.code == self.view_args['locale']:
-                    return locale
-
-        # Return the default locale
-        return self.nereid_website.default_locale
+        # TODO: Deprecate this and make it a global
+        return self.nereid_website.get_current_locale(self)
 
     @cached_property
     def nereid_language(self):

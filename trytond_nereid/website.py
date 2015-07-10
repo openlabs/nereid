@@ -396,6 +396,20 @@ class WebSite(ModelSQL, ModelView):
 
         return url_map
 
+    def get_current_locale(self, req):
+        """
+        Returns the active record of the current locale.
+        The locale could either be from the URL if the locale was specified
+        in the URL, or the default locale from the website.
+        """
+        if req.view_args and 'locale' in req.view_args:
+            for locale in self.locales:
+                if locale.code == req.view_args['locale']:
+                    return locale
+
+        # Return the default locale
+        return self.default_locale
+
 
 class WebSiteLocale(ModelSQL, ModelView):
     'Web Site Locale'
