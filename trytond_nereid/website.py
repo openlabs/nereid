@@ -346,6 +346,13 @@ class WebSite(ModelSQL, ModelView):
         else:
             return website
 
+    def get_context(self):
+        """
+        Returns transaction context to be used by nereid dispatcher for this
+        website
+        """
+        return {}
+
     _url_adapter_cache = Cache('nereid.website.url_adapter', context=False)
 
     @classmethod
