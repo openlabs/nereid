@@ -21,6 +21,7 @@ class NereidTestApp(Nereid):
     def __init__(self, **config):
         super(NereidTestApp, self).__init__(**config)
         self.config['WTF_CSRF_ENABLED'] = False
+        self.config['EAGER_TEMPLATE_RENDER'] = True
 
     @property
     def root_transaction(self):
